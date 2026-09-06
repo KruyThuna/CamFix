@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  DEV build: allow plain HTTP so the app can reach the Spring backend during
+  development, whether that's:
+    - the emulator's host alias   10.0.2.2:8081
+    - localhost / 127.0.0.1        (host-run / port-forwarded)
+    - the PC's LAN IP              e.g. 192.168.x.x:8081  (a real phone on Wi-Fi)
+  Android's config can't express a subnet, so cleartext is allowed for every
+  host here. Tighten this (HTTPS only, or a fixed domain list) before shipping.
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>
