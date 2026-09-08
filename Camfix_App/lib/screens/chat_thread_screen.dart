@@ -134,12 +134,12 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
             ),
           ),
           IconButton(
-            onPressed: () => _snack('Calling ${c.name}…'),
+            onPressed: () => _snack('${AppStrings.t('calling')} ${c.name}…'),
             icon: const Icon(Icons.call_outlined,
                 color: AppColors.primaryBlue, size: 20),
           ),
           IconButton(
-            onPressed: () => _snack('Chat options'),
+            onPressed: () => _snack(AppStrings.t('chatOptions')),
             icon: Icon(Icons.more_vert, color: p.textPrimary, size: 20),
           ),
         ],

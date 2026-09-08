@@ -10,7 +10,7 @@
 #   1. Copy this file to  run-with-otp-delivery.ps1  (keep that name off
 #      version control - it will hold secrets).
 #   2. Fill in ONE of the SMS options below (+ email if you want it).
-#   3. From C:\Cam\api run:   . .\run-with-otp-delivery.ps1
+#   3. From C:\Cam\Backend run:   . .\run-with-otp-delivery.ps1
 #      (the leading "dot space" matters - it sets the vars in your shell,
 #       then starts the API.)
 # ---------------------------------------------------------------------------

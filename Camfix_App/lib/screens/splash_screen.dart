@@ -2,6 +2,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import '../l10n/app_strings.dart';
 import '../services/connectivity_service.dart';
+import '../services/current_user.dart';
+import '../services/token_store.dart';
 import '../theme/app_theme.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -54,10 +56,19 @@ class _SplashScreenState extends State<SplashScreen> {
   /// (e.g. opening the app straight on `/live-tracking`). Never navigate then.
   bool get _isCurrent => ModalRoute.of(context)?.isCurrent ?? true;
 
-  void _go() {
+  Future<void> _go() async {
     _net.removeListener(_onNet);
     if (!mounted || !_isCurrent) return;
-    Navigator.of(context).pushReplacementNamed('/language');
+    // A JWT from a previous session means the user is still signed in — go
+    // straight to the app instead of the language / login flow.
+    final signedIn = await TokenStore.instance.hasToken();
+    if (!mounted || !_isCurrent) return;
+    if (signedIn) {
+      unawaited(CurrentUser.instance.refresh()); // warm the profile
+      Navigator.of(context).pushReplacementNamed('/dashboard');
+    } else {
+      Navigator.of(context).pushReplacementNamed('/language');
+    }
   }
 
   @override

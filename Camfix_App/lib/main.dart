@@ -20,6 +20,7 @@ import 'screens/live_tracking_screen.dart';
 import 'screens/technicians_live_screen.dart';
 import 'screens/services_screen.dart';
 import 'screens/provider_detail_screen.dart';
+import 'screens/directions_map_screen.dart';
 import 'screens/chat_list_screen.dart';
 import 'screens/chat_thread_screen.dart';
 import 'screens/profile_screen.dart';
@@ -73,6 +74,7 @@ class CamFixApp extends StatelessWidget {
           '/technicians-live': (context) => const TechniciansLiveScreen(),
           '/services': (context) => const ServicesScreen(),
           '/provider': (context) => const ProviderDetailScreen(),
+          '/directions': (context) => const DirectionsMapScreen(),
           '/chat': (context) => const ChatListScreen(),
           '/chat-thread': (context) => const ChatThreadScreen(),
           '/profile': (context) => const ProfileScreen(),

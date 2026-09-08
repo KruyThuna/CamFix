@@ -53,6 +53,8 @@ class _TechniciansLiveScreenState extends State<TechniciansLiveScreen> {
         rating: 4.5,
         distanceKm: t.distanceKm,
         available: t.available,
+        latitude: t.pos.latitude,
+        longitude: t.pos.longitude,
       ),
     );
   }

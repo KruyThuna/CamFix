@@ -42,148 +42,203 @@ class _ServicesScreenState extends State<ServicesScreen> {
     'Water network',
   ];
 
+  // Shop coordinates are scattered across the Phnom Penh khan named in each
+  // provider's `location`, so "Get Direction" on the detail screen draws a
+  // real route to that technician instead of the city centre.
   static const Map<String, List<ServiceProvider>> _providersByCategory = {
     'Air Conditioner': [
       ServiceProvider(
           name: 'Vanna Sok',
           category: 'Air Conditioner',
           location: 'SenSok, PhnomPenh',
-          rating: 4.5),
+          rating: 4.5,
+          latitude: 11.5872,
+          longitude: 104.8951),
       ServiceProvider(
           name: 'Ngoun Sokrom',
           category: 'Air Conditioner',
           location: 'Toul Kouk, PhnomPenh',
-          rating: 4.8),
+          rating: 4.8,
+          latitude: 11.5731,
+          longitude: 104.8983),
       ServiceProvider(
           name: 'Chai Bunrak',
           category: 'Air Conditioner',
           location: 'Toul Tompung, PhnomPenh',
-          rating: 4),
+          rating: 4,
+          latitude: 11.5442,
+          longitude: 104.9065),
       ServiceProvider(
           name: 'Dara ChanMean',
           category: 'Air Conditioner',
           location: 'Toul Kouk, PhnomPenh',
-          rating: 4.3),
+          rating: 4.3,
+          latitude: 11.5708,
+          longitude: 104.9012),
       ServiceProvider(
           name: 'Na ChanSok',
           category: 'Air Conditioner',
           location: 'SenSok, PhnomPenh',
-          rating: 4.2),
+          rating: 4.2,
+          latitude: 11.5845,
+          longitude: 104.8994),
     ],
     'Car': [
       ServiceProvider(
           name: 'Kha Bunn',
           category: 'Car',
           location: 'SenSok, PhnomPenh',
-          rating: 4.5),
+          rating: 4.5,
+          latitude: 11.5888,
+          longitude: 104.8975),
       ServiceProvider(
           name: 'Reak Smey',
           category: 'Car',
           location: 'Toul Kouk, PhnomPenh',
-          rating: 4.8),
+          rating: 4.8,
+          latitude: 11.5716,
+          longitude: 104.8949),
       ServiceProvider(
           name: 'VannSak Doung',
           category: 'Car',
           location: 'Toul Tompung, PhnomPenh',
-          rating: 4),
+          rating: 4,
+          latitude: 11.5461,
+          longitude: 104.9041),
       ServiceProvider(
           name: 'Mean Dara',
           category: 'Car',
           location: 'Toul Kouk, PhnomPenh',
-          rating: 4.3),
+          rating: 4.3,
+          latitude: 11.5739,
+          longitude: 104.9005),
       ServiceProvider(
           name: 'Muo Nisey',
           category: 'Car',
           location: 'SenSok, PhnomPenh',
-          rating: 4.2),
+          rating: 4.2,
+          latitude: 11.5820,
+          longitude: 104.8930),
     ],
     'Water network': [
       ServiceProvider(
           name: 'Sok Pisey',
           category: 'Water network',
           location: 'SenSok, PhnomPenh',
-          rating: 4.6),
+          rating: 4.6,
+          latitude: 11.5859,
+          longitude: 104.9008),
       ServiceProvider(
           name: 'Chan Dara',
           category: 'Water network',
           location: 'Toul Kouk, PhnomPenh',
-          rating: 4.4),
+          rating: 4.4,
+          latitude: 11.5725,
+          longitude: 104.8967),
       ServiceProvider(
           name: 'Long Sophea',
           category: 'Water network',
           location: 'Toul Tompung, PhnomPenh',
-          rating: 4.1),
+          rating: 4.1,
+          latitude: 11.5418,
+          longitude: 104.9083),
       ServiceProvider(
           name: 'Kim Srey',
           category: 'Water network',
           location: 'Chamkarmon, PhnomPenh',
-          rating: 4.7),
+          rating: 4.7,
+          latitude: 11.5432,
+          longitude: 104.9218),
     ],
     'Electrical': [
       ServiceProvider(
           name: 'Sok Vibol',
           category: 'Electrical',
           location: 'SenSok, PhnomPenh',
-          rating: 4.6),
+          rating: 4.6,
+          latitude: 11.5836,
+          longitude: 104.8962),
       ServiceProvider(
           name: 'Chan Ratha',
           category: 'Electrical',
           location: 'Toul Kouk, PhnomPenh',
-          rating: 4.4),
+          rating: 4.4,
+          latitude: 11.5748,
+          longitude: 104.8991),
       ServiceProvider(
           name: 'Pich Sambath',
           category: 'Electrical',
           location: 'Chamkarmon, PhnomPenh',
-          rating: 4.7),
+          rating: 4.7,
+          latitude: 11.5409,
+          longitude: 104.9241),
       ServiceProvider(
           name: 'Long Dara',
           category: 'Electrical',
           location: 'Daun Penh, PhnomPenh',
-          rating: 4.1),
+          rating: 4.1,
+          latitude: 11.5731,
+          longitude: 104.9258),
     ],
     'Appliance Repair': [
       ServiceProvider(
           name: 'Kong Pisey',
           category: 'Appliance Repair',
           location: 'SenSok, PhnomPenh',
-          rating: 4.5),
+          rating: 4.5,
+          latitude: 11.5867,
+          longitude: 104.8939),
       ServiceProvider(
           name: 'Nov Sreypov',
           category: 'Appliance Repair',
           location: 'Toul Tompung, PhnomPenh',
-          rating: 4.3),
+          rating: 4.3,
+          latitude: 11.5449,
+          longitude: 104.9052),
       ServiceProvider(
           name: 'Heng Vichea',
           category: 'Appliance Repair',
           location: 'Mean Chey, PhnomPenh',
-          rating: 4.6),
+          rating: 4.6,
+          latitude: 11.5162,
+          longitude: 104.9203),
       ServiceProvider(
           name: 'Sam Oudom',
           category: 'Appliance Repair',
           location: 'Toul Kouk, PhnomPenh',
-          rating: 4.2),
+          rating: 4.2,
+          latitude: 11.5719,
+          longitude: 104.9019),
     ],
     'Motorcycle': [
       ServiceProvider(
           name: 'Rith Sokun',
           category: 'Motorcycle',
           location: 'SenSok, PhnomPenh',
-          rating: 4.7),
+          rating: 4.7,
+          latitude: 11.5841,
+          longitude: 104.8977),
       ServiceProvider(
           name: 'Chea Kimhong',
           category: 'Motorcycle',
           location: 'Chroy Changvar, PhnomPenh',
-          rating: 4.4),
+          rating: 4.4,
+          latitude: 11.5967,
+          longitude: 104.9321),
       ServiceProvider(
           name: 'Vong Piseth',
           category: 'Motorcycle',
           location: 'Toul Kouk, PhnomPenh',
-          rating: 4.5),
+          rating: 4.5,
+          latitude: 11.5733,
+          longitude: 104.8973),
       ServiceProvider(
           name: 'Meng Sovann',
           category: 'Motorcycle',
           location: 'Chamkarmon, PhnomPenh',
-          rating: 4),
+          rating: 4,
+          latitude: 11.5421,
+          longitude: 104.9236),
     ],
   };
 
@@ -406,9 +461,10 @@ class _ServicesScreenState extends State<ServicesScreen> {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
             border: Border.all(color: p.border),
+            // flat, like the mockup list — just a hairline, no heavy drop shadow
             boxShadow: [
               BoxShadow(
-                  color: p.shadow, blurRadius: 12, offset: const Offset(0, 4)),
+                  color: p.shadow, blurRadius: 5, offset: const Offset(0, 1)),
             ],
           ),
           child: Row(
@@ -416,12 +472,13 @@ class _ServicesScreenState extends State<ServicesScreen> {
               Container(
                 width: 56,
                 height: 56,
+                clipBehavior: Clip.antiAlias,
                 decoration: BoxDecoration(
                   color: p.surfaceAlt,
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(Icons.person_outline_rounded,
-                    color: p.textSecondary, size: 24),
+                child: Icon(Icons.person_rounded,
+                    color: p.textSecondary.withValues(alpha: 0.45), size: 30),
               ),
               const SizedBox(width: 12),
               Expanded(

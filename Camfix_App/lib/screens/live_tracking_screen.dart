@@ -227,7 +227,6 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
           else
             _osmMap(here),
           _backButton(p),
-          if (!_useGoogle) _legend(p),
           Positioned(
             left: 0,
             right: 0,
@@ -509,63 +508,6 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
                   ],
                 ),
                 child: Icon(Icons.arrow_back, color: p.textPrimary, size: 20),
-              ),
-            ),
-          ),
-        ),
-      );
-
-  Widget _legend(AppPalette p) => Positioned(
-        top: 0,
-        right: 0,
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-              decoration: BoxDecoration(
-                color: p.surface,
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                      color: p.shadow,
-                      blurRadius: 8,
-                      offset: const Offset(0, 2)),
-                ],
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(AppStrings.t('trafficTitle'),
-                      style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          color: p.textSecondary)),
-                  const SizedBox(height: 6),
-                  for (final lvl in TrafficLevel.values)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 3),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Container(
-                            width: 14,
-                            height: 4,
-                            decoration: BoxDecoration(
-                              color: lvl.color,
-                              borderRadius: BorderRadius.circular(2),
-                            ),
-                          ),
-                          const SizedBox(width: 6),
-                          Text(AppStrings.t(lvl.labelKey),
-                              style: TextStyle(
-                                  fontSize: 11, color: p.textPrimary)),
-                        ],
-                      ),
-                    ),
-                ],
               ),
             ),
           ),

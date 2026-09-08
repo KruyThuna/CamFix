@@ -49,11 +49,13 @@ class CamFixBottomNavBar extends StatelessWidget {
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 200),
               padding: EdgeInsets.symmetric(
-                horizontal: active ? 18 : 14,
-                vertical: 10,
+                horizontal: active ? 18 : 12,
+                vertical: active ? 10 : 12,
               ),
               decoration: BoxDecoration(
-                color: active ? AppColors.white : Colors.transparent,
+                color: active
+                    ? AppColors.white
+                    : AppColors.white.withValues(alpha: 0.16),
                 borderRadius: BorderRadius.circular(30),
               ),
               child: Row(

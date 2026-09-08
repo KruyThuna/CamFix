@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../l10n/app_strings.dart';
 import '../models/chat.dart';
 import '../models/service_provider.dart';
 import '../theme/app_theme.dart';
 import 'booking_sheet.dart';
+import 'services_screen.dart' show categoryLabel;
 
 /// Provider detail screen (mockup page 16): avatar + status, contact actions,
 /// an Info / Achievements / Reviews tab switcher, rating breakdown,
@@ -91,6 +91,8 @@ class _ProviderDetailScreenState extends State<ProviderDetailScreen> {
     category: 'Air Conditioner',
     location: 'SenSok, PhnomPenh',
     rating: 4.5,
+    latitude: 11.5872,
+    longitude: 104.8951,
   );
 
   static const List<String> _tabs = ['Info', 'Achievements', 'Reviews'];
@@ -163,6 +165,10 @@ class _ProviderDetailScreenState extends State<ProviderDetailScreen> {
   static String _fmt(double v) =>
       v % 1 == 0 ? v.toStringAsFixed(0) : v.toString();
 
+  /// Localised job role ("Professional" is the only value in the sample data).
+  static String _roleLabel(String role) =>
+      role == 'Professional' ? AppStrings.t('roleProfessional') : role;
+
   void _snack(String message) {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
@@ -173,22 +179,11 @@ class _ProviderDetailScreenState extends State<ProviderDetailScreen> {
       ));
   }
 
-  /// Start turn-by-turn directions to the provider in the device's maps app
-  /// (Google Maps universal URL — works on Android, iOS and web).
-  Future<void> _openDirections(ServiceProvider p) async {
-    final dest = Uri.encodeComponent(
-        p.address.isNotEmpty ? p.address : '${p.location}, Phnom Penh, Cambodia');
-    final uri = Uri.parse(
-        'https://www.google.com/maps/dir/?api=1&destination=$dest'
-        '&travelmode=driving');
-    try {
-      final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
-      if (!ok && mounted) {
-        _snack('Could not open a maps app for ${p.name}');
-      }
-    } catch (_) {
-      if (mounted) _snack('Could not open a maps app for ${p.name}');
-    }
+  /// Open the in-app directions map to this technician's shop — a real
+  /// road route the customer can follow to go check the repair. That screen
+  /// also offers a hand-off to the device's Google Maps for turn-by-turn.
+  void _openDirections(ServiceProvider p) {
+    Navigator.of(context).pushNamed('/directions', arguments: p);
   }
 
   /// Open a chat thread with this technician.
@@ -331,7 +326,7 @@ class _ProviderDetailScreenState extends State<ProviderDetailScreen> {
                 style: AppText.h2.copyWith(fontSize: 20, color: _text)),
             const SizedBox(height: 3),
             Text(
-              '${p.category}  |  ${p.role}',
+              '${categoryLabel(p.category)}  |  ${_roleLabel(p.role)}',
               style: TextStyle(color: _muted, fontSize: 13),
             ),
             const SizedBox(height: 8),
@@ -376,7 +371,8 @@ class _ProviderDetailScreenState extends State<ProviderDetailScreen> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: ElevatedButton.icon(
-                    onPressed: () => _snack('Calling ${p.phone}…'),
+                    onPressed: () =>
+                        _snack('${AppStrings.t('calling')} ${p.phone}…'),
                     icon: const Icon(Icons.call_outlined, size: 19),
                     label: Text(AppStrings.t('audioBtn')),
                     style: ElevatedButton.styleFrom(
@@ -694,7 +690,7 @@ class _ProviderDetailScreenState extends State<ProviderDetailScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('${p.category} ${p.role}',
+        Text('${categoryLabel(p.category)} ${_roleLabel(p.role)}',
             style:
                 const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w700)),
         const SizedBox(height: 12),
@@ -758,7 +754,7 @@ class _ProviderDetailScreenState extends State<ProviderDetailScreen> {
           ),
         ),
         const SizedBox(height: 10),
-        Text(p.category,
+        Text(categoryLabel(p.category),
             style: AppText.h2.copyWith(fontSize: 18, color: _text)),
         const SizedBox(height: 4),
         Row(
@@ -803,7 +799,7 @@ class _ProviderDetailScreenState extends State<ProviderDetailScreen> {
               children: [
                 const Icon(Icons.ac_unit_rounded, size: 13, color: _green),
                 const SizedBox(width: 4),
-                Text(p.category,
+                Text(categoryLabel(p.category),
                     style: const TextStyle(
                         fontSize: 11.5,
                         fontWeight: FontWeight.w700,
@@ -939,7 +935,7 @@ class _ProviderDetailScreenState extends State<ProviderDetailScreen> {
                         style: const TextStyle(
                             fontWeight: FontWeight.w700, fontSize: 14)),
                     const SizedBox(height: 2),
-                    Text('${r.reviewsCount} Reviews',
+                    Text('${r.reviewsCount} ${AppStrings.t('reviewsSuffix')}',
                         style: TextStyle(
                             fontSize: 11.5, color: _muted)),
                   ],
@@ -947,7 +943,7 @@ class _ProviderDetailScreenState extends State<ProviderDetailScreen> {
               ),
               InkWell(
                 customBorder: const CircleBorder(),
-                onTap: () => _snack('Review options'),
+                onTap: () => _snack(AppStrings.t('reviewOptions')),
                 child: Padding(
                   padding: const EdgeInsets.all(2),
                   child: Icon(Icons.more_vert,
@@ -991,7 +987,7 @@ class _ProviderDetailScreenState extends State<ProviderDetailScreen> {
                   fontSize: 13, color: _text, height: 1.4)),
           const SizedBox(height: 6),
           InkWell(
-            onTap: () => _snack('Translating review…'),
+            onTap: () => _snack(AppStrings.t('translatingReview')),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -1012,7 +1008,7 @@ class _ProviderDetailScreenState extends State<ProviderDetailScreen> {
                   TextStyle(fontSize: 11.5, color: _muted)),
           const SizedBox(height: 10),
           InkWell(
-            onTap: () => _snack('Liked ${r.name}\'s review'),
+            onTap: () => _snack(AppStrings.t('reviewLiked')),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [

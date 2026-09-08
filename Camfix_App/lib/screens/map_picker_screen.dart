@@ -25,6 +25,8 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
   LatLng? _picked;
   bool _argsRead = false;
   bool _locating = false;
+  bool _mapReady = false;
+  LatLng? _pendingCenter; // recentre here the moment the map is ready
 
   @override
   void didChangeDependencies() {
@@ -32,7 +34,14 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
     if (_argsRead) return;
     _argsRead = true;
     final args = ModalRoute.of(context)?.settings.arguments;
-    if (args is LatLng) _picked = args;
+    if (args is LatLng) {
+      _picked = args;
+    } else {
+      // No start point supplied → drop the pin on the current user's real
+      // location as soon as the screen opens, so "update address" begins
+      // from where they actually are.
+      _goToCurrentLocation(silentOnError: true);
+    }
   }
 
   void _snack(String msg) {
@@ -41,19 +50,26 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
       ..showSnackBar(SnackBar(content: Text(msg)));
   }
 
-  /// Centre the map on the device GPS position and drop the pin there.
-  Future<void> _myLocation() async {
+  /// Read the device GPS, drop the pin there and centre the map on it.
+  /// [silentOnError] suppresses the error snack for the automatic call on
+  /// open (the user can still tap the button to retry).
+  Future<void> _goToCurrentLocation({bool silentOnError = false}) async {
+    if (_locating) return;
     setState(() => _locating = true);
     final res = await getCurrentLocation();
     if (!mounted) return;
     setState(() => _locating = false);
     if (!res.ok) {
-      _snack(AppStrings.t(res.errorKey!));
+      if (!silentOnError) _snack(AppStrings.t(res.errorKey!));
       return;
     }
     final here = LatLng(res.position!.latitude, res.position!.longitude);
     setState(() => _picked = here);
-    _map.move(here, 16);
+    if (_mapReady) {
+      _map.move(here, 16);
+    } else {
+      _pendingCenter = here; // onMapReady will consume this
+    }
   }
 
   @override
@@ -70,6 +86,14 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
             options: MapOptions(
               initialCenter: center,
               initialZoom: 14,
+              onMapReady: () {
+                _mapReady = true;
+                final c = _pendingCenter;
+                if (c != null) {
+                  _pendingCenter = null;
+                  _map.move(c, 16);
+                }
+              },
               onTap: (_, latlng) => setState(() => _picked = latlng),
             ),
             children: [
@@ -124,10 +148,12 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
                           ],
                         ),
                         child: Text(
-                          _picked == null
-                              ? AppStrings.t('tapMapToPick')
-                              : '${_picked!.latitude.toStringAsFixed(6)}, '
-                                  '${_picked!.longitude.toStringAsFixed(6)}',
+                          _picked != null
+                              ? '${_picked!.latitude.toStringAsFixed(6)}, '
+                                  '${_picked!.longitude.toStringAsFixed(6)}'
+                              : _locating
+                                  ? AppStrings.t('gettingLocation')
+                                  : AppStrings.t('tapMapToPick'),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
@@ -151,7 +177,7 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
                 padding: const EdgeInsets.only(bottom: 84),
                 child: InkWell(
                   customBorder: const CircleBorder(),
-                  onTap: _locating ? null : _myLocation,
+                  onTap: _locating ? null : () => _goToCurrentLocation(),
                   child: Container(
                     width: 48,
                     height: 48,

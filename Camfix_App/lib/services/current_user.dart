@@ -28,8 +28,14 @@ class CurrentUser extends ChangeNotifier {
     try {
       final json = await ApiClient.instance.getJson('/api/auth/me');
       _value = UserInfo.fromJson(json);
-    } on ApiException {
-      // keep whatever we had; a 401 means the token is stale
+    } on ApiException catch (e) {
+      // A 401 means the saved JWT is expired / revoked — drop it so the next
+      // launch shows the login flow instead of a broken signed-in state.
+      // Any other error (server down, no network) leaves the token in place.
+      if (e.statusCode == 401) {
+        await TokenStore.instance.clear();
+        _value = null;
+      }
     } finally {
       _loading = false;
       notifyListeners();

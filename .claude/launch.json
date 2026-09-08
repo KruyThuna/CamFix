@@ -19,11 +19,11 @@
     },
     {
       "name": "api",
-      "runtimeExecutable": "C:\\Cam\\api\\mvnw.cmd",
+      "runtimeExecutable": "C:\\Cam\\Backend\\mvnw.cmd",
       "runtimeArgs": [
         "spring-boot:run"
       ],
-      "cwd": "C:\\Cam\\api",
+      "cwd": "C:\\Cam\\Backend",
       "port": 8081,
       "autoPort": false,
       "env": {

@@ -56,6 +56,13 @@ class _MainShellState extends State<MainShell> implements MainShellController {
     super.dispose();
   }
 
+  static const _tabs = [
+    DashboardScreen(),
+    ServicesScreen(),
+    ChatListScreen(),
+    ProfileScreen(),
+  ];
+
   @override
   Widget build(BuildContext context) {
     final bottomInset = MediaQuery.of(context).viewPadding.bottom;
@@ -63,15 +70,23 @@ class _MainShellState extends State<MainShell> implements MainShellController {
       backgroundColor: context.pal.background,
       body: Stack(
         children: [
-          IndexedStack(
-            index: _index,
-            children: const [
-              DashboardScreen(),
-              ServicesScreen(),
-              ChatListScreen(),
-              ProfileScreen(),
-            ],
-          ),
+          // All four stay mounted (state + scroll preserved); switching
+          // cross-fades so the body transition matches the nav-bar pill.
+          for (var i = 0; i < _tabs.length; i++)
+            Positioned.fill(
+              child: AnimatedOpacity(
+                duration: const Duration(milliseconds: 220),
+                curve: Curves.easeOut,
+                opacity: i == _index ? 1 : 0,
+                child: IgnorePointer(
+                  ignoring: i != _index,
+                  child: TickerMode(
+                    enabled: i == _index,
+                    child: _tabs[i],
+                  ),
+                ),
+              ),
+            ),
           Positioned(
             left: 20,
             right: 20,

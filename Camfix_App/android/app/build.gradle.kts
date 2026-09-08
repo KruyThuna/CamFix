@@ -1,5 +1,3 @@
-import java.util.Properties
-
 plugins {
     id("com.android.application")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
@@ -9,12 +7,16 @@ plugins {
 // google_maps_flutter needs the Maps key in the manifest at build time.
 // Put `MAPS_API_KEY=...` in android/local.properties (git-ignored); absent =
 // the app uses the keyless OpenStreetMap map. See GOOGLE_MAPS_SETUP.md.
-val mapsProperties = Properties()
-val mapsPropertiesFile = rootProject.file("local.properties")
-if (mapsPropertiesFile.exists()) {
-    mapsPropertiesFile.inputStream().use { mapsProperties.load(it) }
-}
-val mapsApiKey: String = mapsProperties.getProperty("MAPS_API_KEY") ?: ""
+//
+// Parsed by hand (no java.util.Properties) because the Kotlin DSL script
+// compiler under AGP 9 fails to resolve that import here.
+val mapsApiKey: String = rootProject.file("local.properties")
+    .takeIf { it.exists() }
+    ?.readLines()
+    ?.firstOrNull { it.trimStart().startsWith("MAPS_API_KEY=") }
+    ?.substringAfter("=")
+    ?.trim()
+    ?: ""
 
 android {
     namespace = "com.example.camfix_app"

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:latlong2/latlong.dart';
 
 import '../l10n/app_strings.dart';
 import '../models/service_provider.dart';
+import '../services/bookings_store.dart';
 import '../theme/app_theme.dart';
 import '../widgets/app_buttons.dart';
 
@@ -29,11 +31,22 @@ class _BookingSheet extends StatefulWidget {
 }
 
 class _BookingSheetState extends State<_BookingSheet> {
+  // Stable ids kept in the booking; shown through [_serviceLabel] so the
+  // chips and confirmation follow the app language.
   static const _services = ['Repair', 'Clean', 'Installation', 'Inspection'];
+
+  static String _serviceLabel(String id) => switch (id) {
+        'Repair' => AppStrings.t('svcRepair'),
+        'Clean' => AppStrings.t('svcClean'),
+        'Installation' => AppStrings.t('svcInstallation'),
+        'Inspection' => AppStrings.t('svcInspection'),
+        _ => id,
+      };
   final _note = TextEditingController();
   String _service = _services.first;
   DateTime? _date;
   TimeOfDay? _time;
+  String? _address; // where the technician should come — "lat, lng" or typed
   bool _submitting = false;
 
   @override
@@ -42,7 +55,16 @@ class _BookingSheetState extends State<_BookingSheet> {
     super.dispose();
   }
 
-  bool get _ready => _date != null && _time != null && !_submitting;
+  bool get _ready =>
+      _date != null && _time != null && _address != null && !_submitting;
+
+  static LatLng? _parseLatLng(String s) {
+    final m = RegExp(r'^\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*$')
+        .firstMatch(s);
+    return m == null
+        ? null
+        : LatLng(double.parse(m.group(1)!), double.parse(m.group(2)!));
+  }
 
   Future<void> _pickDate() async {
     final now = DateTime.now();
@@ -63,16 +85,40 @@ class _BookingSheetState extends State<_BookingSheet> {
     if (picked != null) setState(() => _time = picked);
   }
 
+  Future<void> _pickOnMap() async {
+    FocusScope.of(context).unfocus();
+    // Reopen on the last-picked point if the address was already set once.
+    final start = _address == null ? null : _parseLatLng(_address!);
+    final result =
+        await Navigator.of(context).pushNamed('/map-picker', arguments: start);
+    if (result is LatLng) {
+      setState(() => _address = '${result.latitude.toStringAsFixed(6)}, '
+          '${result.longitude.toStringAsFixed(6)}');
+    }
+  }
+
   Future<void> _confirm() async {
     setState(() => _submitting = true);
     await Future<void>.delayed(const Duration(milliseconds: 600));
     if (!mounted) return;
+
+    final when = DateTime(
+        _date!.year, _date!.month, _date!.day, _time!.hour, _time!.minute);
+    BookingsStore.instance.add(Booking(
+      provider: widget.provider.name,
+      service: _service,
+      category: widget.provider.category,
+      when: when,
+      address: _address!,
+    ));
+
     Navigator.of(context).pop(); // close the sheet
     await showDialog<void>(
       context: context,
       builder: (_) => _BookingDoneDialog(
         provider: widget.provider.name,
-        service: _service,
+        service: _serviceLabel(_service),
+        address: _address!,
       ),
     );
   }
@@ -128,7 +174,7 @@ class _BookingSheetState extends State<_BookingSheet> {
                 children: _services.map((s) {
                   final sel = s == _service;
                   return ChoiceChip(
-                    label: Text(s),
+                    label: Text(_serviceLabel(s)),
                     selected: sel,
                     onSelected: (_) => setState(() => _service = s),
                     showCheckmark: false,
@@ -157,6 +203,17 @@ class _BookingSheetState extends State<_BookingSheet> {
                         _time != null, _pickTime),
                   ),
                 ],
+              ),
+              const SizedBox(height: 18),
+
+              _label(p, AppStrings.t('bookingAddress')),
+              const SizedBox(height: 8),
+              _pickerField(
+                p,
+                Icons.location_on_outlined,
+                _address ?? AppStrings.t('chooseOnMap'),
+                _address != null,
+                _pickOnMap,
               ),
               const SizedBox(height: 18),
 
@@ -234,9 +291,11 @@ class _BookingSheetState extends State<_BookingSheet> {
 }
 
 class _BookingDoneDialog extends StatelessWidget {
-  const _BookingDoneDialog({required this.provider, required this.service});
+  const _BookingDoneDialog(
+      {required this.provider, required this.service, required this.address});
   final String provider;
   final String service;
+  final String address;
 
   @override
   Widget build(BuildContext context) {
@@ -270,6 +329,24 @@ class _BookingDoneDialog extends StatelessWidget {
               style: TextStyle(fontSize: 13, color: p.textSecondary),
             ),
             const SizedBox(height: 4),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.location_on_outlined,
+                    size: 13, color: p.textSecondary),
+                const SizedBox(width: 3),
+                Flexible(
+                  child: Text(
+                    address,
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(fontSize: 12, color: p.textSecondary),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
             Text(
               AppStrings.t('bookingDoneBody'),
               textAlign: TextAlign.center,

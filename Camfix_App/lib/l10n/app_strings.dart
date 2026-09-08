@@ -222,6 +222,10 @@ class AppStrings {
       AppLang.en: 'Your list of Active Jobs is empty.\nPlease book a service!',
       AppLang.km: 'បញ្ជីការងាររបស់អ្នកនៅទទេ។\nសូមកក់សេវាកម្ម!',
     },
+    'noCompletedJobs': {
+      AppLang.en: 'No completed jobs yet.',
+      AppLang.km: 'មិនទាន់មានការងារបានបញ្ចប់ទេ។',
+    },
 
     // --- Service categories -------------------------------------------
     'svcAirConditioner': {
@@ -271,6 +275,22 @@ class AppStrings {
     'tabAchievements': {AppLang.en: 'Achievements', AppLang.km: 'សមិទ្ធផល'},
     'tabReviews': {AppLang.en: 'Reviews', AppLang.km: 'ការវាយតម្លៃ'},
     'rating': {AppLang.en: 'Rating', AppLang.km: 'ការវាយតម្លៃ'},
+    'reviewsSuffix': {AppLang.en: 'Reviews', AppLang.km: 'ការវាយតម្លៃ'},
+    'roleProfessional': {AppLang.en: 'Professional', AppLang.km: 'អ្នកជំនាញ'},
+    'reviewOptions': {
+      AppLang.en: 'Review options',
+      AppLang.km: 'ជម្រើសការវាយតម្លៃ',
+    },
+    'translatingReview': {
+      AppLang.en: 'Translating review…',
+      AppLang.km: 'កំពុងបកប្រែការវាយតម្លៃ…',
+    },
+    'reviewLiked': {
+      AppLang.en: 'Review liked',
+      AppLang.km: 'បានចូលចិត្តការវាយតម្លៃ',
+    },
+    'calling': {AppLang.en: 'Calling', AppLang.km: 'កំពុងហៅ'},
+    'chatOptions': {AppLang.en: 'Chat options', AppLang.km: 'ជម្រើសជជែក'},
     'about': {AppLang.en: 'About', AppLang.km: 'អំពី'},
     'openingHours': {AppLang.en: 'Opening Hours', AppLang.km: 'ម៉ោងបើក'},
     'service': {AppLang.en: 'Service', AppLang.km: 'សេវាកម្ម'},
@@ -322,9 +342,27 @@ class AppStrings {
     'orderedPrefix': {AppLang.en: 'Ordered: ', AppLang.km: 'បានកម្ម៉ង់៖ '},
     'like': {AppLang.en: 'Like', AppLang.km: 'ចូលចិត្ត'},
     'getDirection': {AppLang.en: 'Get Direction', AppLang.km: 'យកទិសដៅ'},
+    'directionsTitle': {AppLang.en: 'Directions', AppLang.km: 'ទិសដៅ'},
+    'openInMapsApp': {
+      AppLang.en: 'Open in Maps app',
+      AppLang.km: 'បើកក្នុងកម្មវិធីផែនទី',
+    },
+    'routeUnavailable': {
+      AppLang.en: 'Live route unavailable — showing a direct line.',
+      AppLang.km: 'មិនអាចទាញផ្លូវផ្ទាល់បាន — បង្ហាញជាបន្ទាត់ត្រង់។',
+    },
+    'couldNotOpenMaps': {
+      AppLang.en: 'Could not open a maps app',
+      AppLang.km: 'មិនអាចបើកកម្មវិធីផែនទីបានទេ',
+    },
     'bookNow': {AppLang.en: 'Book Now', AppLang.km: 'កក់ឥឡូវនេះ'},
     'bookingTitle': {AppLang.en: 'Book a service', AppLang.km: 'កក់សេវាកម្ម'},
     'bookingService': {AppLang.en: 'Service', AppLang.km: 'សេវាកម្ម'},
+    'svcRepair': {AppLang.en: 'Repair', AppLang.km: 'ជួសជុល'},
+    'svcClean': {AppLang.en: 'Clean', AppLang.km: 'សម្អាត'},
+    'svcInstallation': {AppLang.en: 'Installation', AppLang.km: 'ដំឡើង'},
+    'svcInspection': {AppLang.en: 'Inspection', AppLang.km: 'ត្រួតពិនិត្យ'},
+    'bookingAddress': {AppLang.en: 'Service address', AppLang.km: 'អាសយដ្ឋានសេវាកម្ម'},
     'bookingNote': {AppLang.en: 'Note (optional)', AppLang.km: 'កំណត់ចំណាំ (ស្រេចចិត្ត)'},
     'bookingNoteHint': {
       AppLang.en: 'Anything the technician should know…',

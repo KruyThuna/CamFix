@@ -4,10 +4,12 @@ import 'package:flutter/material.dart';
 import '../l10n/app_strings.dart';
 import '../models/service_provider.dart';
 import '../models/tracking_info.dart';
+import '../services/bookings_store.dart';
 import '../services/current_user.dart';
 import '../theme/app_theme.dart';
 import '../widgets/user_avatar.dart';
 import 'main_shell.dart';
+import 'services_screen.dart';
 import 'tracking_details_sheet.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -28,10 +30,12 @@ class _ServiceItem {
 }
 
 class _Technician {
-  const _Technician(this.name, this.role, this.distance);
+  const _Technician(this.name, this.role, this.distance, this.lat, this.lng);
   final String name;
   final String role;
   final String distance;
+  final double lat;
+  final double lng;
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
@@ -41,25 +45,39 @@ class _DashboardScreenState extends State<DashboardScreen> {
     _ServiceItem('svcAirConditioner', Icons.ac_unit_rounded, 'Air Conditioner'),
     _ServiceItem(
         'svcElectrical', Icons.electrical_services_rounded, 'Electrical'),
-    _ServiceItem('svcApplianceRepair', Icons.home_repair_service_rounded,
-        'Appliance Repair'),
+    _ServiceItem(
+        'svcApplianceRepair', Icons.handyman_rounded, 'Appliance Repair'),
     _ServiceItem('svcMotorcycle', Icons.two_wheeler_rounded, 'Motorcycle'),
     _ServiceItem('svcCar', Icons.directions_car_filled_rounded, 'Car'),
-    _ServiceItem('svcWaterNetwork', Icons.water_drop_rounded, 'Water network'),
+    _ServiceItem('svcWaterNetwork', Icons.plumbing_rounded, 'Water network'),
   ];
 
   final _technicians = const [
-    _Technician('Rotha Brak', 'Car Repair', '1.6km Nearby'),
-    _Technician('Chetra Prime', 'Air Conditioner', '2.6km Nearby'),
-    _Technician('Steven', 'Electrical', '3.2km Nearby'),
-    _Technician('B Sokha', 'Motorcycle', '3.6km Nearby'),
+    _Technician('Rotha Brak', 'Car Repair', '1.6km Nearby', 11.5680, 104.9010),
+    _Technician(
+        'Chetra Prime', 'Air Conditioner', '2.6km Nearby', 11.5620, 104.8880),
+    _Technician('Steven', 'Electrical', '3.2km Nearby', 11.5490, 104.9160),
+    _Technician('B Sokha', 'Motorcycle', '3.6km Nearby', 11.5780, 104.9250),
   ];
 
-  // Seed one active job so the "Active Job" tab shows the populated state
-  // seen in the mockup. Set to an empty list to see the empty state.
-  final List<String> _activeJobs = const ['Air Conditioner'];
-
   Timer? _clock;
+
+  static IconData _categoryIcon(String c) {
+    switch (c) {
+      case 'Electrical':
+        return Icons.electrical_services_rounded;
+      case 'Appliance Repair':
+        return Icons.handyman_rounded;
+      case 'Motorcycle':
+        return Icons.two_wheeler_rounded;
+      case 'Car':
+        return Icons.directions_car_filled_rounded;
+      case 'Water network':
+        return Icons.plumbing_rounded;
+      default:
+        return Icons.ac_unit_rounded;
+    }
+  }
 
   @override
   void initState() {
@@ -111,6 +129,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
         location: 'Phnom Penh',
         rating: 4.5,
         distanceKm: double.tryParse(t.distance.split('km').first.trim()) ?? 1.6,
+        latitude: t.lat,
+        longitude: t.lng,
       ),
     );
   }
@@ -127,13 +147,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
           _buildHeader(),
           Expanded(
             child: SingleChildScrollView(
-              padding: EdgeInsets.only(bottom: 100 + bottomInset),
-              child: Column(
-                children: [
-                  _buildTabSwitcher(),
-                  const SizedBox(height: 16),
-                  _buildTabContent(),
-                ],
+              // Nearby Technicians / Active / History sit on a white sheet
+              // that curves up right below the blue section (mockup p.10).
+              child: Container(
+                width: double.infinity,
+                constraints: BoxConstraints(
+                  minHeight: MediaQuery.of(context).size.height * 0.35,
+                ),
+                decoration: BoxDecoration(
+                  color: p.surface,
+                  borderRadius:
+                      const BorderRadius.vertical(top: Radius.circular(28)),
+                ),
+                padding: EdgeInsets.only(top: 20, bottom: 110 + bottomInset),
+                child: _buildTabContent(),
               ),
             ),
           ),
@@ -144,10 +171,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Widget _buildHeader() {
     return Container(
-      padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 22),
       decoration: const BoxDecoration(
         gradient: AppColors.blueGradient,
-        borderRadius: BorderRadius.vertical(bottom: Radius.circular(28)),
       ),
       child: SafeArea(
         bottom: false,
@@ -221,6 +247,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
               itemBuilder: (context, i) => _serviceTile(_services[i]),
             ),
+            const SizedBox(height: 20),
+            _buildTabSwitcher(),
           ],
         ),
       ),
@@ -253,13 +281,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Container(
-                width: 42,
-                height: 42,
+                width: 48,
+                height: 48,
                 decoration: const BoxDecoration(
                   color: AppColors.primaryBlue,
                   shape: BoxShape.circle,
                 ),
-                child: Icon(item.icon, color: AppColors.white, size: 20),
+                child: Icon(item.icon, color: AppColors.white, size: 22),
               ),
               const SizedBox(height: 8),
               Text(
@@ -287,14 +315,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
       AppStrings.t('history'),
     ];
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20),
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
         color: p.surface,
         borderRadius: BorderRadius.circular(14),
         boxShadow: [
           BoxShadow(
-              color: p.shadow, blurRadius: 12, offset: const Offset(0, 4)),
+              color: Colors.black.withValues(alpha: 0.12),
+              blurRadius: 12,
+              offset: const Offset(0, 4)),
         ],
       ),
       child: Row(
@@ -329,14 +358,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildTabContent() {
-    switch (_tabIndex) {
-      case 1:
-        return _buildActiveJobSection();
-      case 2:
-        return _buildHistorySection();
-      default:
-        return _buildTechniciansSection();
-    }
+    if (_tabIndex == 0) return _buildTechniciansSection();
+    // Active / History are driven by BookingsStore, so they update the moment
+    // a new booking is made.
+    return AnimatedBuilder(
+      animation: BookingsStore.instance,
+      builder: (context, _) => _tabIndex == 1
+          ? _buildActiveJobSection()
+          : _buildHistorySection(),
+    );
   }
 
   Widget _buildTechniciansSection() {
@@ -400,9 +430,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
               const SizedBox(height: 2),
               Row(
                 children: [
-                  const Icon(Icons.verified,
+                  const Icon(Icons.verified_rounded,
                       size: 13, color: AppColors.primaryBlue),
-                  const SizedBox(width: 2),
+                  const SizedBox(width: 3),
                   Text(AppStrings.t('available'),
                       style: const TextStyle(
                           fontSize: 11.5,
@@ -420,32 +450,44 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Widget _buildActiveJobSection() {
     final p = context.pal;
-    if (_activeJobs.isEmpty) {
+    final jobs = BookingsStore.instance.upcoming;
+    if (jobs.isEmpty) {
       return Padding(
         padding: const EdgeInsets.fromLTRB(20, 4, 20, 0),
         child: Column(
           children: [
-            _sectionHeader(AppStrings.t('active')),
-            const SizedBox(height: 40),
-            Icon(Icons.apps_rounded, size: 40, color: p.textSecondary),
-            const SizedBox(height: 12),
+            _sectionHeader(AppStrings.t('active'),
+                onSeeAll: () => setState(() => _tabIndex = 2)),
+            const SizedBox(height: 44),
+            Container(
+              width: 68,
+              height: 68,
+              decoration: BoxDecoration(
+                color: p.surfaceAlt,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(Icons.apps_rounded, size: 32, color: p.textSecondary),
+            ),
+            const SizedBox(height: 14),
             Text(
               AppStrings.t('activeJobsEmpty'),
               textAlign: TextAlign.center,
-              style: TextStyle(color: p.textSecondary),
+              style: TextStyle(color: p.textSecondary, height: 1.4),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 18),
             ElevatedButton(
               onPressed: () => setState(() => _tabIndex = 0),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primaryBlue,
+                foregroundColor: AppColors.white,
+                elevation: 0,
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12)),
                 padding:
                     const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
               ),
               child: Text(AppStrings.t('bookAService'),
-                  style: const TextStyle(color: AppColors.white)),
+                  style: const TextStyle(fontWeight: FontWeight.w600)),
             ),
           ],
         ),
@@ -457,25 +499,33 @@ class _DashboardScreenState extends State<DashboardScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _sectionHeader(AppStrings.t('active')),
+          _sectionHeader(AppStrings.t('active'),
+              onSeeAll: () => setState(() => _tabIndex = 2)),
           const SizedBox(height: 8),
-          _jobCard(
-            onTap: () => showTrackingDetails(context, TrackingInfo.sample),
-            title: AppStrings.t('svcAirConditioner'),
-            subtitle: '${AppStrings.t('today')}   2:30 PM',
-            trailing: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: p.surfaceAlt,
-                borderRadius: BorderRadius.circular(20),
+          for (final b in jobs)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: _jobCard(
+                icon: _categoryIcon(b.category),
+                onTap: () =>
+                    showTrackingDetails(context, TrackingInfo.sample),
+                title: categoryLabel(b.category),
+                subtitle: b.whenLabel,
+                trailing: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: AppColors.primaryBlue.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(AppStrings.t('live'),
+                      style: const TextStyle(
+                          color: AppColors.primaryBlue,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 12)),
+                ),
               ),
-              child: Text(AppStrings.t('live'),
-                  style: const TextStyle(
-                      color: AppColors.primaryBlue,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 12)),
             ),
-          ),
         ],
       ),
     );
@@ -483,6 +533,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Widget _buildHistorySection() {
     final p = context.pal;
+    final jobs = BookingsStore.instance.completed;
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 4, 20, 0),
       child: Column(
@@ -494,71 +545,88 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   fontWeight: FontWeight.w700,
                   color: p.textPrimary)),
           const SizedBox(height: 8),
-          Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: p.surface,
-              borderRadius: BorderRadius.circular(14),
-              boxShadow: [
-                BoxShadow(
-                    color: p.shadow,
-                    blurRadius: 10,
-                    offset: const Offset(0, 4)),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    _serviceIconBadge(Icons.ac_unit_rounded),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+          if (jobs.isEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 40),
+              child: Center(
+                child: Text(AppStrings.t('noCompletedJobs'),
+                    style: TextStyle(color: p.textSecondary)),
+              ),
+            )
+          else
+            for (final b in jobs)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: p.surface,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: p.border),
+                    boxShadow: [
+                      BoxShadow(
+                          color: p.shadow,
+                          blurRadius: 5,
+                          offset: const Offset(0, 1)),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
                         children: [
-                          Text(AppStrings.t('svcAirConditioner'),
-                              style: TextStyle(
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 15,
-                                  color: p.textPrimary)),
-                          Text('2026-06-26   2:30 PM',
-                              style: TextStyle(
-                                  color: p.textSecondary, fontSize: 12.5)),
+                          _serviceIconBadge(_categoryIcon(b.category)),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(categoryLabel(b.category),
+                                    style: TextStyle(
+                                        fontWeight: FontWeight.w700,
+                                        fontSize: 15,
+                                        color: p.textPrimary)),
+                                Text(b.whenLabel,
+                                    style: TextStyle(
+                                        color: p.textSecondary,
+                                        fontSize: 12.5)),
+                              ],
+                            ),
+                          ),
+                          Icon(Icons.chevron_right, color: p.textSecondary),
                         ],
                       ),
-                    ),
-                    Icon(Icons.chevron_right, color: p.textSecondary),
-                  ],
+                      const SizedBox(height: 12),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          _chipButton(AppStrings.t('reorder')),
+                          const SizedBox(width: 8),
+                          _chipButton(AppStrings.t('ratings'), filled: false),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
-                const SizedBox(height: 12),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    _chipButton(AppStrings.t('reorder')),
-                    const SizedBox(width: 8),
-                    _chipButton(AppStrings.t('ratings')),
-                  ],
-                ),
-              ],
-            ),
-          ),
+              ),
         ],
       ),
     );
   }
 
-  Widget _chipButton(String label) {
+  Widget _chipButton(String label, {bool filled = true}) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: AppColors.primaryBlue,
+        color: filled
+            ? AppColors.primaryBlue
+            : AppColors.primaryBlue.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Text(
         label,
-        style: const TextStyle(
-          color: AppColors.white,
+        style: TextStyle(
+          color: filled ? AppColors.white : AppColors.primaryBlue,
           fontSize: 10.5,
           fontWeight: FontWeight.w700,
         ),
@@ -571,10 +639,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
       width: 44,
       height: 44,
       decoration: BoxDecoration(
-        color: context.pal.surfaceAlt,
+        color: AppColors.primaryBlue,
         borderRadius: BorderRadius.circular(12),
       ),
-      child: const Icon(Icons.ac_unit_rounded, color: AppColors.primaryBlue),
+      child: Icon(icon, color: AppColors.white, size: 22),
     );
   }
 
@@ -582,6 +650,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     required String title,
     required String subtitle,
     required Widget trailing,
+    IconData icon = Icons.ac_unit_rounded,
     VoidCallback? onTap,
   }) {
     final p = context.pal;
@@ -593,14 +662,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
         decoration: BoxDecoration(
           color: p.surface,
           borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: p.border),
           boxShadow: [
             BoxShadow(
-                color: p.shadow, blurRadius: 10, offset: const Offset(0, 4)),
+                color: p.shadow, blurRadius: 5, offset: const Offset(0, 1)),
           ],
         ),
         child: Row(
           children: [
-            _serviceIconBadge(Icons.ac_unit_rounded),
+            _serviceIconBadge(icon),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
@@ -635,12 +705,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
                 color: p.textPrimary)),
-        GestureDetector(
-          onTap: onSeeAll,
-          child: Text(AppStrings.t('seeAll'),
-              style: const TextStyle(
-                  color: AppColors.primaryBlue, fontWeight: FontWeight.w600)),
-        ),
+        if (onSeeAll != null)
+          GestureDetector(
+            onTap: onSeeAll,
+            child: Text(AppStrings.t('seeAll'),
+                style: const TextStyle(
+                    color: AppColors.primaryBlue,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 12.5)),
+          ),
       ],
     );
   }
