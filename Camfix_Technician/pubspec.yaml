@@ -1,0 +1,32 @@
+name: camfix_technician
+description: "CAM FIX - technician app"
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.13.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  http: ^1.2.2
+  shared_preferences: ^2.3.2
+  geolocator: ^13.0.1
+  url_launcher: ^6.3.2
+  flutter_map: ^8.3.2
+  latlong2: ^0.10.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+# Same reason as Camfix_App: path_provider_foundation >= 2.6.0 needs a native
+# toolchain (Dart build hooks) that isn't available on this Windows machine and
+# hangs the build. It's a macOS/iOS-only impl package, irrelevant to web/Windows.
+dependency_overrides:
+  path_provider_foundation: 2.5.1
+
+flutter:
+  uses-material-design: true
