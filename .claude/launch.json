@@ -1,0 +1,34 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "camfix-web",
+      "runtimeExecutable": "flutter",
+      "runtimeArgs": [
+        "run",
+        "-d",
+        "web-server",
+        "--release",
+        "--web-port",
+        "8090",
+        "--web-hostname",
+        "127.0.0.1"
+      ],
+      "cwd": "C:\\Cam\\Camfix_App",
+      "port": 8090
+    },
+    {
+      "name": "api",
+      "runtimeExecutable": "C:\\Cam\\Backend\\mvnw.cmd",
+      "runtimeArgs": [
+        "spring-boot:run"
+      ],
+      "cwd": "C:\\Cam\\Backend",
+      "port": 8081,
+      "autoPort": false,
+      "env": {
+        "TEXTBELT_KEY": "textbelt"
+      }
+    }
+  ]
+}

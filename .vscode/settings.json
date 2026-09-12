@@ -1,0 +1,6 @@
+{
+    "cmake.sourceDirectory": "C:/Cam/Camfix_App/windows",
+    "claudeCode.useTerminal": true,
+    "java.compile.nullAnalysis.mode": "automatic",
+    "java.configuration.updateBuildConfiguration": "automatic"
+}
