@@ -39,6 +39,36 @@ public class Technician {
     @Column(name = "availability_status", length = 20)
     private String availabilityStatus;
 
+    // --- Admin-console fields (all nullable; added for the /api/admin surface) ---
+
+    /** PENDING | APPROVED | REJECTED. Null is treated as PENDING. */
+    @Column(name = "approval_status", length = 20)
+    private String approvalStatus;
+
+    @Column(name = "approved_at")
+    private LocalDateTime approvedAt;
+
+    @Column(name = "rejection_reason", length = 500)
+    private String rejectionReason;
+
+    @Column(name = "service_area")
+    private String serviceArea;
+
+    @Column(name = "opening_hours")
+    private String openingHours;
+
+    @Column(name = "rating_count")
+    private Integer ratingCount;
+
+    /** Profile photo, uploaded from the technician app. Stored in the DB -
+     *  there's no object storage / CDN in this project. */
+    @Lob
+    @Column(name = "photo", columnDefinition = "LONGBLOB")
+    private byte[] photo;
+
+    @Column(name = "photo_content_type", length = 100)
+    private String photoContentType;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -130,6 +160,70 @@ public class Technician {
 
     public void setAvailabilityStatus(String availabilityStatus) {
         this.availabilityStatus = availabilityStatus;
+    }
+
+    public String getApprovalStatus() {
+        return approvalStatus;
+    }
+
+    public void setApprovalStatus(String approvalStatus) {
+        this.approvalStatus = approvalStatus;
+    }
+
+    public LocalDateTime getApprovedAt() {
+        return approvedAt;
+    }
+
+    public void setApprovedAt(LocalDateTime approvedAt) {
+        this.approvedAt = approvedAt;
+    }
+
+    public String getRejectionReason() {
+        return rejectionReason;
+    }
+
+    public void setRejectionReason(String rejectionReason) {
+        this.rejectionReason = rejectionReason;
+    }
+
+    public String getServiceArea() {
+        return serviceArea;
+    }
+
+    public void setServiceArea(String serviceArea) {
+        this.serviceArea = serviceArea;
+    }
+
+    public String getOpeningHours() {
+        return openingHours;
+    }
+
+    public void setOpeningHours(String openingHours) {
+        this.openingHours = openingHours;
+    }
+
+    public Integer getRatingCount() {
+        return ratingCount;
+    }
+
+    public void setRatingCount(Integer ratingCount) {
+        this.ratingCount = ratingCount;
+    }
+
+    public byte[] getPhoto() {
+        return photo;
+    }
+
+    public void setPhoto(byte[] photo) {
+        this.photo = photo;
+    }
+
+    public String getPhotoContentType() {
+        return photoContentType;
+    }
+
+    public void setPhotoContentType(String photoContentType) {
+        this.photoContentType = photoContentType;
     }
 
     public LocalDateTime getCreatedAt() {

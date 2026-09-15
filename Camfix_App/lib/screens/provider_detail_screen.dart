@@ -2,9 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 
+import '../app_settings.dart';
 import '../l10n/app_strings.dart';
 import '../models/chat.dart';
+import '../models/review.dart';
 import '../models/service_provider.dart';
+import '../services/favorites_api.dart';
+import '../services/technicians_api.dart';
 import '../theme/app_theme.dart';
 import 'booking_sheet.dart';
 import 'services_screen.dart' show categoryLabel;
@@ -161,6 +165,73 @@ class _ProviderDetailScreenState extends State<ProviderDetailScreen> {
 
   int _tabIndex = 0;
 
+  int? _technicianId;
+  List<Review> _realReviews = const [];
+  bool _loadingReviews = false;
+  bool? _isFavorite;
+  bool _favoriteBusy = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_technicianId != null) return;
+    final arg = ModalRoute.of(context)?.settings.arguments as ServiceProvider?;
+    final id = (arg ?? _fallback).technicianId;
+    if (id == null) return;
+    _technicianId = id;
+    _loadReviews(id);
+    _loadFavoriteStatus(id);
+  }
+
+  Future<void> _loadReviews(int technicianId) async {
+    setState(() => _loadingReviews = true);
+    try {
+      final reviews = await TechniciansApi.instance.reviews(technicianId);
+      if (mounted) setState(() => _realReviews = reviews);
+    } catch (_) {
+      // real reviews are a nice-to-have on this screen; fail quietly
+    } finally {
+      if (mounted) setState(() => _loadingReviews = false);
+    }
+  }
+
+  Future<void> _loadFavoriteStatus(int technicianId) async {
+    try {
+      final fav = await FavoritesApi.instance.check(technicianId);
+      if (mounted) setState(() => _isFavorite = fav);
+    } catch (_) {
+      // favorite status is a nice-to-have; fail quietly
+    }
+  }
+
+  Future<void> _toggleFavorite() async {
+    final id = _technicianId;
+    if (id == null) return;
+    final current = _isFavorite ?? false;
+    setState(() {
+      _isFavorite = !current;
+      _favoriteBusy = true;
+    });
+    try {
+      if (current) {
+        await FavoritesApi.instance.remove(id);
+      } else {
+        await FavoritesApi.instance.add(id);
+      }
+      if (mounted) {
+        _snack(AppStrings.t(
+            current ? 'removedFromFavorites' : 'addedToFavorites'));
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isFavorite = current);
+        _snack(e.toString());
+      }
+    } finally {
+      if (mounted) setState(() => _favoriteBusy = false);
+    }
+  }
+
   /// Drops a trailing ".0" so 4.0 shows as "4" but 4.5 stays "4.5".
   static String _fmt(double v) =>
       v % 1 == 0 ? v.toStringAsFixed(0) : v.toString();
@@ -204,7 +275,9 @@ class _ProviderDetailScreenState extends State<ProviderDetailScreen> {
     final provider =
         ModalRoute.of(context)?.settings.arguments as ServiceProvider? ??
             _fallback;
-    final distance = _fmt(provider.distanceKm);
+    final distance =
+        '${AppSettings.instance.convertKm(provider.distanceKm).toStringAsFixed(1)} '
+        '${AppStrings.t(AppSettings.instance.distanceUnitKey)}';
 
     return Scaffold(
       backgroundColor: _surface,
@@ -272,17 +345,32 @@ class _ProviderDetailScreenState extends State<ProviderDetailScreen> {
         padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
         child: Column(
           children: [
-            Align(
-              alignment: Alignment.centerLeft,
-              child: IconButton(
-                onPressed: () {
-                  if (Navigator.of(context).canPop()) {
-                    Navigator.of(context).pop();
-                  }
-                },
-                icon: Icon(Icons.arrow_back,
-                    color: _text, size: 22),
-              ),
+            Row(
+              children: [
+                IconButton(
+                  onPressed: () {
+                    if (Navigator.of(context).canPop()) {
+                      Navigator.of(context).pop();
+                    }
+                  },
+                  icon: Icon(Icons.arrow_back, color: _text, size: 22),
+                ),
+                const Spacer(),
+                if (p.technicianId != null)
+                  IconButton(
+                    onPressed: _favoriteBusy ? null : _toggleFavorite,
+                    tooltip: AppStrings.t('saveTechnicianTooltip'),
+                    icon: Icon(
+                      _isFavorite == true
+                          ? Icons.favorite_rounded
+                          : Icons.favorite_border_rounded,
+                      color: _isFavorite == true
+                          ? const Color(0xFFE5484D)
+                          : _text,
+                      size: 22,
+                    ),
+                  ),
+              ],
             ),
             const SizedBox(height: 4),
             CircleAvatar(
@@ -336,7 +424,7 @@ class _ProviderDetailScreenState extends State<ProviderDetailScreen> {
                 const Icon(Icons.location_on,
                     size: 14, color: AppColors.primaryBlue),
                 const SizedBox(width: 3),
-                Text('${distance}km ${AppStrings.t('nearby')}',
+                Text('$distance ${AppStrings.t('nearby')}',
                     style: TextStyle(
                         fontSize: 12.5, color: _text)),
                 const SizedBox(width: 14),
@@ -671,7 +759,7 @@ class _ProviderDetailScreenState extends State<ProviderDetailScreen> {
       child: ElevatedButton.icon(
         onPressed: () => _openDirections(p),
         icon: const Icon(Icons.near_me_rounded, size: 20),
-        label: Text('${AppStrings.t('getDirection')}   ·   $distance km'),
+        label: Text('${AppStrings.t('getDirection')}   ·   $distance'),
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primaryBlue,
           foregroundColor: AppColors.white,
@@ -897,13 +985,89 @@ class _ProviderDetailScreenState extends State<ProviderDetailScreen> {
   // --- Reviews tab ------------------------------------------------------------
 
   Widget _buildReviewsTab() {
+    if (_technicianId == null) {
+      // No real technician id (a still-mock entry elsewhere in the app) -
+      // fall back to the illustrative sample reviews.
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ..._reviews.map(_reviewCard),
+        ],
+      );
+    }
+    if (_loadingReviews) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 32),
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
+    if (_realReviews.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 32),
+        child: Center(
+          child: Text(AppStrings.t('noReviewsYet'),
+              style: TextStyle(color: _muted)),
+        ),
+      );
+    }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        ..._reviews.map(_reviewCard),
+        ..._realReviews.map(_realReviewCard),
       ],
     );
   }
+
+  Widget _realReviewCard(Review r) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: _surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: _line),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              CircleAvatar(
+                radius: 18,
+                backgroundColor: _alt,
+                child: const Icon(Icons.person, size: 20, color: AppColors.primaryBlue),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(r.customerName ?? AppStrings.t('camfixUser'),
+                    style: const TextStyle(
+                        fontWeight: FontWeight.w700, fontSize: 14)),
+              ),
+              if (r.createdAt != null)
+                Text(_dateLabel(r.createdAt!),
+                    style: TextStyle(fontSize: 11.5, color: _muted)),
+            ],
+          ),
+          const SizedBox(height: 8),
+          _starRow(r.rating.toDouble(), size: 14),
+          if ((r.comment ?? '').isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Text(r.comment!,
+                style: TextStyle(fontSize: 13, color: _text, height: 1.4)),
+          ],
+        ],
+      ),
+    );
+  }
+
+  static const List<String> _months = [
+    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+  ];
+
+  static String _dateLabel(DateTime d) =>
+      '${d.day.toString().padLeft(2, '0')} ${_months[d.month - 1]} ${d.year}';
 
   Widget _reviewCard(_Review r) {
     return Container(

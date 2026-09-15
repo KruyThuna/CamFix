@@ -1,16 +1,17 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import '../app_settings.dart';
 import '../l10n/app_strings.dart';
 import '../models/service_provider.dart';
-import '../models/tracking_info.dart';
 import '../services/bookings_store.dart';
 import '../services/current_user.dart';
+import '../services/notifications_store.dart';
+import '../services/token_store.dart';
 import '../theme/app_theme.dart';
 import '../widgets/user_avatar.dart';
 import 'main_shell.dart';
 import 'services_screen.dart';
-import 'tracking_details_sheet.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -30,16 +31,17 @@ class _ServiceItem {
 }
 
 class _Technician {
-  const _Technician(this.name, this.role, this.distance, this.lat, this.lng);
+  const _Technician(this.name, this.role, this.distanceKm, this.lat, this.lng);
   final String name;
   final String role;
-  final String distance;
+  final double distanceKm;
   final double lat;
   final double lng;
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
   int _tabIndex = 0; // 0 = Book a service, 1 = Active Job, 2 = History
+  final _scaffoldKey = GlobalKey<ScaffoldState>();
 
   final _services = const [
     _ServiceItem('svcAirConditioner', Icons.ac_unit_rounded, 'Air Conditioner'),
@@ -53,11 +55,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
   ];
 
   final _technicians = const [
-    _Technician('Rotha Brak', 'Car Repair', '1.6km Nearby', 11.5680, 104.9010),
-    _Technician(
-        'Chetra Prime', 'Air Conditioner', '2.6km Nearby', 11.5620, 104.8880),
-    _Technician('Steven', 'Electrical', '3.2km Nearby', 11.5490, 104.9160),
-    _Technician('B Sokha', 'Motorcycle', '3.6km Nearby', 11.5780, 104.9250),
+    _Technician('Rotha Brak', 'Car Repair', 1.6, 11.5680, 104.9010),
+    _Technician('Chetra Prime', 'Air Conditioner', 2.6, 11.5620, 104.8880),
+    _Technician('Steven', 'Electrical', 3.2, 11.5490, 104.9160),
+    _Technician('B Sokha', 'Motorcycle', 3.6, 11.5780, 104.9250),
   ];
 
   Timer? _clock;
@@ -84,6 +85,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
     super.initState();
     CurrentUser.instance.addListener(_onUser);
     CurrentUser.instance.refresh();
+    // Poll the backend for new booking / job notifications while signed in.
+    NotificationsStore.instance.addListener(_onUser);
+    NotificationsStore.instance.startPolling();
+    // Same for the customer's own bookings, so Active Job / History and the
+    // tracking screen reflect real status changes (a technician accepting,
+    // moving, arriving, ...).
+    BookingsStore.instance.startPolling();
     // Re-evaluate the time-of-day greeting once a minute.
     _clock = Timer.periodic(const Duration(minutes: 1), (_) {
       if (mounted) setState(() {});
@@ -94,6 +102,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   void dispose() {
     _clock?.cancel();
     CurrentUser.instance.removeListener(_onUser);
+    NotificationsStore.instance.removeListener(_onUser);
+    BookingsStore.instance.stopPolling();
     super.dispose();
   }
 
@@ -128,7 +138,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         category: t.role,
         location: 'Phnom Penh',
         rating: 4.5,
-        distanceKm: double.tryParse(t.distance.split('km').first.trim()) ?? 1.6,
+        distanceKm: t.distanceKm,
         latitude: t.lat,
         longitude: t.lng,
       ),
@@ -141,27 +151,29 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final bottomInset = MediaQuery.of(context).viewPadding.bottom;
 
     return Scaffold(
+      key: _scaffoldKey,
       backgroundColor: p.background,
-      body: Column(
-        children: [
-          _buildHeader(),
-          Expanded(
-            child: SingleChildScrollView(
-              // Nearby Technicians / Active / History sit on a white sheet
-              // that curves up right below the blue section (mockup p.10).
-              child: Container(
-                width: double.infinity,
-                constraints: BoxConstraints(
-                  minHeight: MediaQuery.of(context).size.height * 0.35,
-                ),
-                decoration: BoxDecoration(
-                  color: p.surface,
-                  borderRadius:
-                      const BorderRadius.vertical(top: Radius.circular(28)),
-                ),
-                padding: EdgeInsets.only(top: 20, bottom: 110 + bottomInset),
-                child: _buildTabContent(),
+      drawer: _buildDrawer(),
+      // A single scrollable: the blue header scrolls away together with the
+      // white sheet below it instead of staying pinned while only the sheet
+      // scrolls independently. SliverFillRemaining still makes the sheet
+      // fill the leftover viewport height when its content is short (mockup
+      // p.10's curved white sheet look), but lets the whole page scroll once
+      // the content is taller than the screen.
+      body: CustomScrollView(
+        slivers: [
+          SliverToBoxAdapter(child: _buildHeader()),
+          SliverFillRemaining(
+            hasScrollBody: false,
+            child: Container(
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: p.surface,
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(28)),
               ),
+              padding: EdgeInsets.only(top: 20, bottom: 110 + bottomInset),
+              child: _buildTabContent(),
             ),
           ),
         ],
@@ -181,7 +193,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
           children: [
             Row(
               children: [
-                _iconCircle(Icons.menu_rounded, onTap: () {}),
+                _iconCircle(Icons.menu_rounded,
+                    onTap: () => _scaffoldKey.currentState?.openDrawer()),
                 const SizedBox(width: 12),
                 Expanded(
                   child: InkWell(
@@ -189,8 +202,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     borderRadius: BorderRadius.circular(24),
                     child: Row(
                       children: [
-                        const UserAvatar(
-                            radius: 20, bgColor: AppColors.white),
+                        const UserAvatar(radius: 20, bgColor: AppColors.white),
                         const SizedBox(width: 10),
                         Expanded(
                           child: Column(
@@ -213,7 +225,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
                   ),
                 ),
-                _iconCircle(Icons.notifications_none_rounded, onTap: () {}),
+                _bellIcon(),
               ],
             ),
             const SizedBox(height: 20),
@@ -264,6 +276,47 @@ class _DashboardScreenState extends State<DashboardScreen> {
         backgroundColor: AppColors.white,
         child: Icon(icon, color: AppColors.textDark, size: 20),
       ),
+    );
+  }
+
+  /// Notifications bell with an unread-count badge.
+  Widget _bellIcon() {
+    final unread = NotificationsStore.instance.unread;
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        _iconCircle(
+          Icons.notifications_none_rounded,
+          onTap: () async {
+            await Navigator.of(context).pushNamed('/notifications');
+            NotificationsStore.instance.refresh();
+          },
+        ),
+        if (unread > 0)
+          Positioned(
+            right: -2,
+            top: -2,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+              constraints: const BoxConstraints(minWidth: 18),
+              decoration: BoxDecoration(
+                color: const Color(0xFFE23D3D),
+                borderRadius: BorderRadius.circular(9),
+                border: Border.all(color: AppColors.white, width: 1.5),
+              ),
+              child: Text(
+                unread > 9 ? '9+' : '$unread',
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: AppColors.white,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                  height: 1.3,
+                ),
+              ),
+            ),
+          ),
+      ],
     );
   }
 
@@ -363,9 +416,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     // a new booking is made.
     return AnimatedBuilder(
       animation: BookingsStore.instance,
-      builder: (context, _) => _tabIndex == 1
-          ? _buildActiveJobSection()
-          : _buildHistorySection(),
+      builder: (context, _) =>
+          _tabIndex == 1 ? _buildActiveJobSection() : _buildHistorySection(),
     );
   }
 
@@ -393,57 +445,61 @@ class _DashboardScreenState extends State<DashboardScreen> {
       onTap: () => _openTechnician(t),
       borderRadius: BorderRadius.circular(12),
       child: Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10),
-      child: Row(
-        children: [
-          CircleAvatar(
-            radius: 24,
-            backgroundColor: p.surfaceAlt,
-            child: const Icon(Icons.person, color: AppColors.primaryBlue),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        child: Row(
+          children: [
+            CircleAvatar(
+              radius: 24,
+              backgroundColor: p.surfaceAlt,
+              child: const Icon(Icons.person, color: AppColors.primaryBlue),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(t.name,
+                      style: TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 15,
+                          color: p.textPrimary)),
+                  Text(t.role,
+                      style: TextStyle(color: p.textSecondary, fontSize: 13)),
+                ],
+              ),
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Text(t.name,
-                    style: TextStyle(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 15,
-                        color: p.textPrimary)),
-                Text(t.role,
-                    style: TextStyle(color: p.textSecondary, fontSize: 13)),
+                Row(
+                  children: [
+                    Icon(Icons.location_on, size: 14, color: p.textSecondary),
+                    const SizedBox(width: 2),
+                    Text(
+                        '${AppSettings.instance.convertKm(t.distanceKm).toStringAsFixed(1)} '
+                        '${AppStrings.t(AppSettings.instance.distanceUnitKey)} '
+                        '${AppStrings.t('nearby')}',
+                        style:
+                            TextStyle(fontSize: 11.5, color: p.textSecondary)),
+                  ],
+                ),
+                const SizedBox(height: 2),
+                Row(
+                  children: [
+                    const Icon(Icons.verified_rounded,
+                        size: 13, color: AppColors.primaryBlue),
+                    const SizedBox(width: 3),
+                    Text(AppStrings.t('available'),
+                        style: const TextStyle(
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.primaryBlue)),
+                  ],
+                ),
               ],
             ),
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Row(
-                children: [
-                  Icon(Icons.location_on, size: 14, color: p.textSecondary),
-                  const SizedBox(width: 2),
-                  Text(t.distance,
-                      style: TextStyle(fontSize: 11.5, color: p.textSecondary)),
-                ],
-              ),
-              const SizedBox(height: 2),
-              Row(
-                children: [
-                  const Icon(Icons.verified_rounded,
-                      size: 13, color: AppColors.primaryBlue),
-                  const SizedBox(width: 3),
-                  Text(AppStrings.t('available'),
-                      style: const TextStyle(
-                          fontSize: 11.5,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.primaryBlue)),
-                ],
-              ),
-            ],
-          ),
-        ],
-      ),
+          ],
+        ),
       ),
     );
   }
@@ -507,8 +563,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
               padding: const EdgeInsets.only(bottom: 12),
               child: _jobCard(
                 icon: _categoryIcon(b.category),
-                onTap: () =>
-                    showTrackingDetails(context, TrackingInfo.sample),
+                onTap: () => Navigator.of(context)
+                    .pushNamed('/booking-tracking', arguments: b.id),
                 title: categoryLabel(b.category),
                 subtitle: b.whenLabel,
                 trailing: Container(
@@ -518,7 +574,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     color: AppColors.primaryBlue.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(20),
                   ),
-                  child: Text(AppStrings.t('live'),
+                  child: Text(
+                      AppStrings.t(
+                          b.status == 'REQUESTED' ? 'pending' : 'live'),
                       style: const TextStyle(
                           color: AppColors.primaryBlue,
                           fontWeight: FontWeight.w700,
@@ -557,55 +615,67 @@ class _DashboardScreenState extends State<DashboardScreen> {
             for (final b in jobs)
               Padding(
                 padding: const EdgeInsets.only(bottom: 12),
-                child: Container(
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: p.surface,
+                child: Material(
+                  color: p.surface,
+                  borderRadius: BorderRadius.circular(14),
+                  child: InkWell(
                     borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: p.border),
-                    boxShadow: [
-                      BoxShadow(
-                          color: p.shadow,
-                          blurRadius: 5,
-                          offset: const Offset(0, 1)),
-                    ],
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
+                    onTap: () => Navigator.of(context)
+                        .pushNamed('/booking-tracking', arguments: b.id),
+                    child: Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: p.border),
+                        boxShadow: [
+                          BoxShadow(
+                              color: p.shadow,
+                              blurRadius: 5,
+                              offset: const Offset(0, 1)),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _serviceIconBadge(_categoryIcon(b.category)),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(categoryLabel(b.category),
-                                    style: TextStyle(
-                                        fontWeight: FontWeight.w700,
-                                        fontSize: 15,
-                                        color: p.textPrimary)),
-                                Text(b.whenLabel,
-                                    style: TextStyle(
-                                        color: p.textSecondary,
-                                        fontSize: 12.5)),
-                              ],
-                            ),
+                          Row(
+                            children: [
+                              _serviceIconBadge(_categoryIcon(b.category)),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(categoryLabel(b.category),
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.w700,
+                                            fontSize: 15,
+                                            color: p.textPrimary)),
+                                    Text(b.whenLabel,
+                                        style: TextStyle(
+                                            color: p.textSecondary,
+                                            fontSize: 12.5)),
+                                  ],
+                                ),
+                              ),
+                              Icon(Icons.chevron_right, color: p.textSecondary),
+                            ],
                           ),
-                          Icon(Icons.chevron_right, color: p.textSecondary),
+                          const SizedBox(height: 12),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              _chipButton(AppStrings.t('reorder')),
+                              const SizedBox(width: 8),
+                              _chipButton(AppStrings.t('ratings'),
+                                  filled: false,
+                                  onTap: () => Navigator.of(context).pushNamed(
+                                      '/booking-tracking',
+                                      arguments: b.id)),
+                            ],
+                          ),
                         ],
                       ),
-                      const SizedBox(height: 12),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          _chipButton(AppStrings.t('reorder')),
-                          const SizedBox(width: 8),
-                          _chipButton(AppStrings.t('ratings'), filled: false),
-                        ],
-                      ),
-                    ],
+                    ),
                   ),
                 ),
               ),
@@ -614,8 +684,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _chipButton(String label, {bool filled = true}) {
-    return Container(
+  Widget _chipButton(String label, {bool filled = true, VoidCallback? onTap}) {
+    final chip = Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
         color: filled
@@ -631,6 +701,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
           fontWeight: FontWeight.w700,
         ),
       ),
+    );
+    if (onTap == null) return chip;
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+          borderRadius: BorderRadius.circular(20), onTap: onTap, child: chip),
     );
   }
 
@@ -716,5 +792,229 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
       ],
     );
+  }
+
+  // --- Hamburger drawer ----------------------------------------------------
+
+  Widget _buildDrawer() {
+    final p = context.pal;
+    final user = CurrentUser.instance.value;
+    return Drawer(
+      backgroundColor: p.background,
+      child: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            InkWell(
+              onTap: () {
+                Navigator.of(context).pop();
+                _openProfile();
+              },
+              child: Container(
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+                decoration:
+                    const BoxDecoration(gradient: AppColors.blueGradient),
+                child: Row(
+                  children: [
+                    const UserAvatar(radius: 26, bgColor: AppColors.white),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            user?.displayName ?? AppStrings.t('camfixUser'),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                                color: AppColors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700),
+                          ),
+                          if ((user?.email ?? '').isNotEmpty) ...[
+                            const SizedBox(height: 2),
+                            Text(
+                              user!.email,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                  color:
+                                      AppColors.white.withValues(alpha: 0.85),
+                                  fontSize: 12.5),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                    Icon(Icons.chevron_right,
+                        color: AppColors.white.withValues(alpha: 0.85)),
+                  ],
+                ),
+              ),
+            ),
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                children: [
+                  _drawerRow(
+                    icon: Icons.favorite_border_rounded,
+                    label: AppStrings.t('favorites'),
+                    onTap: () {
+                      Navigator.of(context).pop();
+                      Navigator.of(context).pushNamed('/favorites');
+                    },
+                  ),
+                  _drawerRow(
+                    icon: Icons.notifications_none_rounded,
+                    label: AppStrings.t('notifications'),
+                    onTap: () async {
+                      Navigator.of(context).pop();
+                      await Navigator.of(context).pushNamed('/notifications');
+                      NotificationsStore.instance.refresh();
+                    },
+                  ),
+                  _drawerRow(
+                    icon: Icons.help_outline_rounded,
+                    label: AppStrings.t('helpAndSupport'),
+                    onTap: () {
+                      Navigator.of(context).pop();
+                      Navigator.of(context).pushNamed('/help-support');
+                    },
+                  ),
+                  Divider(height: 24, color: p.border),
+                  _drawerLanguageRow(p),
+                  const SizedBox(height: 4),
+                  _drawerDarkModeRow(p),
+                  Divider(height: 24, color: p.border),
+                  _drawerRow(
+                    icon: Icons.logout_rounded,
+                    label: AppStrings.t('logout'),
+                    color: const Color(0xFFE5484D),
+                    onTap: () {
+                      Navigator.of(context).pop();
+                      _logout();
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _drawerRow({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+    Color? color,
+  }) {
+    final p = context.pal;
+    final tint = color ?? p.textPrimary;
+    return ListTile(
+      leading: Icon(icon, color: tint),
+      title: Text(label,
+          style: TextStyle(color: tint, fontWeight: FontWeight.w600)),
+      onTap: onTap,
+    );
+  }
+
+  Widget _drawerLanguageRow(AppPalette p) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      child: Row(
+        children: [
+          Icon(Icons.translate_rounded, color: p.textPrimary),
+          const SizedBox(width: 32),
+          Expanded(
+            child: Text(AppStrings.t('language'),
+                style: TextStyle(
+                    color: p.textPrimary, fontWeight: FontWeight.w600)),
+          ),
+          _langChip(p, AppLang.en, 'EN'),
+          const SizedBox(width: 6),
+          _langChip(p, AppLang.km, 'ខ្មែរ'),
+        ],
+      ),
+    );
+  }
+
+  Widget _langChip(AppPalette p, AppLang lang, String label) {
+    final active = AppSettings.instance.lang == lang;
+    return InkWell(
+      borderRadius: BorderRadius.circular(20),
+      onTap: () {
+        AppSettings.instance.setLang(lang);
+        setState(() {});
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: active
+              ? AppColors.primaryBlue
+              : AppColors.primaryBlue.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Text(label,
+            style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: active ? AppColors.white : AppColors.primaryBlue)),
+      ),
+    );
+  }
+
+  Widget _drawerDarkModeRow(AppPalette p) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      child: Row(
+        children: [
+          Icon(Icons.dark_mode_outlined, color: p.textPrimary),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(AppStrings.t('darkMode'),
+                style: TextStyle(
+                    color: p.textPrimary, fontWeight: FontWeight.w600)),
+          ),
+          Switch(
+            value: AppSettings.instance.isDark,
+            onChanged: (v) {
+              AppSettings.instance.setDarkMode(v);
+              setState(() {});
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _logout() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(AppStrings.t('logoutConfirmTitle')),
+        content: Text(AppStrings.t('logoutConfirmMessage')),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: Text(AppStrings.t('cancel')),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            style:
+                TextButton.styleFrom(foregroundColor: const Color(0xFFE5484D)),
+            child: Text(AppStrings.t('logout')),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
+    await TokenStore.instance.clear();
+    CurrentUser.instance.clear();
+    if (mounted) {
+      Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
+    }
   }
 }

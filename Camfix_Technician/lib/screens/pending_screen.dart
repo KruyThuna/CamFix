@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/app_strings.dart';
+import '../lang_aware.dart';
 import '../models/technician_profile.dart';
 import '../services/auth_api.dart';
 import '../services/current_technician.dart';
 import '../theme/app_theme.dart';
+import '../widgets/ui.dart';
 
 class PendingScreen extends StatefulWidget {
   const PendingScreen({super.key});
@@ -12,7 +15,8 @@ class PendingScreen extends StatefulWidget {
   State<PendingScreen> createState() => _PendingScreenState();
 }
 
-class _PendingScreenState extends State<PendingScreen> {
+class _PendingScreenState extends State<PendingScreen>
+    with LangAware<PendingScreen> {
   @override
   void initState() {
     super.initState();
@@ -48,35 +52,33 @@ class _PendingScreenState extends State<PendingScreen> {
       return (
         icon: Icons.hourglass_empty,
         color: AppColors.primaryBlue,
-        title: 'Checking your status…',
-        body: 'Pull down to refresh.',
+        title: AppStrings.t('checkingStatus'),
+        body: AppStrings.t('pullToRefresh'),
       );
     }
     if (p.isRejected) {
       return (
         icon: Icons.cancel_outlined,
         color: const Color(0xFFD13438),
-        title: 'Application not approved',
+        title: AppStrings.t('notApprovedTitle'),
         body: p.rejectionReason?.isNotEmpty == true
             ? p.rejectionReason!
-            : 'Contact CAM FIX support for details.',
+            : AppStrings.t('contactSupportDetails'),
       );
     }
     if (p.isSuspended) {
       return (
         icon: Icons.pause_circle_outline,
         color: const Color(0xFFD13438),
-        title: 'Account suspended',
-        body: 'Your technician account is currently suspended. '
-            'Contact CAM FIX support.',
+        title: AppStrings.t('accountSuspendedTitle'),
+        body: AppStrings.t('accountSuspendedBody'),
       );
     }
     return (
       icon: Icons.hourglass_top_rounded,
       color: AppColors.primaryBlue,
-      title: 'Waiting for approval',
-      body: 'An admin is reviewing your registration. You\'ll get an email '
-          'once you\'re approved — pull down to check again.',
+      title: AppStrings.t('waitingApprovalTitle'),
+      body: AppStrings.t('waitingApprovalBody'),
     );
   }
 
@@ -87,9 +89,12 @@ class _PendingScreenState extends State<PendingScreen> {
     final c = _content(profile);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('CAM FIX Technician'),
+        title: Text(AppStrings.t('camfixTechnician')),
         actions: [
-          TextButton(onPressed: _signOut, child: const Text('Sign out')),
+          const Center(child: LanguageToggle()),
+          const SizedBox(width: 4),
+          TextButton(
+              onPressed: _signOut, child: Text(AppStrings.t('signOut'))),
         ],
       ),
       body: RefreshIndicator(
@@ -114,7 +119,7 @@ class _PendingScreenState extends State<PendingScreen> {
               const SizedBox(height: 28),
               Center(
                 child: Text(
-                    '${profile.displayName} · ${profile.category}',
+                    '${profile.displayName} · ${AppStrings.category(profile.category)}',
                     style: TextStyle(color: p.textSecondary, fontSize: 13)),
               ),
             ],

@@ -111,6 +111,17 @@ class AuthApi {
     return _storeToken(json);
   }
 
+  /// `PUT /api/auth/me/password` — sets a new password for the signed-in
+  /// user. Reached after an OTP-verified "forgot password" flow (that OTP
+  /// step already stores a session token), and doubles as a plain "change
+  /// password" for anyone already signed in. Stores the refreshed token.
+  Future<String> setPassword(String newPassword) async {
+    final json = await _client.putJson('/api/auth/me/password', {
+      'newPassword': newPassword,
+    });
+    return _storeToken(json);
+  }
+
   Future<OtpRequestResult> _requestOtp(
       String path, Map<String, dynamic> body) async {
     final json = await _client.postJson(path, body);

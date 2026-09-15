@@ -29,6 +29,7 @@ class AuthApi {
     required String phoneNumber,
     required String category,
     required String serviceArea,
+    required String otpCode,
   }) async {
     final json = await _client.postJson('/api/technician/auth/register', {
       'firstName': firstName,
@@ -38,8 +39,21 @@ class AuthApi {
       'phoneNumber': phoneNumber,
       'category': category,
       'serviceArea': serviceArea,
+      'otpCode': otpCode,
     });
     return _storeToken(json);
+  }
+
+  /// Phone OTP ahead of registration - unlike [requestPhoneOtp] (shared with
+  /// phone-login), this rejects a number that's already registered so a
+  /// doomed sign-up never burns an SMS.
+  Future<OtpRequestResult> requestRegistrationOtp(String phoneNumber) async {
+    final json = await _client.postJson(
+        '/api/technician/auth/phone/request-otp', {'phoneNumber': phoneNumber});
+    return OtpRequestResult(
+      message: (json['message'] ?? 'Code sent').toString(),
+      devCode: json['devCode']?.toString(),
+    );
   }
 
   Future<String> login(String email, String password) async {

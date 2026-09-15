@@ -1,15 +1,18 @@
 package com.api.Service;
 
 import java.util.List;
+
 import com.api.dto.Request.StartCallRequest;
 import com.api.dto.Response.CallHistoryResponse;
 
+/** Bearer-token identifies the caller for every method - no raw user/technician
+ *  ids taken from the client, so one customer can't read or end another's calls. */
 public interface CallService {
-    CallHistoryResponse startCall(StartCallRequest request);
+    CallHistoryResponse startCall(String authorization, StartCallRequest request);
 
-    CallHistoryResponse endCall(Long callId);
+    CallHistoryResponse endCall(String authorization, Long callId);
 
-    List<CallHistoryResponse> getCallHistoryByUser(Long userId);
+    List<CallHistoryResponse> mine(String authorization);
 
-    List<CallHistoryResponse> getCallHistoryByTechnician(Long technicianId);
+    List<CallHistoryResponse> forTechnician(Long technicianId);
 }

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../l10n/app_strings.dart';
+import '../services/api_client.dart';
+import '../services/auth_api.dart';
 import '../theme/app_theme.dart';
 import '../widgets/app_buttons.dart';
 import '../widgets/app_text_field.dart';
@@ -17,6 +19,45 @@ class _CreateNewPasswordScreenState extends State<CreateNewPasswordScreen> {
   final _confirm = TextEditingController();
   bool _obscure1 = true;
   bool _obscure2 = true;
+  bool _saving = false;
+
+  @override
+  void dispose() {
+    _password.dispose();
+    _confirm.dispose();
+    super.dispose();
+  }
+
+  void _snack(String msg) {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(msg)));
+  }
+
+  Future<void> _save() async {
+    final password = _password.text;
+    if (password.trim().length < 6) {
+      _snack(AppStrings.t('errPasswordMin'));
+      return;
+    }
+    if (password != _confirm.text) {
+      _snack(AppStrings.t('errPasswordsDontMatch'));
+      return;
+    }
+    setState(() => _saving = true);
+    try {
+      // The email-OTP step just before this screen already signed the user
+      // in (see VerifyEmailScreen._verify), so this call is authenticated.
+      await AuthApi.instance.setPassword(password);
+      if (!mounted) return;
+      Navigator.of(context)
+          .pushNamedAndRemoveUntil('/dashboard', (route) => false);
+    } on ApiException catch (e) {
+      _snack(e.message);
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -77,9 +118,8 @@ class _CreateNewPasswordScreenState extends State<CreateNewPasswordScreen> {
               ),
               const SizedBox(height: 24),
               PrimaryButton(
-                label: AppStrings.t('save'),
-                onPressed: () => Navigator.of(context)
-                    .pushNamedAndRemoveUntil('/login', (route) => false),
+                label: _saving ? AppStrings.t('saving') : AppStrings.t('save'),
+                onPressed: _saving ? null : _save,
               ),
             ],
           ),

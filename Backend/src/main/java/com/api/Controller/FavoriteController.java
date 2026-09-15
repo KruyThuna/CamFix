@@ -1,53 +1,61 @@
 package com.api.Controller;
 
-import com.api.Entity.Favorite;
-import com.api.Service.FavoriteService;
-import lombok.RequiredArgsConstructor;
+import java.util.List;
+import java.util.Map;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
+import com.api.Service.FavoriteService;
+import com.api.dto.Request.FavoriteRequest;
+import com.api.dto.Response.FavoriteResponse;
 
+/** The signed-in customer's saved technicians (`/api/favorites/**`). */
 @RestController
-@RequestMapping("/api/v1/favorites")
-@RequiredArgsConstructor
-@CrossOrigin(origins = "*")
+@RequestMapping("/api/favorites")
 public class FavoriteController {
+
+    private static final String AUTH = "Authorization";
 
     private final FavoriteService favoriteService;
 
-    // 1. Get all favorite technicians for a specific user
-    @GetMapping("/user/{userId}")
-    public ResponseEntity<List<Favorite>> getUserFavorites(@PathVariable Long userId) {
-        List<Favorite> favorites = favoriteService.getFavoritesByUser(userId);
-        return ResponseEntity.ok(favorites);
+    public FavoriteController(FavoriteService favoriteService) {
+        this.favoriteService = favoriteService;
     }
 
-    // 2. Check if a technician is favorited by a user
-    // @GetMapping("/check")
-    // public ResponseEntity<Boolean> isFavorite(
-    // @RequestParam Long userId,
-    // @RequestParam Long technicianId) {
-    // boolean isFav = favoriteService(userId, technicianId);
-    // return ResponseEntity.ok(isFav);
-    // }
+    @GetMapping("/mine")
+    public List<FavoriteResponse> mine(@RequestHeader(value = AUTH, required = false) String auth) {
+        return favoriteService.mine(auth);
+    }
 
-    // 3. Add a technician to favorites
     @PostMapping
-    public ResponseEntity<Favorite> addFavorite(
-            @RequestParam Long userId,
-            @RequestParam Long technicianId) {
-        Favorite createdFavorite = favoriteService.addFavorite(userId, technicianId);
-        return ResponseEntity.status(HttpStatus.CREATED).body(createdFavorite);
+    public ResponseEntity<FavoriteResponse> add(
+            @RequestHeader(value = AUTH, required = false) String auth,
+            @RequestBody FavoriteRequest body) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(favoriteService.add(auth, body == null ? null : body.getTechnicianId()));
     }
 
-    // 4. Remove a technician from favorites
-    @DeleteMapping
-    public ResponseEntity<Void> removeFavorite(
-            @RequestParam Long userId,
-            @RequestParam Long technicianId) {
-        favoriteService.removeFavorite(userId, technicianId);
+    @DeleteMapping("/{technicianId}")
+    public ResponseEntity<Void> remove(
+            @RequestHeader(value = AUTH, required = false) String auth,
+            @PathVariable Long technicianId) {
+        favoriteService.remove(auth, technicianId);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{technicianId}/check")
+    public Map<String, Boolean> check(
+            @RequestHeader(value = AUTH, required = false) String auth,
+            @PathVariable Long technicianId) {
+        return Map.of("isFavorite", favoriteService.isFavorite(auth, technicianId));
     }
 }

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/app_strings.dart';
+import '../lang_aware.dart';
 import '../services/auth_api.dart';
 import '../services/current_technician.dart';
 import '../theme/app_theme.dart';
@@ -12,7 +14,7 @@ class LoginScreen extends StatefulWidget {
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginScreenState extends State<LoginScreen> with LangAware<LoginScreen> {
   final _email = TextEditingController();
   final _password = TextEditingController();
   bool _busy = false;
@@ -51,46 +53,55 @@ class _LoginScreenState extends State<LoginScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Align(
+                  alignment: Alignment.centerRight,
+                  child: const LanguageToggle()),
+              const SizedBox(height: 4),
               const Icon(Icons.handyman_rounded,
                   size: 44, color: AppColors.primaryBlue),
               const SizedBox(height: 16),
-              Text('Technician sign in',
+              Text(AppStrings.t('loginTitle'),
                   style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.w800,
                       color: p.textPrimary)),
               const SizedBox(height: 4),
-              Text('Use the email and password you registered with.',
+              Text(AppStrings.t('loginSubtitle'),
                   style: TextStyle(color: p.textSecondary)),
               const SizedBox(height: 28),
               LabeledField(
-                  label: 'Email',
+                  label: AppStrings.t('email'),
                   controller: _email,
                   keyboardType: TextInputType.emailAddress),
               LabeledField(
-                  label: 'Password', controller: _password, obscure: true),
+                  label: AppStrings.t('password'),
+                  controller: _password,
+                  obscure: true),
               const SizedBox(height: 4),
               PrimaryButton(
-                  label: 'Sign in', busy: _busy, onPressed: _submit),
+                  label: AppStrings.t('signInBtn'),
+                  busy: _busy,
+                  onPressed: _submit),
               const SizedBox(height: 12),
               Center(
                 child: TextButton(
                   onPressed: _busy
                       ? null
                       : () => Navigator.pushNamed(context, '/phone-login'),
-                  child: const Text('Sign in with a phone code instead'),
+                  child: Text(AppStrings.t('signInWithPhone')),
                 ),
               ),
               const Divider(height: 32),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text("New technician?", style: TextStyle(color: p.textSecondary)),
+                  Text(AppStrings.t('newTechnicianQ'),
+                      style: TextStyle(color: p.textSecondary)),
                   TextButton(
                     onPressed: _busy
                         ? null
                         : () => Navigator.pushNamed(context, '/register'),
-                    child: const Text('Create an account'),
+                    child: Text(AppStrings.t('createAccount')),
                   ),
                 ],
               ),

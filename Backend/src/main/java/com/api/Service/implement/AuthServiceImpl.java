@@ -25,6 +25,7 @@ import com.api.dto.Auth.LoginRequest;
 import com.api.dto.Auth.PhoneOtpRequest;
 import com.api.dto.Auth.PhoneVerifyRequest;
 import com.api.dto.Auth.RegisterRequest;
+import com.api.dto.Auth.SetPasswordRequest;
 import com.api.dto.Auth.UpdateProfileRequest;
 import com.api.dto.Auth.UserResponse;
 import com.api.exception.EmailAlreadyExistsException;
@@ -203,6 +204,21 @@ public class AuthServiceImpl implements AuthService {
             return userRepository.save(u);
         });
         return tokenFor(user, "Email login successful");
+    }
+
+    // --- Password reset / change --------------------------------------------
+
+    @Override
+    public AuthResponse setPassword(String token, SetPasswordRequest request) {
+        Users user = userFromToken(token);
+        String newPassword = request == null ? null : request.getNewPassword();
+        requireText(newPassword, "newPassword is required");
+        if (newPassword.trim().length() < 6) {
+            throw new IllegalArgumentException("newPassword must be at least 6 characters");
+        }
+        user.setPassword(passwordEncoder.encode(newPassword.trim()));
+        userRepository.save(user);
+        return tokenFor(user, "Password updated");
     }
 
     // --- Current user (bearer token) --------------------------------------

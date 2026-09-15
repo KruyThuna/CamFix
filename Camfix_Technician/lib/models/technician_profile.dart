@@ -18,6 +18,7 @@ class TechnicianProfile {
     this.lastLat,
     this.lastLng,
     this.rejectionReason,
+    this.photoUrl,
   });
 
   final int id;
@@ -37,6 +38,7 @@ class TechnicianProfile {
   final double? lastLat;
   final double? lastLng;
   final String? rejectionReason;
+  final String? photoUrl;
 
   bool get isApproved => approvalStatus == 'APPROVED';
   bool get isRejected => approvalStatus == 'REJECTED';
@@ -70,6 +72,7 @@ class TechnicianProfile {
         lastLat: (j['lastLat'] as num?)?.toDouble(),
         lastLng: (j['lastLng'] as num?)?.toDouble(),
         rejectionReason: j['rejectionReason']?.toString(),
+        photoUrl: j['photoUrl']?.toString(),
       );
 }
 

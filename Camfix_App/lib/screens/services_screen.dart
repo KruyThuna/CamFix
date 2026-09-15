@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../l10n/app_strings.dart';
 import '../models/service_provider.dart';
+import '../services/technicians_api.dart';
 import '../theme/app_theme.dart';
 import 'main_shell.dart';
 
@@ -42,214 +43,40 @@ class _ServicesScreenState extends State<ServicesScreen> {
     'Water network',
   ];
 
-  // Shop coordinates are scattered across the Phnom Penh khan named in each
-  // provider's `location`, so "Get Direction" on the detail screen draws a
-  // real route to that technician instead of the city centre.
-  static const Map<String, List<ServiceProvider>> _providersByCategory = {
-    'Air Conditioner': [
-      ServiceProvider(
-          name: 'Vanna Sok',
-          category: 'Air Conditioner',
-          location: 'SenSok, PhnomPenh',
-          rating: 4.5,
-          latitude: 11.5872,
-          longitude: 104.8951),
-      ServiceProvider(
-          name: 'Ngoun Sokrom',
-          category: 'Air Conditioner',
-          location: 'Toul Kouk, PhnomPenh',
-          rating: 4.8,
-          latitude: 11.5731,
-          longitude: 104.8983),
-      ServiceProvider(
-          name: 'Chai Bunrak',
-          category: 'Air Conditioner',
-          location: 'Toul Tompung, PhnomPenh',
-          rating: 4,
-          latitude: 11.5442,
-          longitude: 104.9065),
-      ServiceProvider(
-          name: 'Dara ChanMean',
-          category: 'Air Conditioner',
-          location: 'Toul Kouk, PhnomPenh',
-          rating: 4.3,
-          latitude: 11.5708,
-          longitude: 104.9012),
-      ServiceProvider(
-          name: 'Na ChanSok',
-          category: 'Air Conditioner',
-          location: 'SenSok, PhnomPenh',
-          rating: 4.2,
-          latitude: 11.5845,
-          longitude: 104.8994),
-    ],
-    'Car': [
-      ServiceProvider(
-          name: 'Kha Bunn',
-          category: 'Car',
-          location: 'SenSok, PhnomPenh',
-          rating: 4.5,
-          latitude: 11.5888,
-          longitude: 104.8975),
-      ServiceProvider(
-          name: 'Reak Smey',
-          category: 'Car',
-          location: 'Toul Kouk, PhnomPenh',
-          rating: 4.8,
-          latitude: 11.5716,
-          longitude: 104.8949),
-      ServiceProvider(
-          name: 'VannSak Doung',
-          category: 'Car',
-          location: 'Toul Tompung, PhnomPenh',
-          rating: 4,
-          latitude: 11.5461,
-          longitude: 104.9041),
-      ServiceProvider(
-          name: 'Mean Dara',
-          category: 'Car',
-          location: 'Toul Kouk, PhnomPenh',
-          rating: 4.3,
-          latitude: 11.5739,
-          longitude: 104.9005),
-      ServiceProvider(
-          name: 'Muo Nisey',
-          category: 'Car',
-          location: 'SenSok, PhnomPenh',
-          rating: 4.2,
-          latitude: 11.5820,
-          longitude: 104.8930),
-    ],
-    'Water network': [
-      ServiceProvider(
-          name: 'Sok Pisey',
-          category: 'Water network',
-          location: 'SenSok, PhnomPenh',
-          rating: 4.6,
-          latitude: 11.5859,
-          longitude: 104.9008),
-      ServiceProvider(
-          name: 'Chan Dara',
-          category: 'Water network',
-          location: 'Toul Kouk, PhnomPenh',
-          rating: 4.4,
-          latitude: 11.5725,
-          longitude: 104.8967),
-      ServiceProvider(
-          name: 'Long Sophea',
-          category: 'Water network',
-          location: 'Toul Tompung, PhnomPenh',
-          rating: 4.1,
-          latitude: 11.5418,
-          longitude: 104.9083),
-      ServiceProvider(
-          name: 'Kim Srey',
-          category: 'Water network',
-          location: 'Chamkarmon, PhnomPenh',
-          rating: 4.7,
-          latitude: 11.5432,
-          longitude: 104.9218),
-    ],
-    'Electrical': [
-      ServiceProvider(
-          name: 'Sok Vibol',
-          category: 'Electrical',
-          location: 'SenSok, PhnomPenh',
-          rating: 4.6,
-          latitude: 11.5836,
-          longitude: 104.8962),
-      ServiceProvider(
-          name: 'Chan Ratha',
-          category: 'Electrical',
-          location: 'Toul Kouk, PhnomPenh',
-          rating: 4.4,
-          latitude: 11.5748,
-          longitude: 104.8991),
-      ServiceProvider(
-          name: 'Pich Sambath',
-          category: 'Electrical',
-          location: 'Chamkarmon, PhnomPenh',
-          rating: 4.7,
-          latitude: 11.5409,
-          longitude: 104.9241),
-      ServiceProvider(
-          name: 'Long Dara',
-          category: 'Electrical',
-          location: 'Daun Penh, PhnomPenh',
-          rating: 4.1,
-          latitude: 11.5731,
-          longitude: 104.9258),
-    ],
-    'Appliance Repair': [
-      ServiceProvider(
-          name: 'Kong Pisey',
-          category: 'Appliance Repair',
-          location: 'SenSok, PhnomPenh',
-          rating: 4.5,
-          latitude: 11.5867,
-          longitude: 104.8939),
-      ServiceProvider(
-          name: 'Nov Sreypov',
-          category: 'Appliance Repair',
-          location: 'Toul Tompung, PhnomPenh',
-          rating: 4.3,
-          latitude: 11.5449,
-          longitude: 104.9052),
-      ServiceProvider(
-          name: 'Heng Vichea',
-          category: 'Appliance Repair',
-          location: 'Mean Chey, PhnomPenh',
-          rating: 4.6,
-          latitude: 11.5162,
-          longitude: 104.9203),
-      ServiceProvider(
-          name: 'Sam Oudom',
-          category: 'Appliance Repair',
-          location: 'Toul Kouk, PhnomPenh',
-          rating: 4.2,
-          latitude: 11.5719,
-          longitude: 104.9019),
-    ],
-    'Motorcycle': [
-      ServiceProvider(
-          name: 'Rith Sokun',
-          category: 'Motorcycle',
-          location: 'SenSok, PhnomPenh',
-          rating: 4.7,
-          latitude: 11.5841,
-          longitude: 104.8977),
-      ServiceProvider(
-          name: 'Chea Kimhong',
-          category: 'Motorcycle',
-          location: 'Chroy Changvar, PhnomPenh',
-          rating: 4.4,
-          latitude: 11.5967,
-          longitude: 104.9321),
-      ServiceProvider(
-          name: 'Vong Piseth',
-          category: 'Motorcycle',
-          location: 'Toul Kouk, PhnomPenh',
-          rating: 4.5,
-          latitude: 11.5733,
-          longitude: 104.8973),
-      ServiceProvider(
-          name: 'Meng Sovann',
-          category: 'Motorcycle',
-          location: 'Chamkarmon, PhnomPenh',
-          rating: 4,
-          latitude: 11.5421,
-          longitude: 104.9236),
-    ],
-  };
+  List<ServiceProvider> _providers = const [];
+  bool _loading = true;
+  String? _error;
 
   List<ServiceProvider> get _visibleProviders {
-    final all = _providersByCategory[_category] ?? const [];
+    final all =
+        _providers.where((p) => p.category == _category).toList();
     final q = _query.trim().toLowerCase();
     if (q.isEmpty) return all;
     return all.where((p) => p.name.toLowerCase().contains(q)).toList();
   }
 
   MainShellController? _shell;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      final list = await TechniciansApi.instance.list();
+      if (mounted) setState(() => _providers = list);
+    } catch (e) {
+      if (mounted) setState(() => _error = e.toString());
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
 
   @override
   void didChangeDependencies() {
@@ -259,7 +86,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
     if (!_appliedRouteCategory) {
       _appliedRouteCategory = true;
       final arg = ModalRoute.of(context)?.settings.arguments;
-      if (arg is String && _providersByCategory.containsKey(arg)) {
+      if (arg is String && _categories.contains(arg)) {
         _category = arg;
       }
     }
@@ -274,7 +101,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
 
   void _applyPendingCategory() {
     final cat = _shell?.pendingCategory.value;
-    if (cat != null && _providersByCategory.containsKey(cat)) {
+    if (cat != null && _categories.contains(cat)) {
       setState(() => _category = cat);
       _shell?.pendingCategory.value = null;
     }
@@ -311,17 +138,24 @@ class _ServicesScreenState extends State<ServicesScreen> {
             _buildCategoryChips(),
             const SizedBox(height: 6),
             Expanded(
-              child: providers.isEmpty
-                  ? _buildEmptyState()
-                  : ListView.separated(
-                      padding: EdgeInsets.fromLTRB(
-                          20, 8, 20, 110 + bottomInset),
-                      itemCount: providers.length,
-                      separatorBuilder: (_, __) =>
-                          const SizedBox(height: 12),
-                      itemBuilder: (context, i) =>
-                          _buildProviderCard(providers[i]),
-                    ),
+              child: RefreshIndicator(
+                onRefresh: _load,
+                child: _loading
+                    ? const Center(child: CircularProgressIndicator())
+                    : _error != null
+                        ? _buildErrorState()
+                        : providers.isEmpty
+                            ? _buildEmptyState()
+                            : ListView.separated(
+                                padding: EdgeInsets.fromLTRB(
+                                    20, 8, 20, 110 + bottomInset),
+                                itemCount: providers.length,
+                                separatorBuilder: (_, __) =>
+                                    const SizedBox(height: 12),
+                                itemBuilder: (context, i) =>
+                                    _buildProviderCard(providers[i]),
+                              ),
+              ),
             ),
           ],
         ),
@@ -330,44 +164,25 @@ class _ServicesScreenState extends State<ServicesScreen> {
   }
 
   Widget _buildHeader() {
+    final p = context.pal;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+      padding: const EdgeInsets.fromLTRB(4, 8, 4, 16),
       child: Row(
         children: [
-          _circleBackButton(),
+          IconButton(
+            onPressed: () => MainShell.of(context)?.goToTab(0),
+            icon: Icon(Icons.arrow_back, color: p.textPrimary),
+          ),
           Expanded(
             child: Center(
               child: Text(
                 AppStrings.t('navService'),
-                style: AppText.h2
-                    .copyWith(fontSize: 20, color: context.pal.textPrimary),
+                style: AppText.h2.copyWith(fontSize: 20, color: p.textPrimary),
               ),
             ),
           ),
-          const SizedBox(width: 44), // balances the back button
+          const SizedBox(width: 48),
         ],
-      ),
-    );
-  }
-
-  Widget _circleBackButton() {
-    final p = context.pal;
-    return InkWell(
-      customBorder: const CircleBorder(),
-      onTap: () {
-        if (Navigator.of(context).canPop()) Navigator.of(context).pop();
-      },
-      child: Container(
-        width: 44,
-        height: 44,
-        decoration: BoxDecoration(
-          color: p.surface,
-          shape: BoxShape.circle,
-          boxShadow: [
-            BoxShadow(color: p.shadow, blurRadius: 10, offset: const Offset(0, 4)),
-          ],
-        ),
-        child: Icon(Icons.arrow_back, color: p.textPrimary, size: 20),
       ),
     );
   }
@@ -544,6 +359,27 @@ class _ServicesScreenState extends State<ServicesScreen> {
               textAlign: TextAlign.center,
               style: TextStyle(color: p.textSecondary),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildErrorState() {
+    final p = context.pal;
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: 80),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.cloud_off_rounded, size: 40, color: p.textSecondary),
+            const SizedBox(height: 12),
+            Text(_error!,
+                textAlign: TextAlign.center,
+                style: TextStyle(color: p.textSecondary)),
+            const SizedBox(height: 12),
+            TextButton(onPressed: _load, child: Text(AppStrings.t('retry'))),
           ],
         ),
       ),

@@ -94,6 +94,51 @@ class ApiClient {
     throw ApiException(res.statusCode, msg);
   }
 
+  /// POST a `multipart/form-data` file upload (e.g. a profile photo).
+  Future<Map<String, dynamic>> postMultipart(
+    String path, {
+    required String fieldName,
+    required List<int> bytes,
+    required String filename,
+    String? contentType,
+  }) async {
+    final uri = Uri.parse('$baseUrl$path');
+    final token = await TokenStore.instance.read();
+    final request = http.MultipartRequest('POST', uri);
+    if (token != null && token.isNotEmpty) {
+      request.headers['Authorization'] = 'Bearer $token';
+    }
+    request.files.add(http.MultipartFile.fromBytes(
+      fieldName,
+      bytes,
+      filename: filename,
+      contentType: contentType == null ? null : http.MediaType.parse(contentType),
+    ));
+
+    final http.StreamedResponse streamed;
+    try {
+      streamed = await _http.send(request).timeout(const Duration(seconds: 30));
+    } on TimeoutException {
+      throw ApiException(0, 'The server at $baseUrl did not respond.');
+    } catch (e) {
+      throw ApiException(0, 'Cannot reach the server at $baseUrl. $e');
+    }
+    final res = await http.Response.fromStream(streamed);
+
+    Map<String, dynamic> json = const {};
+    if (res.body.isNotEmpty) {
+      try {
+        final decoded = jsonDecode(res.body);
+        if (decoded is Map<String, dynamic>) json = decoded;
+      } catch (_) {/* non-JSON body */}
+    }
+    if (res.statusCode >= 200 && res.statusCode < 300) return json;
+    final msg =
+        (json['message'] ?? json['error'] ?? res.reasonPhrase ?? 'Request failed')
+            .toString();
+    throw ApiException(res.statusCode, msg);
+  }
+
   Future<Map<String, String>> _headers({bool withAuth = false}) async {
     final h = <String, String>{'Content-Type': 'application/json'};
     if (withAuth) {

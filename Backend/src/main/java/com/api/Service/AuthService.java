@@ -12,6 +12,7 @@ import com.api.dto.Auth.LoginRequest;
 import com.api.dto.Auth.PhoneOtpRequest;
 import com.api.dto.Auth.PhoneVerifyRequest;
 import com.api.dto.Auth.RegisterRequest;
+import com.api.dto.Auth.SetPasswordRequest;
 import com.api.dto.Auth.UpdateProfileRequest;
 import com.api.dto.Auth.UserResponse;
 
@@ -43,6 +44,11 @@ public interface AuthService {
 
     /** Verify an email OTP; create the user on first sign-in. */
     AuthResponse verifyEmailOtp(EmailVerifyRequest request);
+
+    /** Set a new password for the bearer token's user - used to finish the
+     *  "forgot password" flow (which authenticates via email OTP first) and
+     *  doubles as a normal "change password" for any signed-in user. */
+    AuthResponse setPassword(String token, SetPasswordRequest request);
 
     List<Users> findAllUsers();
 

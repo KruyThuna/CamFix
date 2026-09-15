@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/app_strings.dart';
+import '../lang_aware.dart';
 import '../models/tech_job.dart';
 import '../services/auth_api.dart';
 import '../services/current_technician.dart';
+import '../services/device_location.dart';
 import '../services/location_reporter.dart';
+import '../services/notifications_store.dart';
 import '../services/technician_api.dart';
 import '../theme/app_theme.dart';
 import '../widgets/ui.dart';
@@ -15,7 +19,7 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen> with LangAware<HomeScreen> {
   List<TechJob>? _jobs;
   bool _loading = true;
   bool _togglingAvailability = false;
@@ -26,6 +30,8 @@ class _HomeScreenState extends State<HomeScreen> {
     CurrentTechnician.instance.addListener(_onProfile);
     CurrentTechnician.instance.refresh();
     _load();
+    NotificationsStore.instance.addListener(_onProfile);
+    NotificationsStore.instance.startPolling();
     if (CurrentTechnician.instance.value?.available == true) {
       LocationReporter.instance.start();
     }
@@ -34,6 +40,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void dispose() {
     CurrentTechnician.instance.removeListener(_onProfile);
+    NotificationsStore.instance.removeListener(_onProfile);
     super.dispose();
   }
 
@@ -58,6 +65,12 @@ class _HomeScreenState extends State<HomeScreen> {
       CurrentTechnician.instance.set(updated);
       if (value) {
         LocationReporter.instance.start();
+        // Surface a GPS / permission problem right away (the background
+        // reporter just retries silently otherwise).
+        final loc = await getCurrentLocation();
+        if (!loc.ok && mounted) {
+          showError(context, AppStrings.t(loc.errorKey!));
+        }
       } else {
         LocationReporter.instance.stop();
       }
@@ -89,20 +102,30 @@ class _HomeScreenState extends State<HomeScreen> {
       length: 2,
       child: Scaffold(
         appBar: AppBar(
-          title: Text(profile?.displayName ?? 'CAM FIX Technician'),
+          title: Text(profile?.displayName ?? AppStrings.t('camfixTechnician')),
           actions: [
+            _NotificationsBell(
+              unread: NotificationsStore.instance.unread,
+              onTap: () async {
+                await Navigator.pushNamed(context, '/notifications');
+                NotificationsStore.instance.refresh();
+              },
+            ),
             IconButton(
-              tooltip: 'Profile',
+              tooltip: AppStrings.t('tooltipProfile'),
               onPressed: () => Navigator.pushNamed(context, '/profile'),
               icon: const Icon(Icons.person_outline),
             ),
             IconButton(
-              tooltip: 'Sign out',
+              tooltip: AppStrings.t('signOut'),
               onPressed: _signOut,
               icon: const Icon(Icons.logout),
             ),
           ],
-          bottom: const TabBar(tabs: [Tab(text: 'Active'), Tab(text: 'History')]),
+          bottom: TabBar(tabs: [
+            Tab(text: AppStrings.t('tabActive')),
+            Tab(text: AppStrings.t('tabHistory')),
+          ]),
         ),
         body: Column(
           children: [
@@ -120,8 +143,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   Expanded(
                     child: Text(
                       available
-                          ? 'You\'re online — sharing your location'
-                          : 'You\'re offline',
+                          ? AppStrings.t('onlineSharingLocation')
+                          : AppStrings.t('offline'),
                       style: TextStyle(
                           fontWeight: FontWeight.w600, color: p.textPrimary),
                     ),
@@ -149,12 +172,12 @@ class _HomeScreenState extends State<HomeScreen> {
                       children: [
                         _JobList(
                             jobs: active,
-                            empty: 'No active jobs right now.',
+                            empty: AppStrings.t('noActiveJobs'),
                             onRefresh: _load,
                             onTap: _openJob),
                         _JobList(
                             jobs: history,
-                            empty: 'No past jobs yet.',
+                            empty: AppStrings.t('noPastJobs'),
                             onRefresh: _load,
                             onTap: _openJob),
                       ],
@@ -232,7 +255,7 @@ class _JobList extends StatelessWidget {
                           ],
                         ),
                         const SizedBox(height: 4),
-                        Text(j.category,
+                        Text(AppStrings.category(j.category),
                             style: TextStyle(
                                 color: p.textSecondary, fontSize: 12.5)),
                         const SizedBox(height: 8),
@@ -272,7 +295,7 @@ class _StatusChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (bg, fg) = switch (status) {
-      'IN_PROGRESS' || 'ASSIGNED' => (
+      'IN_PROGRESS' || 'ASSIGNED' || 'ON_THE_WAY' || 'ARRIVED' || 'QUOTE_PENDING' => (
           AppColors.primaryBlue.withValues(alpha: 0.12),
           AppColors.primaryBlue
         ),
@@ -286,9 +309,54 @@ class _StatusChip extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
       decoration:
           BoxDecoration(color: bg, borderRadius: BorderRadius.circular(999)),
-      child: Text(status.replaceAll('_', ' '),
+      child: Text(AppStrings.jobStatus(status),
           style: TextStyle(
               color: fg, fontSize: 11, fontWeight: FontWeight.w700)),
+    );
+  }
+}
+
+/// Bell icon with an unread-count badge for the home app bar.
+class _NotificationsBell extends StatelessWidget {
+  const _NotificationsBell({required this.unread, required this.onTap});
+  final int unread;
+  final Future<void> Function() onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        IconButton(
+          tooltip: AppStrings.t('tooltipNotifications'),
+          onPressed: onTap,
+          icon: const Icon(Icons.notifications_none_rounded),
+        ),
+        if (unread > 0)
+          Positioned(
+            right: 6,
+            top: 6,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+              constraints: const BoxConstraints(minWidth: 16),
+              decoration: BoxDecoration(
+                color: const Color(0xFFE23D3D),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.white, width: 1.5),
+              ),
+              child: Text(
+                unread > 9 ? '9+' : '$unread',
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 9,
+                  fontWeight: FontWeight.w700,
+                  height: 1.3,
+                ),
+              ),
+            ),
+          ),
+      ],
     );
   }
 }

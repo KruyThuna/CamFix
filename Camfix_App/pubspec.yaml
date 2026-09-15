@@ -27,6 +27,13 @@ dev_dependencies:
     sdk: flutter
   flutter_lints: ^3.0.0
 
+# path_provider_foundation >= 2.6.0 needs a native toolchain (Dart build hooks)
+# that isn't available on this Windows machine and hangs the build. It's a
+# macOS/iOS-only impl package, irrelevant to web/Windows. Mirrors the same pin
+# in ../Camfix_Technician/pubspec.yaml.
+dependency_overrides:
+  path_provider_foundation: 2.5.1
+
 flutter:
   uses-material-design: true
   assets:

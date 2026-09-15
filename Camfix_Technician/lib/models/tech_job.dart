@@ -24,13 +24,13 @@ class TechJob {
   final String? address;
   final double? lat;
   final double? lng;
-  final String status; // REQUESTED | ASSIGNED | IN_PROGRESS | COMPLETED | CANCELLED
+  final String status; // ASSIGNED | ON_THE_WAY | ARRIVED | QUOTE_PENDING | IN_PROGRESS | COMPLETED | CANCELLED
   final DateTime? createdAt;
   final DateTime? scheduledAt;
   final DateTime? assignedAt;
   final DateTime? completedAt;
 
-  bool get isActive => status == 'ASSIGNED' || status == 'IN_PROGRESS';
+  bool get isActive => status != 'COMPLETED' && status != 'CANCELLED';
 
   static DateTime? _date(dynamic v) =>
       v == null ? null : DateTime.tryParse(v.toString())?.toLocal();

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/app_strings.dart';
+import '../lang_aware.dart';
 import '../services/auth_api.dart';
 import '../theme/app_theme.dart';
 import '../widgets/ui.dart';
@@ -11,7 +13,8 @@ class PhoneLoginScreen extends StatefulWidget {
   State<PhoneLoginScreen> createState() => _PhoneLoginScreenState();
 }
 
-class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
+class _PhoneLoginScreenState extends State<PhoneLoginScreen>
+    with LangAware<PhoneLoginScreen> {
   final _phone = TextEditingController();
   bool _busy = false;
 
@@ -24,7 +27,7 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
   Future<void> _requestCode() async {
     final phone = _phone.text.trim();
     if (phone.isEmpty) {
-      showError(context, 'Enter your phone number');
+      showError(context, AppStrings.t('enterYourPhone'));
       return;
     }
     setState(() => _busy = true);
@@ -44,24 +47,32 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
   Widget build(BuildContext context) {
     final p = context.pal;
     return Scaffold(
-      appBar: AppBar(title: const Text('Phone sign in')),
+      appBar: AppBar(
+        title: Text(AppStrings.t('phoneSignIn')),
+        actions: const [
+          Padding(
+              padding: EdgeInsets.only(right: 8),
+              child: Center(child: LanguageToggle())),
+        ],
+      ),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                  'We\'ll text a 6-digit code to the number on your technician account.',
+              Text(AppStrings.t('phoneSignInBody'),
                   style: TextStyle(color: p.textSecondary)),
               const SizedBox(height: 24),
               LabeledField(
-                  label: 'Phone number',
+                  label: AppStrings.t('phoneNumber'),
                   controller: _phone,
                   keyboardType: TextInputType.phone),
               const SizedBox(height: 4),
               PrimaryButton(
-                  label: 'Send code', busy: _busy, onPressed: _requestCode),
+                  label: AppStrings.t('sendCode'),
+                  busy: _busy,
+                  onPressed: _requestCode),
             ],
           ),
         ),

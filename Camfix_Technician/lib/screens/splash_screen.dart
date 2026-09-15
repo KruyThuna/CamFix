@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/app_strings.dart';
 import '../services/current_technician.dart';
 import '../services/token_store.dart';
 import '../theme/app_theme.dart';
@@ -19,9 +20,9 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _boot() async {
-    await Future<void>.delayed(const Duration(milliseconds: 300));
+    await Future<void>.delayed(const Duration(milliseconds: 1200));
     if (!await TokenStore.instance.hasToken()) {
-      _go('/login');
+      _go('/language');
       return;
     }
     await CurrentTechnician.instance.refresh();
@@ -48,19 +49,19 @@ class _SplashScreenState extends State<SplashScreen> {
         alignment: Alignment.center,
         child: Column(
           mainAxisSize: MainAxisSize.min,
-          children: const [
-            Icon(Icons.handyman_rounded, size: 64, color: Colors.white),
-            SizedBox(height: 16),
-            Text('CAM FIX',
+          children: [
+            const Icon(Icons.handyman_rounded, size: 64, color: Colors.white),
+            const SizedBox(height: 16),
+            const Text('CAM FIX',
                 style: TextStyle(
                     color: Colors.white,
                     fontSize: 28,
                     fontWeight: FontWeight.w800,
                     letterSpacing: 1)),
-            Text('Technician',
-                style: TextStyle(color: Colors.white70, fontSize: 15)),
-            SizedBox(height: 28),
-            SizedBox(
+            Text(AppStrings.t('splashSubtitle'),
+                style: const TextStyle(color: Colors.white70, fontSize: 15)),
+            const SizedBox(height: 28),
+            const SizedBox(
               height: 22,
               width: 22,
               child: CircularProgressIndicator(

@@ -2,11 +2,13 @@ package com.api.exception;
 
 import java.time.Instant;
 import java.util.Map;
+import java.util.NoSuchElementException;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 /** Maps the auth service's exceptions onto proper HTTP status codes + a JSON body. */
@@ -21,6 +23,21 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(InvalidCredentialsException.class)
     public ResponseEntity<Map<String, Object>> handleBadCredentials(InvalidCredentialsException ex) {
         return build(HttpStatus.UNAUTHORIZED, ex.getMessage());
+    }
+
+    @ExceptionHandler(ForbiddenException.class)
+    public ResponseEntity<Map<String, Object>> handleForbidden(ForbiddenException ex) {
+        return build(HttpStatus.FORBIDDEN, ex.getMessage());
+    }
+
+    @ExceptionHandler(NoSuchElementException.class)
+    public ResponseEntity<Map<String, Object>> handleNoSuchElement(NoSuchElementException ex) {
+        return build(HttpStatus.NOT_FOUND, ex.getMessage());
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<Map<String, Object>> handleUploadTooLarge(MaxUploadSizeExceededException ex) {
+        return build(HttpStatus.BAD_REQUEST, "File is too large (max 5MB)");
     }
 
     @ExceptionHandler(IllegalArgumentException.class)

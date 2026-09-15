@@ -1,54 +1,104 @@
 package com.api.dto.Response;
 
-import java.time.LocalDateTime;
-
-import com.api.Entity.Technician;
-import com.api.Entity.Users;
-
 public class FavoriteResponse {
 
-    private Long favoriteId;
-    private Users users;
-    private Technician technician;
-    private LocalDateTime createAt;
+    private Long id;
+    private Long technicianId;
+    private String technicianName;
+    private String technicianPhone;
+    private String category;
+    private String serviceArea;
+    private double rating;
+    private int ratingCount;
+    private String photoUrl;
+    private boolean available;
+    private String createdAt;
 
-    public FavoriteResponse(Long favoriteId, Users users, Technician technician, LocalDateTime createAt) {
-        this.favoriteId = favoriteId;
-        this.users = users;
-        this.technician = technician;
-        this.createAt = createAt;
+    public Long getId() {
+        return id;
     }
 
-    public Long getFavoriteId() {
-        return favoriteId;
+    public void setId(Long id) {
+        this.id = id;
     }
 
-    public Users getUsers() {
-        return users;
+    public Long getTechnicianId() {
+        return technicianId;
     }
 
-    public Technician getTechnician() {
-        return technician;
+    public void setTechnicianId(Long technicianId) {
+        this.technicianId = technicianId;
     }
 
-    public LocalDateTime getCreateAt() {
-        return createAt;
+    public String getTechnicianName() {
+        return technicianName;
     }
 
-    public void setFavoriteId(Long favoriteId) {
-        this.favoriteId = favoriteId;
+    public void setTechnicianName(String technicianName) {
+        this.technicianName = technicianName;
     }
 
-    public void setUsers(Users users) {
-        this.users = users;
+    public String getTechnicianPhone() {
+        return technicianPhone;
     }
 
-    public void setTechnician(Technician technician) {
-        this.technician = technician;
+    public void setTechnicianPhone(String technicianPhone) {
+        this.technicianPhone = technicianPhone;
     }
 
-    public void setCreateAt(LocalDateTime createAt) {
-        this.createAt = createAt;
+    public String getCategory() {
+        return category;
     }
 
+    public void setCategory(String category) {
+        this.category = category;
+    }
+
+    public String getServiceArea() {
+        return serviceArea;
+    }
+
+    public void setServiceArea(String serviceArea) {
+        this.serviceArea = serviceArea;
+    }
+
+    public double getRating() {
+        return rating;
+    }
+
+    public void setRating(double rating) {
+        this.rating = rating;
+    }
+
+    public int getRatingCount() {
+        return ratingCount;
+    }
+
+    public void setRatingCount(int ratingCount) {
+        this.ratingCount = ratingCount;
+    }
+
+    public String getPhotoUrl() {
+        return photoUrl;
+    }
+
+    public void setPhotoUrl(String photoUrl) {
+        this.photoUrl = photoUrl;
+    }
+
+    public boolean isAvailable() {
+        return available;
+    }
+
+    public void setAvailable(boolean available) {
+        this.available = available;
+    }
+
+    public String getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(String createdAt) {
+        this.createdAt = createdAt;
+    }
 }

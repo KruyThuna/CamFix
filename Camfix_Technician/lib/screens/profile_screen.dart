@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 
+import '../app_settings.dart';
+import '../l10n/app_strings.dart';
+import '../lang_aware.dart';
 import '../models/technician_profile.dart';
 import '../services/current_technician.dart';
 import '../services/technician_api.dart';
 import '../theme/app_theme.dart';
 import '../widgets/ui.dart';
+import '../widgets/user_avatar.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -13,7 +17,8 @@ class ProfileScreen extends StatefulWidget {
   State<ProfileScreen> createState() => _ProfileScreenState();
 }
 
-class _ProfileScreenState extends State<ProfileScreen> {
+class _ProfileScreenState extends State<ProfileScreen>
+    with LangAware<ProfileScreen> {
   final _first = TextEditingController();
   final _last = TextEditingController();
   final _area = TextEditingController();
@@ -47,6 +52,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
     super.dispose();
   }
 
+  Future<void> _pickLocation() async {
+    final result =
+        await Navigator.of(context).pushNamed('/location-picker');
+    if (result is String && result.isNotEmpty) {
+      setState(() => _area.text = result);
+    }
+  }
+
   Future<void> _save() async {
     setState(() => _busy = true);
     try {
@@ -73,7 +86,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final profile = CurrentTechnician.instance.value;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('My profile'),
+        title: Text(AppStrings.t('myProfile')),
         actions: [
           if (!_editing)
             TextButton(
@@ -81,7 +94,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       _fill(profile);
                       _editing = true;
                     }),
-                child: const Text('Edit')),
+                child: Text(AppStrings.t('edit'))),
         ],
       ),
       body: profile == null
@@ -89,31 +102,41 @@ class _ProfileScreenState extends State<ProfileScreen> {
           : ListView(
               padding: const EdgeInsets.all(20),
               children: [
+                _buildAvatar(),
+                const SizedBox(height: 20),
                 if (!_editing) ...[
-                  _kv(context, 'Name', profile.displayName),
-                  _kv(context, 'Email', profile.email),
-                  _kv(context, 'Phone', profile.phoneNumber),
-                  _kv(context, 'Category', profile.category),
-                  _kv(context, 'Service area', profile.serviceArea),
-                  _kv(context, 'About', profile.about ?? '—'),
-                  _kv(context, 'Opening hours', profile.openingHours ?? '—'),
-                  _kv(context, 'Rating',
+                  _langRow(context),
+                  const SizedBox(height: 4),
+                  _darkRow(context),
+                  const Divider(height: 24),
+                  _kv(context, AppStrings.t('name'), profile.displayName),
+                  _kv(context, AppStrings.t('email'), profile.email),
+                  _kv(context, AppStrings.t('phone'), profile.phoneNumber),
+                  _kv(context, AppStrings.t('category'),
+                      AppStrings.category(profile.category)),
+                  _kv(context, AppStrings.t('serviceArea'), profile.serviceArea),
+                  _kv(context, AppStrings.t('about'), profile.about ?? '—'),
+                  _kv(context, AppStrings.t('openingHours'),
+                      profile.openingHours ?? '—'),
+                  _kv(context, AppStrings.t('rating'),
                       '${profile.rating.toStringAsFixed(1)} (${profile.ratingCount})'),
-                  _kv(context, 'Status',
-                      '${profile.approvalStatus} · ${profile.accountStatus}'),
+                  _kv(context, AppStrings.t('statusLabel'),
+                      '${AppStrings.approval(profile.approvalStatus)} · ${AppStrings.account(profile.accountStatus)}'),
                 ] else ...[
                   Row(children: [
                     Expanded(
                         child: LabeledField(
-                            label: 'First name', controller: _first)),
+                            label: AppStrings.t('firstName'),
+                            controller: _first)),
                     const SizedBox(width: 12),
                     Expanded(
                         child: LabeledField(
-                            label: 'Last name', controller: _last)),
+                            label: AppStrings.t('lastName'),
+                            controller: _last)),
                   ]),
                   Padding(
                     padding: const EdgeInsets.only(bottom: 6, left: 2),
-                    child: Text('Service category',
+                    child: Text(AppStrings.t('serviceCategory'),
                         style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
@@ -130,32 +153,130 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         value: _category,
                         items: [
                           for (final c in kServiceCategories)
-                            DropdownMenuItem(value: c, child: Text(c)),
+                            DropdownMenuItem(
+                                value: c, child: Text(AppStrings.category(c))),
                         ],
                         onChanged: (v) => setState(() => _category = v!),
                       ),
                     ),
                   ),
                   const SizedBox(height: 14),
-                  LabeledField(label: 'Service area', controller: _area),
                   LabeledField(
-                      label: 'About', controller: _about, maxLines: 3),
-                  LabeledField(label: 'Opening hours', controller: _hours),
+                      label: AppStrings.t('serviceArea'),
+                      controller: _area,
+                      suffixIcon: IconButton(
+                        icon: const Icon(Icons.map_outlined),
+                        tooltip: AppStrings.t('pickOnMap'),
+                        onPressed: _pickLocation,
+                      )),
+                  LabeledField(
+                      label: AppStrings.t('about'),
+                      controller: _about,
+                      maxLines: 3),
+                  LabeledField(
+                      label: AppStrings.t('openingHours'), controller: _hours),
                   const SizedBox(height: 4),
                   PrimaryButton(
-                      label: 'Save', busy: _busy, onPressed: _save),
+                      label: AppStrings.t('save'),
+                      busy: _busy,
+                      onPressed: _save),
                   const SizedBox(height: 8),
                   Center(
                     child: TextButton(
                       onPressed: _busy
                           ? null
                           : () => setState(() => _editing = false),
-                      child: const Text('Cancel'),
+                      child: Text(AppStrings.t('cancel')),
                     ),
                   ),
                 ],
               ],
             ),
+    );
+  }
+
+  Widget _buildAvatar() {
+    final p = context.pal;
+    return Center(
+      child: GestureDetector(
+        onTap: () => pickProfilePhoto(context),
+        child: SizedBox(
+          width: 92,
+          height: 92,
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              const UserAvatar(radius: 42),
+              Positioned(
+                bottom: 0,
+                right: 0,
+                child: Container(
+                  width: 28,
+                  height: 28,
+                  decoration: BoxDecoration(
+                    color: AppColors.primaryBlue,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: p.background, width: 2),
+                  ),
+                  child: const Icon(Icons.photo_camera,
+                      size: 14, color: AppColors.white),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _langRow(BuildContext context) {
+    final p = context.pal;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          Icon(Icons.language, size: 20, color: p.textSecondary),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(AppStrings.t('language'),
+                style: TextStyle(fontSize: 15, color: p.textPrimary)),
+          ),
+          SegmentedButton<AppLang>(
+            style: const ButtonStyle(
+                visualDensity: VisualDensity.compact,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap),
+            segments: const [
+              ButtonSegment(value: AppLang.en, label: Text('EN')),
+              ButtonSegment(value: AppLang.km, label: Text('ខ្មែរ')),
+            ],
+            selected: {AppSettings.instance.lang},
+            onSelectionChanged: (s) => AppSettings.instance.setLang(s.first),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _darkRow(BuildContext context) {
+    final p = context.pal;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Row(
+        children: [
+          Icon(AppSettings.instance.isDark ? Icons.dark_mode : Icons.light_mode,
+              size: 20, color: p.textSecondary),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(AppStrings.t('darkMode'),
+                style: TextStyle(fontSize: 15, color: p.textPrimary)),
+          ),
+          Switch(
+            value: AppSettings.instance.isDark,
+            activeThumbColor: AppColors.primaryBlue,
+            onChanged: (v) => AppSettings.instance.setDarkMode(v),
+          ),
+        ],
+      ),
     );
   }
 

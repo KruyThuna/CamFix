@@ -64,7 +64,10 @@ class _LoginScreenState extends State<LoginScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const AuthHeader(),
+              AuthHeader(
+                onBack: () =>
+                    Navigator.of(context).pushReplacementNamed('/language'),
+              ),
               const SizedBox(height: 44),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),

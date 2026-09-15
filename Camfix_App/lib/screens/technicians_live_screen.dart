@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 
+import '../app_settings.dart';
 import '../l10n/app_strings.dart';
 import '../models/live_technician.dart';
 import '../models/service_provider.dart';
 import '../services/current_user.dart';
 import '../theme/app_theme.dart';
+import 'services_screen.dart' show categoryLabel;
 
 /// "Nearby Technicians" live map: the current user's area plus every
 /// technician's live position. Tap a marker (or a list row) to open the
@@ -299,7 +301,7 @@ class _TechniciansLiveScreenState extends State<TechniciansLiveScreen> {
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
                       color: p.textPrimary)),
-              Text(t.category,
+              Text(categoryLabel(t.category),
                   style: TextStyle(fontSize: 12, color: p.textSecondary)),
             ],
           ),
@@ -307,7 +309,10 @@ class _TechniciansLiveScreenState extends State<TechniciansLiveScreen> {
         Column(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            Text('${t.distanceKm}km ${AppStrings.t('nearby')}',
+            Text(
+                '${AppSettings.instance.convertKm(t.distanceKm).toStringAsFixed(1)} '
+                '${AppStrings.t(AppSettings.instance.distanceUnitKey)} '
+                '${AppStrings.t('nearby')}',
                 style: TextStyle(fontSize: 11.5, color: p.textSecondary)),
             const SizedBox(height: 2),
             Row(

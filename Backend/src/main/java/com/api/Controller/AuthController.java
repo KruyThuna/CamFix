@@ -17,6 +17,7 @@ import com.api.dto.Auth.LoginRequest;
 import com.api.dto.Auth.PhoneOtpRequest;
 import com.api.dto.Auth.PhoneVerifyRequest;
 import com.api.dto.Auth.RegisterRequest;
+import com.api.dto.Auth.SetPasswordRequest;
 import com.api.dto.Auth.UpdateProfileRequest;
 import com.api.dto.Auth.UserResponse;
 
@@ -89,6 +90,13 @@ public class AuthController {
             @RequestHeader(value = "Authorization", required = false) String authorization,
             @RequestBody UpdateProfileRequest request) {
         return ResponseEntity.ok(authService.updateCurrentUser(bearer(authorization), request));
+    }
+
+    @PutMapping("/me/password")
+    public ResponseEntity<AuthResponse> setPassword(
+            @RequestHeader(value = "Authorization", required = false) String authorization,
+            @RequestBody SetPasswordRequest request) {
+        return ResponseEntity.ok(authService.setPassword(bearer(authorization), request));
     }
 
     private static String bearer(String header) {

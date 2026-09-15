@@ -3,9 +3,11 @@ import '../app_settings.dart';
 import '../l10n/app_strings.dart';
 import '../models/user_info.dart';
 import '../services/current_user.dart';
+import '../services/notifications_store.dart';
 import '../services/token_store.dart';
 import '../theme/app_theme.dart';
 import '../widgets/user_avatar.dart';
+import 'main_shell.dart';
 
 /// Profile screen (mockup pages 22–23): user summary card, quick settings
 /// (Dark Mode / Language / Notifications), a secondary settings group and
@@ -51,6 +53,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void _openEditProfile() => Navigator.of(context).pushNamed('/edit-profile');
 
   Future<void> _logout() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(AppStrings.t('logoutConfirmTitle')),
+        content: Text(AppStrings.t('logoutConfirmMessage')),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: Text(AppStrings.t('cancel')),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            style: TextButton.styleFrom(foregroundColor: const Color(0xFFE5484D)),
+            child: Text(AppStrings.t('logout')),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
     await TokenStore.instance.clear();
     CurrentUser.instance.clear();
     if (mounted) {
@@ -117,44 +139,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildHeader() {
+    final p = context.pal;
     return Row(
       children: [
-        _circleBackButton(),
+        IconButton(
+          onPressed: () => MainShell.of(context)?.goToTab(0),
+          icon: Icon(Icons.arrow_back, color: p.textPrimary),
+        ),
         Expanded(
           child: Center(
             child: Text(
               AppStrings.t('profile'),
-              style: AppText.h2.copyWith(
-                fontSize: 20,
-                color: context.pal.textPrimary,
-              ),
+              style: AppText.h2.copyWith(fontSize: 20, color: p.textPrimary),
             ),
           ),
         ),
-        const SizedBox(width: 44), // balances the back button
+        const SizedBox(width: 48),
       ],
-    );
-  }
-
-  Widget _circleBackButton() {
-    final p = context.pal;
-    return InkWell(
-      customBorder: const CircleBorder(),
-      onTap: () {
-        if (Navigator.of(context).canPop()) Navigator.of(context).pop();
-      },
-      child: Container(
-        width: 44,
-        height: 44,
-        decoration: BoxDecoration(
-          color: p.surface,
-          shape: BoxShape.circle,
-          boxShadow: [
-            BoxShadow(color: p.shadow, blurRadius: 10, offset: const Offset(0, 4)),
-          ],
-        ),
-        child: Icon(Icons.arrow_back, color: p.textPrimary, size: 20),
-      ),
     );
   }
 
@@ -304,8 +305,34 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _navRow(Icons.translate_rounded, AppStrings.t('language'),
             onTap: _pickLanguage),
         _divider(),
-        _navRow(Icons.notifications_none_rounded, AppStrings.t('notifications'),
-            onTap: () {}),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+          child: Row(
+            children: [
+              _iconBubble(Icons.notifications_none_rounded),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(AppStrings.t('notifications'),
+                    style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: p.textPrimary)),
+              ),
+              Switch(
+                value: AppSettings.instance.notificationsEnabled,
+                onChanged: (v) {
+                  AppSettings.instance.setNotificationsEnabled(v);
+                  if (v) {
+                    NotificationsStore.instance.startPolling();
+                  } else {
+                    NotificationsStore.instance.stopPolling();
+                  }
+                  setState(() {});
+                },
+              ),
+            ],
+          ),
+        ),
       ],
     );
   }
@@ -313,13 +340,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _buildMoreCard() {
     return _card(
       children: [
-        _navRow(Icons.tune_rounded, AppStrings.t('preference'), onTap: () {}),
+        _navRow(Icons.favorite_border_rounded, AppStrings.t('favorites'),
+            onTap: () => Navigator.of(context).pushNamed('/favorites')),
+        _divider(),
+        _navRow(Icons.tune_rounded, AppStrings.t('preference'),
+            onTap: () => Navigator.of(context).pushNamed('/preference')),
         _divider(),
         _navRow(Icons.privacy_tip_outlined, AppStrings.t('privacyPolicy'),
-            onTap: () {}),
+            onTap: () => Navigator.of(context).pushNamed('/privacy-policy')),
         _divider(),
         _navRow(Icons.help_outline_rounded, AppStrings.t('helpAndSupport'),
-            onTap: () {}),
+            onTap: () => Navigator.of(context).pushNamed('/help-support')),
       ],
     );
   }

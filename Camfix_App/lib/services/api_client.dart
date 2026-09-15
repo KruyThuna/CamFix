@@ -71,6 +71,43 @@ class ApiClient {
   }) =>
       _send('GET', path, withAuth: withAuth);
 
+  Future<Map<String, dynamic>> deleteJson(
+    String path, {
+    bool withAuth = true,
+  }) =>
+      _send('DELETE', path, withAuth: withAuth);
+
+  /// GET a JSON *array* endpoint. Non-2xx throws [ApiException] with the
+  /// backend's `{"message": ...}` when present.
+  Future<List<dynamic>> getJsonList(
+    String path, {
+    bool withAuth = true,
+  }) async {
+    final uri = Uri.parse('$baseUrl$path');
+    final headers = await _headers(withAuth: withAuth);
+    final http.Response res;
+    try {
+      res = await _http
+          .get(uri, headers: headers)
+          .timeout(const Duration(seconds: 15));
+    } on TimeoutException {
+      throw ApiException(0, 'The server at $baseUrl did not respond.');
+    } catch (e) {
+      throw ApiException(0, 'Cannot reach the server at $baseUrl. $e');
+    }
+    if (res.statusCode >= 200 && res.statusCode < 300) {
+      if (res.body.isEmpty) return const [];
+      final decoded = jsonDecode(res.body);
+      return decoded is List ? decoded : const [];
+    }
+    String msg = 'Request failed';
+    try {
+      final j = jsonDecode(res.body);
+      if (j is Map && j['message'] != null) msg = j['message'].toString();
+    } catch (_) {/* non-JSON body */}
+    throw ApiException(res.statusCode, msg);
+  }
+
   Future<Map<String, dynamic>> _send(
     String method,
     String path, {
@@ -84,6 +121,7 @@ class ApiClient {
       final f = switch (method) {
         'GET' => _http.get(uri, headers: headers),
         'PUT' => _http.put(uri, headers: headers, body: jsonEncode(body ?? {})),
+        'DELETE' => _http.delete(uri, headers: headers),
         _ => _http.post(uri, headers: headers, body: jsonEncode(body ?? {})),
       };
       res = await f.timeout(const Duration(seconds: 15));

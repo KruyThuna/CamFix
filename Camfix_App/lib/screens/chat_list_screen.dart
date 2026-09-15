@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../l10n/app_strings.dart';
 import '../models/chat.dart';
 import '../theme/app_theme.dart';
+import 'main_shell.dart';
 
 /// Chat list (mockup page 20): search, All / Unread filter and a list of
 /// conversations. Tapping one opens the thread at `/chat-thread`.
@@ -97,38 +98,21 @@ class _ChatListScreenState extends State<ChatListScreen> {
   Widget _buildHeader() {
     final p = context.pal;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+      padding: const EdgeInsets.fromLTRB(4, 8, 4, 16),
       child: Row(
         children: [
-          InkWell(
-            customBorder: const CircleBorder(),
-            onTap: () {
-              if (Navigator.of(context).canPop()) Navigator.of(context).pop();
-            },
-            child: Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                color: p.surface,
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                      color: p.shadow,
-                      blurRadius: 10,
-                      offset: const Offset(0, 4)),
-                ],
-              ),
-              child: Icon(Icons.arrow_back, color: p.textPrimary, size: 20),
-            ),
+          IconButton(
+            onPressed: () => MainShell.of(context)?.goToTab(0),
+            icon: Icon(Icons.arrow_back, color: p.textPrimary),
           ),
           Expanded(
             child: Center(
               child: Text(AppStrings.t('navChat'),
-                  style: AppText.h2
-                      .copyWith(fontSize: 20, color: p.textPrimary)),
+                  style:
+                      AppText.h2.copyWith(fontSize: 20, color: p.textPrimary)),
             ),
           ),
-          const SizedBox(width: 44),
+          const SizedBox(width: 48),
         ],
       ),
     );

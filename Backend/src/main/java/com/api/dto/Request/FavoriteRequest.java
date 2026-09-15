@@ -1,31 +1,13 @@
 package com.api.dto.Request;
 
-import com.api.Entity.Technician;
-import com.api.Entity.Users;
-
 public class FavoriteRequest {
-    private Users users;
-    private Technician technician;
+    private Long technicianId;
 
-    public FavoriteRequest(Users users, Technician technician) {
-        this.users = users;
-        this.technician = technician;
+    public Long getTechnicianId() {
+        return technicianId;
     }
 
-    public Users getUsers() {
-        return users;
+    public void setTechnicianId(Long technicianId) {
+        this.technicianId = technicianId;
     }
-
-    public Technician getTechnician() {
-        return technician;
-    }
-
-    public void setUsers(Users users) {
-        this.users = users;
-    }
-
-    public void setTechnician(Technician technician) {
-        this.technician = technician;
-    }
-
 }

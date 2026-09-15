@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/app_strings.dart';
+import '../lang_aware.dart';
 import '../services/auth_api.dart';
 import '../services/current_technician.dart';
 import '../theme/app_theme.dart';
@@ -13,13 +15,13 @@ class OtpScreen extends StatefulWidget {
   State<OtpScreen> createState() => _OtpScreenState();
 }
 
-class _OtpScreenState extends State<OtpScreen> {
+class _OtpScreenState extends State<OtpScreen> with LangAware<OtpScreen> {
   String _code = '';
   bool _busy = false;
 
   Future<void> _verify(String phone) async {
     if (_code.length < 6) {
-      showError(context, 'Enter the 6-digit code');
+      showError(context, AppStrings.t('enter6DigitCode'));
       return;
     }
     setState(() => _busy = true);
@@ -60,13 +62,13 @@ class _OtpScreenState extends State<OtpScreen> {
                   icon: const Icon(Icons.arrow_back, color: Colors.white),
                 ),
                 const SizedBox(height: 8),
-                const Text('Enter code',
-                    style: TextStyle(
+                Text(AppStrings.t('enterCode'),
+                    style: const TextStyle(
                         color: Colors.white,
                         fontSize: 26,
                         fontWeight: FontWeight.w800)),
                 const SizedBox(height: 6),
-                Text('Sent to $phone',
+                Text('${AppStrings.t('sentTo')} $phone',
                     style: const TextStyle(color: Colors.white70)),
                 const SizedBox(height: 28),
                 OtpBoxes(
@@ -76,13 +78,14 @@ class _OtpScreenState extends State<OtpScreen> {
                 if (devCode != null && devCode.isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.only(top: 14),
-                    child: Text('Dev mode: code $devCode filled in for you',
+                    child: Text(
+                        '${AppStrings.t('devModeCodeFilled')} ($devCode)',
                         style: const TextStyle(
                             color: Colors.white70, fontSize: 12)),
                   ),
                 const SizedBox(height: 28),
                 PrimaryButton(
-                    label: 'Verify',
+                    label: AppStrings.t('verify'),
                     busy: _busy,
                     onPressed: () => _verify(phone)),
               ],

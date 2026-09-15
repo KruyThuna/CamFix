@@ -26,6 +26,12 @@ import 'screens/chat_thread_screen.dart';
 import 'screens/profile_screen.dart';
 import 'screens/edit_profile_screen.dart';
 import 'screens/map_picker_screen.dart';
+import 'screens/notifications_screen.dart';
+import 'screens/booking_tracking_screen.dart';
+import 'screens/help_support_screen.dart';
+import 'screens/preference_screen.dart';
+import 'screens/privacy_policy_screen.dart';
+import 'screens/favorites_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -80,6 +86,12 @@ class CamFixApp extends StatelessWidget {
           '/profile': (context) => const ProfileScreen(),
           '/edit-profile': (context) => const EditProfileScreen(),
           '/map-picker': (context) => const MapPickerScreen(),
+          '/notifications': (context) => const NotificationsScreen(),
+          '/booking-tracking': (context) => const BookingTrackingScreen(),
+          '/help-support': (context) => const HelpSupportScreen(),
+          '/preference': (context) => const PreferenceScreen(),
+          '/privacy-policy': (context) => const PrivacyPolicyScreen(),
+          '/favorites': (context) => const FavoritesScreen(),
         },
       ),
     );

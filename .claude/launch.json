@@ -2,6 +2,23 @@
   "version": "0.0.1",
   "configurations": [
     {
+      "name": "api",
+      "runtimeExecutable": "C:\\Users\\USer\\team\\CamFix\\Backend\\mvnw.cmd",
+      "runtimeArgs": [
+        "spring-boot:run"
+      ],
+      "cwd": "C:\\Users\\USer\\team\\CamFix\\Backend",
+      "port": 8081,
+      "autoPort": false,
+      "env": {
+        "SPRING_DATASOURCE_PASSWORD": "",
+        "SPRING_JPA_HIBERNATE_DDL_AUTO": "update",
+        "TEXTBELT_KEY": "",
+        "APP_OTP_EXPOSE_CODE": "true",
+        "GOOGLE_CLIENT_ID": "40346879984-3duact8qmqrtj862no0tggnfh84jji7u.apps.googleusercontent.com"
+      }
+    },
+    {
       "name": "camfix-web",
       "runtimeExecutable": "flutter",
       "runtimeArgs": [
@@ -12,23 +29,44 @@
         "--web-port",
         "8090",
         "--web-hostname",
-        "127.0.0.1"
+        "127.0.0.1",
+        "--dart-define",
+        "GOOGLE_SIGNIN_CLIENT_ID=40346879984-3duact8qmqrtj862no0tggnfh84jji7u.apps.googleusercontent.com"
       ],
-      "cwd": "C:\\Cam\\Camfix_App",
+      "cwd": "C:\\Users\\USer\\team\\CamFix\\Camfix_App",
       "port": 8090
     },
     {
-      "name": "api",
-      "runtimeExecutable": "C:\\Cam\\Backend\\mvnw.cmd",
+      "name": "technician-web",
+      "runtimeExecutable": "flutter",
       "runtimeArgs": [
-        "spring-boot:run"
+        "run",
+        "-d",
+        "web-server",
+        "--release",
+        "--web-port",
+        "8092",
+        "--web-hostname",
+        "127.0.0.1",
+        "--dart-define",
+        "API_BASE_URL=http://localhost:8081"
       ],
-      "cwd": "C:\\Cam\\Backend",
-      "port": 8081,
-      "autoPort": false,
-      "env": {
-        "TEXTBELT_KEY": "textbelt"
-      }
+      "cwd": "C:\\Users\\USer\\team\\CamFix\\Camfix_Technician",
+      "port": 8092
+    },
+    {
+      "name": "admin",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev",
+        "--",
+        "--port",
+        "5173",
+        "--strictPort"
+      ],
+      "cwd": "C:\\Users\\USer\\team\\CamFix\\admin",
+      "port": 5173
     }
   ]
 }
