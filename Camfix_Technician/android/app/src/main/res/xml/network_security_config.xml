@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  DEV build: allow plain HTTP so the app can reach the Spring backend, whether
+  through the USB tunnel (adb reverse -> localhost:8081), the emulator's host
+  alias, or the PC's LAN IP over Wi-Fi.
+
+  Without this, Android 9+ blocks cleartext and every call to the http://
+  backend fails with "Cleartext HTTP traffic not permitted".
+
+  Android's config can't express a subnet, so cleartext is allowed for every
+  host. Tighten this (HTTPS only, or a fixed domain list) before shipping.
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>

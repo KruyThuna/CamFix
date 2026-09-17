@@ -47,6 +47,7 @@ class ConnectivityService extends ChangeNotifier {
   NetTransport _transport = NetTransport.none;
   bool _checking = false;
   bool _started = false;
+  Future<void>? _refreshing;
 
   NetStatus get status => _status;
   NetTransport get transport => _transport;
@@ -64,7 +65,12 @@ class ConnectivityService extends ChangeNotifier {
   /// Safe to call more than once (later calls just await the first check).
   Future<void> start() async {
     if (_started) {
-      if (_status == NetStatus.unknown) await refresh();
+      final pending = _refreshing;
+      if (pending != null) {
+        await pending;
+      } else if (_status == NetStatus.unknown) {
+        await refresh();
+      }
       return;
     }
     _started = true;
@@ -76,16 +82,25 @@ class ConnectivityService extends ChangeNotifier {
   }
 
   /// Force a fresh transport read + internet probe right now.
-  Future<void> refresh() async {
-    if (_checking) return;
+  Future<void> refresh() {
+    final pending = _refreshing;
+    if (pending != null) return pending;
+
+    final next = _runRefresh();
+    _refreshing = next;
+    return next.whenComplete(() {
+      if (identical(_refreshing, next)) _refreshing = null;
+    });
+  }
+
+  Future<void> _runRefresh() async {
     _checking = true;
     notifyListeners();
     try {
       List<ConnectivityResult> results;
       try {
-        results = await _conn
-            .checkConnectivity()
-            .timeout(const Duration(seconds: 4));
+        results =
+            await _conn.checkConnectivity().timeout(const Duration(seconds: 4));
       } catch (_) {
         results = const [ConnectivityResult.none];
       }

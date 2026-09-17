@@ -1,6 +1,6 @@
 {
-    "name": "camfix_technician",
-    "short_name": "camfix_technician",
+    "name": "CAM FIX Technician",
+    "short_name": "CAM FIX Tech",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

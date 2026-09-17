@@ -22,6 +22,7 @@ class ServiceProvider {
     this.ratingBreakdown = const [85, 9, 5, 0, 7], // % fill for 5★…1★
     this.latitude = 11.5564,
     this.longitude = 104.9282,
+    this.hasLocation = true,
   });
 
   /// Real backend id once this card comes from `GET /api/technicians`; null
@@ -42,8 +43,17 @@ class ServiceProvider {
   final String address;
 
   /// Approximate shop location, for the map preview on the detail screen.
+  /// Falls back to the Phnom Penh centre point when [hasLocation] is false -
+  /// check that flag before trusting these as a real position (e.g. before
+  /// dropping a "you'll find them here" pin on a map).
   final double latitude;
   final double longitude;
+
+  /// Whether [latitude]/[longitude] are a real reported position rather than
+  /// the fallback centre point. `GET /api/technicians` returns null lat/lng
+  /// for a technician who has never gone online - true for both technicians
+  /// in this project's seed data.
+  final bool hasLocation;
 
   /// Total number of ratings received (shown under the average score).
   final int ratingCount;
@@ -78,6 +88,7 @@ class ServiceProvider {
           : List.generate(5, (i) => i == (5 - rating.round()).clamp(0, 4) ? 100 : 0),
       latitude: (j['lat'] as num?)?.toDouble() ?? 11.5564,
       longitude: (j['lng'] as num?)?.toDouble() ?? 104.9282,
+      hasLocation: j['lat'] != null && j['lng'] != null,
     );
   }
 }

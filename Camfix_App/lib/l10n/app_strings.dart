@@ -37,6 +37,14 @@ class AppStrings {
     'search': {AppLang.en: 'Search', AppLang.km: 'ស្វែងរក'},
     'ok': {AppLang.en: 'OK', AppLang.km: 'យល់ព្រម'},
     'retry': {AppLang.en: 'Retry', AppLang.km: 'ព្យាយាមម្តងទៀត'},
+    'noTechniciansNearby': {
+      AppLang.en: 'No technicians online near you right now.',
+      AppLang.km: 'មិនមានជាងនៅជិតអ្នកទេឥឡូវនេះ។'
+    },
+    'locationUnknown': {
+      AppLang.en: 'Location not shared',
+      AppLang.km: 'មិនបានចែករំលែកទីតាំង'
+    },
     'copied': {AppLang.en: 'Copied', AppLang.km: 'បានចម្លង'},
     'changePhoto': {AppLang.en: 'Change photo', AppLang.km: 'ប្តូររូបភាព'},
     'takePhoto': {AppLang.en: 'Take photo', AppLang.km: 'ថតរូប'},

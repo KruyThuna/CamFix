@@ -3,11 +3,11 @@
   "configurations": [
     {
       "name": "api",
-      "runtimeExecutable": "C:\\Users\\USer\\team\\CamFix\\Backend\\mvnw.cmd",
+      "runtimeExecutable": "C:\\team\\Backend\\mvnw.cmd",
       "runtimeArgs": [
         "spring-boot:run"
       ],
-      "cwd": "C:\\Users\\USer\\team\\CamFix\\Backend",
+      "cwd": "C:\\team\\Backend",
       "port": 8081,
       "autoPort": false,
       "env": {
@@ -33,7 +33,7 @@
         "--dart-define",
         "GOOGLE_SIGNIN_CLIENT_ID=40346879984-3duact8qmqrtj862no0tggnfh84jji7u.apps.googleusercontent.com"
       ],
-      "cwd": "C:\\Users\\USer\\team\\CamFix\\Camfix_App",
+      "cwd": "C:\\team\\Camfix_App",
       "port": 8090
     },
     {
@@ -51,7 +51,7 @@
         "--dart-define",
         "API_BASE_URL=http://localhost:8081"
       ],
-      "cwd": "C:\\Users\\USer\\team\\CamFix\\Camfix_Technician",
+      "cwd": "C:\\team\\Camfix_Technician",
       "port": 8092
     },
     {
@@ -65,7 +65,7 @@
         "5173",
         "--strictPort"
       ],
-      "cwd": "C:\\Users\\USer\\team\\CamFix\\admin",
+      "cwd": "C:\\team\\admin",
       "port": 5173
     }
   ]

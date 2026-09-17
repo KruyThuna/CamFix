@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 
 import '../l10n/app_strings.dart';
 import '../services/connectivity_service.dart';
@@ -23,6 +24,7 @@ class _ConnectivityBannerState extends State<ConnectivityBanner> {
   final _svc = ConnectivityService.instance;
   NetStatus _prev = ConnectivityService.instance.status;
   bool _showBackOnline = false;
+  bool _rebuildScheduled = false;
   Timer? _hideTimer;
 
   @override
@@ -34,9 +36,9 @@ class _ConnectivityBannerState extends State<ConnectivityBanner> {
   void _onChange() {
     final now = _svc.status;
     if (now != _prev) {
-      final recovered = (_prev == NetStatus.offline ||
-              _prev == NetStatus.noInternet) &&
-          now == NetStatus.online;
+      final recovered =
+          (_prev == NetStatus.offline || _prev == NetStatus.noInternet) &&
+              now == NetStatus.online;
       _prev = now;
       if (recovered) {
         _showBackOnline = true;
@@ -46,7 +48,27 @@ class _ConnectivityBannerState extends State<ConnectivityBanner> {
         });
       }
     }
-    if (mounted) setState(() {});
+    _requestRebuild();
+  }
+
+  /// Connectivity checks can notify synchronously while a descendant is
+  /// mounting (the splash starts its first check from `initState`). Marking
+  /// this ancestor dirty during that build throws. Defer just that case until
+  /// the current frame is complete; asynchronous notifications can rebuild
+  /// immediately as usual.
+  void _requestRebuild() {
+    if (!mounted) return;
+    if (SchedulerBinding.instance.schedulerPhase ==
+        SchedulerPhase.persistentCallbacks) {
+      if (_rebuildScheduled) return;
+      _rebuildScheduled = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _rebuildScheduled = false;
+        if (mounted) setState(() {});
+      });
+      return;
+    }
+    setState(() {});
   }
 
   @override

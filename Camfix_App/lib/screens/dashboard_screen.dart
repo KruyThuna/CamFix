@@ -1,12 +1,15 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:latlong2/latlong.dart';
 import '../app_settings.dart';
 import '../l10n/app_strings.dart';
 import '../models/service_provider.dart';
 import '../services/bookings_store.dart';
 import '../services/current_user.dart';
+import '../services/device_location.dart';
 import '../services/notifications_store.dart';
+import '../services/technicians_api.dart';
 import '../services/token_store.dart';
 import '../theme/app_theme.dart';
 import '../widgets/user_avatar.dart';
@@ -30,15 +33,6 @@ class _ServiceItem {
   final String category;
 }
 
-class _Technician {
-  const _Technician(this.name, this.role, this.distanceKm, this.lat, this.lng);
-  final String name;
-  final String role;
-  final double distanceKm;
-  final double lat;
-  final double lng;
-}
-
 class _DashboardScreenState extends State<DashboardScreen> {
   int _tabIndex = 0; // 0 = Book a service, 1 = Active Job, 2 = History
   final _scaffoldKey = GlobalKey<ScaffoldState>();
@@ -54,12 +48,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
     _ServiceItem('svcWaterNetwork', Icons.plumbing_rounded, 'Water network'),
   ];
 
-  final _technicians = const [
-    _Technician('Rotha Brak', 'Car Repair', 1.6, 11.5680, 104.9010),
-    _Technician('Chetra Prime', 'Air Conditioner', 2.6, 11.5620, 104.8880),
-    _Technician('Steven', 'Electrical', 3.2, 11.5490, 104.9160),
-    _Technician('B Sokha', 'Motorcycle', 3.6, 11.5780, 104.9250),
-  ];
+  /// Real approved technicians from `GET /api/technicians`, fetched in
+  /// [initState]. Previously a hardcoded 4-entry list (Rotha Brak, Chetra
+  /// Prime, Steven, B Sokha) - none of them real accounts.
+  List<ServiceProvider> _technicians = const [];
+  bool _techsLoading = true;
+  LatLng? _userPos;
 
   Timer? _clock;
 
@@ -96,6 +90,39 @@ class _DashboardScreenState extends State<DashboardScreen> {
     _clock = Timer.periodic(const Duration(minutes: 1), (_) {
       if (mounted) setState(() {});
     });
+    _loadTechnicians();
+  }
+
+  /// Reads GPS (best-effort) and fetches the real approved-technician list.
+  /// A failed GPS read still shows the list - only distance figures are
+  /// affected, same fallback used by the "Nearby Technicians" map screen.
+  Future<void> _loadTechnicians() async {
+    final fix = await getCurrentLocation();
+    if (mounted && fix.ok) {
+      setState(() => _userPos = LatLng(fix.position!.latitude, fix.position!.longitude));
+    }
+    try {
+      final list = await TechniciansApi.instance.list();
+      if (!mounted) return;
+      setState(() {
+        _technicians = list;
+        _techsLoading = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _technicians = const [];
+        _techsLoading = false;
+      });
+    }
+  }
+
+  /// Real distance from the user to [t], or null when either position is
+  /// unknown.
+  double? _distanceKm(ServiceProvider t) {
+    final me = _userPos;
+    if (me == null || !t.hasLocation) return null;
+    return distanceKmBetween(me.latitude, me.longitude, t.latitude, t.longitude);
   }
 
   @override
@@ -130,19 +157,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   void _openProfile() => MainShell.of(context)?.goToTab(3);
 
   /// Open a nearby technician's profile.
-  void _openTechnician(_Technician t) {
-    Navigator.of(context).pushNamed(
-      '/provider',
-      arguments: ServiceProvider(
-        name: t.name,
-        category: t.role,
-        location: 'Phnom Penh',
-        rating: 4.5,
-        distanceKm: t.distanceKm,
-        latitude: t.lat,
-        longitude: t.lng,
-      ),
-    );
+  void _openTechnician(ServiceProvider t) {
+    Navigator.of(context).pushNamed('/provider', arguments: t);
   }
 
   @override
@@ -433,13 +449,34 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 Navigator.of(context).pushNamed('/technicians-live'),
           ),
           const SizedBox(height: 8),
-          ..._technicians.map(_technicianTile),
+          if (_techsLoading)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 20),
+              child: Center(
+                child: SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2)),
+              ),
+            )
+          else if (_technicians.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 20),
+              child: Center(
+                child: Text(AppStrings.t('noTechniciansNearby'),
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                        fontSize: 13, color: context.pal.textSecondary)),
+              ),
+            )
+          else
+            ..._technicians.map(_technicianTile),
         ],
       ),
     );
   }
 
-  Widget _technicianTile(_Technician t) {
+  Widget _technicianTile(ServiceProvider t) {
     final p = context.pal;
     return InkWell(
       onTap: () => _openTechnician(t),
@@ -463,7 +500,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           fontWeight: FontWeight.w700,
                           fontSize: 15,
                           color: p.textPrimary)),
-                  Text(t.role,
+                  Text(categoryLabel(t.category),
                       style: TextStyle(color: p.textSecondary, fontSize: 13)),
                 ],
               ),
@@ -475,25 +512,39 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   children: [
                     Icon(Icons.location_on, size: 14, color: p.textSecondary),
                     const SizedBox(width: 2),
-                    Text(
-                        '${AppSettings.instance.convertKm(t.distanceKm).toStringAsFixed(1)} '
-                        '${AppStrings.t(AppSettings.instance.distanceUnitKey)} '
-                        '${AppStrings.t('nearby')}',
-                        style:
-                            TextStyle(fontSize: 11.5, color: p.textSecondary)),
+                    Builder(builder: (_) {
+                      final km = _distanceKm(t);
+                      return Text(
+                          km != null
+                              ? '${AppSettings.instance.convertKm(km).toStringAsFixed(1)} '
+                                  '${AppStrings.t(AppSettings.instance.distanceUnitKey)} '
+                                  '${AppStrings.t('nearby')}'
+                              : AppStrings.t('locationUnknown'),
+                          style: TextStyle(
+                              fontSize: 11.5, color: p.textSecondary));
+                    }),
                   ],
                 ),
                 const SizedBox(height: 2),
                 Row(
                   children: [
-                    const Icon(Icons.verified_rounded,
-                        size: 13, color: AppColors.primaryBlue),
+                    Icon(
+                        t.available
+                            ? Icons.verified_rounded
+                            : Icons.schedule,
+                        size: 13,
+                        color: t.available
+                            ? AppColors.primaryBlue
+                            : p.textSecondary),
                     const SizedBox(width: 3),
-                    Text(AppStrings.t('available'),
-                        style: const TextStyle(
+                    Text(
+                        AppStrings.t(t.available ? 'available' : 'unavailable'),
+                        style: TextStyle(
                             fontSize: 11.5,
                             fontWeight: FontWeight.w600,
-                            color: AppColors.primaryBlue)),
+                            color: t.available
+                                ? AppColors.primaryBlue
+                                : p.textSecondary)),
                   ],
                 ),
               ],

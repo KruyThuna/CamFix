@@ -1,6 +1,6 @@
 {
-    "name": "camfix_app",
-    "short_name": "camfix_app",
+    "name": "CAM FIX",
+    "short_name": "CAM FIX",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

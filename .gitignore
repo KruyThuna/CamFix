@@ -1,0 +1,21 @@
+# Repo-wide ignores. Each app still has its own .gitignore for its toolchain;
+# this file only covers things that slipped through those and got committed.
+
+# Run / console logs. Backend/ and admin/ had no *.log rule, so outputs like
+# backend_fresh.log (~1.4 MB each, ~14 MB in total) were committed and
+# downloaded on every clone.
+*.log
+
+# JVM crash dumps written to the working directory when the backend or a
+# Gradle build runs out of memory.
+hs_err_pid*.log
+replay_pid*.log
+
+# A full clone of this repository was once copied inside itself as CamFix/,
+# which git recorded as a broken submodule (a gitlink with no .gitmodules).
+/CamFix/
+
+# OS clutter
+Thumbs.db
+desktop.ini
+.DS_Store

@@ -1,20 +1,20 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 import 'token_store.dart';
 
 /// Thin wrapper around the CAM FIX Spring Boot API.
 ///
-/// Base URL resolution (override with `--dart-define=API_BASE_URL=...`):
-///  - Android emulator  -> http://10.0.2.2:8081  (host loopback alias)
-///  - iOS sim / desktop / web -> http://localhost:8081
-///  - REAL Android/iOS device -> MUST pass your PC's LAN IP, e.g.
-///    `flutter run --dart-define=API_BASE_URL=http://192.168.x.x:8081`
-///    (10.0.2.2 / localhost do not exist on a physical phone — the request
-///    just hangs and you get "Cannot reach the server. TimeoutException".)
+/// Base URL: `http://localhost:8081` on every platform.
+///
+/// For a real device or an emulator, tunnel the port over USB first:
+///     adb reverse tcp:8081 tcp:8081
+///
+/// Only when the phone reaches the PC over Wi-Fi instead, override with the
+/// LAN IP (which also needs the firewall to allow inbound 8081):
+///     flutter run --dart-define=API_BASE_URL=http://192.168.x.x:8081
 class ApiException implements Exception {
   ApiException(this.statusCode, this.message);
   final int statusCode;
@@ -40,9 +40,11 @@ class ApiClient {
 
   String get baseUrl {
     if (_override.isNotEmpty) return _override;
-    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
-      return 'http://10.0.2.2:8081';
-    }
+    // localhost everywhere, Android included. The old Android default was
+    // 10.0.2.2 — the *emulator's* host alias — which is a dead address on a
+    // real phone, so a build made without the dart-define silently failed with
+    // "server did not respond". `adb reverse tcp:8081 tcp:8081` maps the
+    // device's localhost to this PC on emulators and real devices alike.
     return 'http://localhost:8081';
   }
 

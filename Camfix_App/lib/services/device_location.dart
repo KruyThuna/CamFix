@@ -35,3 +35,11 @@ Future<LocationResult> getCurrentLocation() async {
     return const LocationResult(errorKey: 'locationFailed');
   }
 }
+
+/// Great-circle distance in kilometres between two points. Backend
+/// `/api/technicians` doesn't compute distance itself (it's a flat list, no
+/// lat/lng query support), so "nearby" is worked out here on-device from the
+/// user's real GPS fix and each technician's real reported position.
+double distanceKmBetween(double lat1, double lng1, double lat2, double lng2) {
+  return Geolocator.distanceBetween(lat1, lng1, lat2, lng2) / 1000;
+}

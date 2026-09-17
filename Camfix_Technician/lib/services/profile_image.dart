@@ -66,13 +66,23 @@ class ProfileImage extends ChangeNotifier {
     return true;
   }
 
-  Future<void> clear() async {
+  /// Forget only the device-local copy.
+  ///
+  /// Signing out must not call [clear], because that would delete the photo
+  /// from the server as well. It must still remove these bytes, though, or a
+  /// different technician who signs in on the same device sees the previous
+  /// account's photo (the local cache takes precedence over [photoUrl]).
+  Future<void> clearLocal() async {
     _bytes = null;
     notifyListeners();
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove(_key);
     } catch (_) {}
+  }
+
+  Future<void> clear() async {
+    await clearLocal();
     try {
       final updated = await TechnicianApi.instance.deletePhoto();
       CurrentTechnician.instance.set(updated);
