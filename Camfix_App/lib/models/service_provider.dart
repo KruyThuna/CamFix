@@ -23,12 +23,17 @@ class ServiceProvider {
     this.latitude = 11.5564,
     this.longitude = 104.9282,
     this.hasLocation = true,
+    this.photoUrl,
   });
 
   /// Real backend id once this card comes from `GET /api/technicians`; null
   /// for the remaining hardcoded/demo entries elsewhere in the app (booking
   /// still works for those - it just isn't assigned to a specific technician).
   final int? technicianId;
+
+  /// Relative path (e.g. `/api/technician/1/photo`) - null if this
+  /// technician hasn't uploaded one. Prefix with [ApiClient.baseUrl] to load.
+  final String? photoUrl;
 
   final String name;
   final String category;
@@ -89,6 +94,7 @@ class ServiceProvider {
       latitude: (j['lat'] as num?)?.toDouble() ?? 11.5564,
       longitude: (j['lng'] as num?)?.toDouble() ?? 104.9282,
       hasLocation: j['lat'] != null && j['lng'] != null,
+      photoUrl: j['photoUrl']?.toString(),
     );
   }
 }

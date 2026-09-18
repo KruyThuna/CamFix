@@ -1,13 +1,11 @@
 package com.api.controller;
 
-import java.util.List;
 import java.util.Map;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import com.api.entity.Users;
 import com.api.service.AuthService;
 import com.api.dto.auth.AuthResponse;
 import com.api.dto.auth.EmailOtpRequest;
@@ -106,12 +104,5 @@ public class AuthController {
         return header.regionMatches(true, 0, "Bearer ", 0, 7)
                 ? header.substring(7).trim()
                 : header.trim();
-    }
-
-    // --- Debug --------------------------------------------------------------
-
-    @GetMapping("/users")
-    public ResponseEntity<List<Users>> getAllUsers() {
-        return ResponseEntity.ok(authService.findAllUsers());
     }
 }

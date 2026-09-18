@@ -1,14 +1,17 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+
 import '../l10n/app_strings.dart';
+import '../lang_aware.dart';
 import '../models/chat.dart';
 import '../services/chat_api.dart';
 import '../theme/app_theme.dart';
+import '../widgets/ui.dart';
 
-/// Chat thread (mockup page 21): a day divider, real incoming/outgoing
-/// message bubbles for one booking, and a composer. Polls every 5s while
-/// open so a reply shows up without leaving the screen.
+/// Chat with the customer on one job. Polls every 5s while open so a reply
+/// shows up without leaving the screen - same per-booking thread the
+/// customer app's ChatThreadScreen shows, via the same backend endpoints.
 class ChatThreadScreen extends StatefulWidget {
   const ChatThreadScreen({super.key});
 
@@ -16,11 +19,13 @@ class ChatThreadScreen extends StatefulWidget {
   State<ChatThreadScreen> createState() => _ChatThreadScreenState();
 }
 
-class _ChatThreadScreenState extends State<ChatThreadScreen> {
+class _ChatThreadScreenState extends State<ChatThreadScreen>
+    with LangAware<ChatThreadScreen> {
   final _controller = TextEditingController();
   final _scrollController = ScrollController();
 
   int? _jobId;
+  String _customerName = '';
   List<ChatMessage> _messages = const [];
   bool _loading = true;
   bool _sending = false;
@@ -30,9 +35,9 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (_jobId != null) return;
-    final thread = ModalRoute.of(context)?.settings.arguments as ChatThread?;
-    if (thread == null) return;
-    _jobId = thread.jobId;
+    final args = ModalRoute.of(context)!.settings.arguments as Map;
+    _jobId = args['jobId'] as int;
+    _customerName = (args['name'] as String?) ?? '';
     _load();
     _poll = Timer.periodic(const Duration(seconds: 5), (_) => _load(silent: true));
   }
@@ -61,7 +66,7 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _loading = false);
-      if (!silent) _snack(e.toString());
+      if (!silent) showError(context, e);
     }
   }
 
@@ -79,7 +84,7 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
     } catch (e) {
       if (!mounted) return;
       _controller.text = text;
-      _snack(e.toString());
+      showError(context, e);
     } finally {
       if (mounted) setState(() => _sending = false);
     }
@@ -100,75 +105,29 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
   @override
   Widget build(BuildContext context) {
     final p = context.pal;
-    final thread = ModalRoute.of(context)?.settings.arguments as ChatThread?;
-
     return Scaffold(
-      backgroundColor: p.background,
-      body: SafeArea(
-        child: Column(
-          children: [
-            _buildHeader(thread),
-            Expanded(
-              child: _loading
-                  ? const Center(
-                      child: SizedBox(
-                          width: 22,
-                          height: 22,
-                          child: CircularProgressIndicator(strokeWidth: 2)))
-                  : _messages.isEmpty
-                      ? Center(
-                          child: Text(AppStrings.t('sayHello'),
-                              style: TextStyle(color: p.textSecondary)),
-                        )
-                      : ListView(
-                          controller: _scrollController,
-                          padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-                          children: [
-                            _dayDivider(AppStrings.t('today')),
-                            const SizedBox(height: 8),
-                            ..._messages.map(_messageRow),
-                          ],
-                        ),
-            ),
-            _buildComposer(),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildHeader(ChatThread? c) {
-    final p = context.pal;
-    return Container(
-      padding: const EdgeInsets.fromLTRB(8, 6, 8, 10),
-      decoration: BoxDecoration(
-        color: p.surface,
-        boxShadow: [
-          BoxShadow(color: p.shadow, blurRadius: 8, offset: const Offset(0, 2)),
-        ],
-      ),
-      child: Row(
+      appBar: AppBar(title: Text(_customerName)),
+      body: Column(
         children: [
-          IconButton(
-            onPressed: () {
-              if (Navigator.of(context).canPop()) Navigator.of(context).pop();
-            },
-            icon: Icon(Icons.arrow_back, color: p.textPrimary, size: 22),
-          ),
-          CircleAvatar(
-            radius: 18,
-            backgroundColor: p.surfaceAlt,
-            child: const Icon(Icons.person,
-                color: AppColors.primaryBlue, size: 20),
-          ),
-          const SizedBox(width: 10),
           Expanded(
-            child: Text(c?.otherPartyName ?? '',
-                style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    color: p.textPrimary)),
+            child: _loading
+                ? const Center(child: CircularProgressIndicator())
+                : _messages.isEmpty
+                    ? Center(
+                        child: Text(AppStrings.t('sayHello'),
+                            style: TextStyle(color: p.textSecondary)),
+                      )
+                    : ListView(
+                        controller: _scrollController,
+                        padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+                        children: [
+                          _dayDivider(AppStrings.t('today')),
+                          const SizedBox(height: 8),
+                          ..._messages.map(_messageRow),
+                        ],
+                      ),
           ),
+          _buildComposer(),
         ],
       ),
     );
@@ -183,13 +142,11 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
           color: p.surfaceAlt,
           borderRadius: BorderRadius.circular(20),
         ),
-        child: Text(
-          label,
-          style: TextStyle(
-              fontSize: 11.5,
-              fontWeight: FontWeight.w600,
-              color: p.textSecondary),
-        ),
+        child: Text(label,
+            style: TextStyle(
+                fontSize: 11.5,
+                fontWeight: FontWeight.w600,
+                color: p.textSecondary)),
       ),
     );
   }
@@ -243,7 +200,8 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
   Widget _buildComposer() {
     final p = context.pal;
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),
+      padding: EdgeInsets.fromLTRB(
+          16, 10, 16, 12 + MediaQuery.of(context).viewInsets.bottom),
       decoration: BoxDecoration(
         color: p.surface,
         boxShadow: [
@@ -251,55 +209,49 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
               color: p.shadow, blurRadius: 12, offset: const Offset(0, -4)),
         ],
       ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Container(
-              decoration: BoxDecoration(
-                color: p.surfaceAlt,
-                borderRadius: BorderRadius.circular(24),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: TextField(
-                controller: _controller,
-                textInputAction: TextInputAction.send,
-                onSubmitted: (_) => _send(),
-                style: TextStyle(fontSize: 14, color: p.textPrimary),
-                decoration: InputDecoration(
-                  hintText: AppStrings.t('messageField'),
-                  hintStyle: TextStyle(color: p.textSecondary, fontSize: 14),
-                  border: InputBorder.none,
-                  contentPadding: const EdgeInsets.symmetric(vertical: 12),
+      child: SafeArea(
+        top: false,
+        child: Row(
+          children: [
+            Expanded(
+              child: Container(
+                decoration: BoxDecoration(
+                  color: p.surfaceAlt,
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: TextField(
+                  controller: _controller,
+                  textInputAction: TextInputAction.send,
+                  onSubmitted: (_) => _send(),
+                  style: TextStyle(fontSize: 14, color: p.textPrimary),
+                  decoration: InputDecoration(
+                    hintText: AppStrings.t('messageField'),
+                    hintStyle: TextStyle(color: p.textSecondary, fontSize: 14),
+                    border: InputBorder.none,
+                    contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
                 ),
               ),
             ),
-          ),
-          const SizedBox(width: 10),
-          GestureDetector(
-            onTap: _sending ? null : _send,
-            child: Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                color: AppColors.primaryBlue.withValues(alpha: _sending ? 0.5 : 1),
-                shape: BoxShape.circle,
+            const SizedBox(width: 10),
+            GestureDetector(
+              onTap: _sending ? null : _send,
+              child: Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: AppColors.primaryBlue
+                      .withValues(alpha: _sending ? 0.5 : 1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.send_rounded,
+                    color: AppColors.white, size: 20),
               ),
-              child: const Icon(Icons.send_rounded,
-                  color: AppColors.white, size: 20),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
-  }
-
-  void _snack(String message) {
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(
-        content: Text(message),
-        behavior: SnackBarBehavior.floating,
-        duration: const Duration(seconds: 2),
-      ));
   }
 }

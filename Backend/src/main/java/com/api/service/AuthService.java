@@ -1,9 +1,7 @@
 package com.api.service;
 
-import java.util.List;
 import java.util.Map;
 
-import com.api.entity.Users;
 import com.api.dto.auth.AuthResponse;
 import com.api.dto.auth.EmailOtpRequest;
 import com.api.dto.auth.EmailVerifyRequest;
@@ -49,7 +47,5 @@ public interface AuthService {
      *  "forgot password" flow (which authenticates via email OTP first) and
      *  doubles as a normal "change password" for any signed-in user. */
     AuthResponse setPassword(String token, SetPasswordRequest request);
-
-    List<Users> findAllUsers();
 
 }

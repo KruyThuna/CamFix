@@ -7,6 +7,8 @@ import '../l10n/app_strings.dart';
 import '../models/chat.dart';
 import '../models/review.dart';
 import '../models/service_provider.dart';
+import '../services/api_client.dart';
+import '../services/bookings_api.dart';
 import '../services/favorites_api.dart';
 import '../services/technicians_api.dart';
 import '../theme/app_theme.dart';
@@ -171,6 +173,11 @@ class _ProviderDetailScreenState extends State<ProviderDetailScreen> {
   bool? _isFavorite;
   bool _favoriteBusy = false;
 
+  /// Freshly fetched on open so edits the technician made after the calling
+  /// screen's list was loaded (dashboard/services - which can stay alive in
+  /// memory for a long time) still show up here instead of stale nav-arg data.
+  ServiceProvider? _freshProvider;
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -179,8 +186,18 @@ class _ProviderDetailScreenState extends State<ProviderDetailScreen> {
     final id = (arg ?? _fallback).technicianId;
     if (id == null) return;
     _technicianId = id;
+    _loadProvider(id);
     _loadReviews(id);
     _loadFavoriteStatus(id);
+  }
+
+  Future<void> _loadProvider(int technicianId) async {
+    try {
+      final fresh = await TechniciansApi.instance.get(technicianId);
+      if (mounted) setState(() => _freshProvider = fresh);
+    } catch (_) {
+      // Fall back to whatever the calling screen passed in.
+    }
   }
 
   Future<void> _loadReviews(int technicianId) async {
@@ -257,24 +274,42 @@ class _ProviderDetailScreenState extends State<ProviderDetailScreen> {
     Navigator.of(context).pushNamed('/directions', arguments: p);
   }
 
-  /// Open a chat thread with this technician.
-  void _openChat(ServiceProvider p) {
-    Navigator.of(context).pushNamed(
-      '/chat-thread',
-      arguments: ChatContact(
-        name: p.name,
-        lastMessage: '',
-        time: '',
-        online: p.available,
-      ),
-    );
+  /// Open a chat thread with this technician - chat is per-booking, so this
+  /// finds the customer's most recent booking with them rather than starting
+  /// a conversation with no job to anchor it to.
+  Future<void> _openChat(ServiceProvider p) async {
+    final technicianId = p.technicianId;
+    if (technicianId == null) return;
+    try {
+      final bookings = await BookingsApi.instance.listMine();
+      final withThisTech = bookings.where((b) => b.technicianId == technicianId).toList()
+        ..sort((a, b) =>
+            (b.createdAt ?? DateTime(0)).compareTo(a.createdAt ?? DateTime(0)));
+      if (withThisTech.isEmpty) {
+        if (mounted) _snack(AppStrings.t('bookFirstToChat'));
+        return;
+      }
+      final booking = withThisTech.first;
+      if (!mounted) return;
+      Navigator.of(context).pushNamed(
+        '/chat-thread',
+        arguments: ChatThread(
+          jobId: booking.id,
+          otherPartyName: p.name,
+          category: booking.category,
+          status: booking.status,
+        ),
+      );
+    } catch (e) {
+      if (mounted) _snack(e.toString());
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final provider =
-        ModalRoute.of(context)?.settings.arguments as ServiceProvider? ??
-            _fallback;
+    final provider = _freshProvider ??
+        (ModalRoute.of(context)?.settings.arguments as ServiceProvider? ??
+            _fallback);
     final distance =
         '${AppSettings.instance.convertKm(provider.distanceKm).toStringAsFixed(1)} '
         '${AppStrings.t(AppSettings.instance.distanceUnitKey)}';
@@ -376,7 +411,12 @@ class _ProviderDetailScreenState extends State<ProviderDetailScreen> {
             CircleAvatar(
               radius: 44,
               backgroundColor: _alt,
-              child: const Icon(Icons.person, size: 46, color: AppColors.primaryBlue),
+              backgroundImage: (p.photoUrl?.isNotEmpty ?? false)
+                  ? NetworkImage('${ApiClient.instance.baseUrl}${p.photoUrl}')
+                  : null,
+              child: (p.photoUrl?.isNotEmpty ?? false)
+                  ? null
+                  : const Icon(Icons.person, size: 46, color: AppColors.primaryBlue),
             ),
             const SizedBox(height: 10),
             Container(

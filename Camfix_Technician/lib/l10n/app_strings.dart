@@ -349,6 +349,15 @@ class AppStrings {
     'apREJECTED': {AppLang.en: 'Rejected', AppLang.km: 'បានបដិសេធ'},
     'acACTIVE': {AppLang.en: 'Active', AppLang.km: 'សកម្ម'},
     'acSUSPENDED': {AppLang.en: 'Suspended', AppLang.km: 'ត្រូវបានផ្អាក'},
+
+    // --- Chat -------------------------------------------------------------
+    'message': {AppLang.en: 'Message', AppLang.km: 'សារ'},
+    'messageField': {AppLang.en: 'Message', AppLang.km: 'សារ'},
+    'today': {AppLang.en: 'Today', AppLang.km: 'ថ្ងៃនេះ'},
+    'sayHello': {
+      AppLang.en: 'No messages yet - say hello!',
+      AppLang.km: 'មិនទាន់មានសារទេ - សូមសួរសុខទុក្ខ!',
+    },
   };
 
   /// Localised approval status (PENDING/APPROVED/REJECTED).

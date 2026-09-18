@@ -101,9 +101,22 @@ class _JobDetailScreenState extends State<JobDetailScreen>
     final j = _job;
     return Scaffold(
       appBar: AppBar(
-          title: Text(j == null
-              ? AppStrings.t('job')
-              : '${AppStrings.t('jobHash')}${j.id}')),
+        title: Text(j == null
+            ? AppStrings.t('job')
+            : '${AppStrings.t('jobHash')}${j.id}'),
+        actions: j == null
+            ? null
+            : [
+                IconButton(
+                  tooltip: AppStrings.t('message'),
+                  icon: const Icon(Icons.chat_bubble_outline_rounded),
+                  onPressed: () => Navigator.of(context).pushNamed(
+                    '/chat-thread',
+                    arguments: {'jobId': j.id, 'name': j.customerName},
+                  ),
+                ),
+              ],
+      ),
       body: _loading || j == null
           ? const Center(child: CircularProgressIndicator())
           : ListView(

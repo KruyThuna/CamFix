@@ -35,6 +35,7 @@ public class NotificationDispatcher {
     public static final String QUOTE_ACCEPTED = "QUOTE_ACCEPTED";
     public static final String QUOTE_REJECTED = "QUOTE_REJECTED";
     public static final String REVIEW_SUBMITTED = "REVIEW_SUBMITTED";
+    public static final String NEW_CHAT_MESSAGE = "NEW_CHAT_MESSAGE";
 
     private final NotificationRepository notificationRepository;
     private final UserRepository userRepository;
@@ -224,6 +225,20 @@ public class NotificationDispatcher {
                 nz(job.getCustomerName()) + " rated your " + cat + " job " + stars + ".",
                 "ការវាយតម្លៃថ្មី",
                 nz(job.getCustomerName()) + " បានវាយតម្លៃការងារ " + kmCategory(cat) + " របស់អ្នក " + stars + "។");
+    }
+
+    /** [senderName] sent a chat message about [job] - tell [recipientUserId]. */
+    public void newChatMessage(Long recipientUserId, Job job, String senderName, String text) {
+        if (recipientUserId == null) {
+            return;
+        }
+        String cat = nz(job.getCategory());
+        String preview = text == null ? "" : (text.length() > 80 ? text.substring(0, 80) + "…" : text);
+        push(recipientUserId, NEW_CHAT_MESSAGE, job.getId(),
+                "New message from " + senderName,
+                preview,
+                "សារថ្មីពី " + senderName,
+                preview);
     }
 
     /** English category name -> Khmer, for the {@code *Km} notification copy.

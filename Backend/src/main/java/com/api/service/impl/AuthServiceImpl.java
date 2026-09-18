@@ -3,7 +3,6 @@ package com.api.service.impl;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -72,7 +71,7 @@ public class AuthServiceImpl implements AuthService {
         String localPart = email.contains("@") ? email.substring(0, email.indexOf('@')) : email;
         String phone = isBlank(request.getPhoneNumber())
                 ? "email:" + email
-                : request.getPhoneNumber().trim();
+                : com.api.util.PhoneNumbers.canonicalize(request.getPhoneNumber());
 
         Users user = new Users();
         user.setFirstName(blankTo(request.getFirstName(), localPart));
@@ -239,7 +238,7 @@ public class AuthServiceImpl implements AuthService {
                 user.setLastName(request.getLastName().trim());
             }
             if (!isBlank(request.getPhoneNumber())) {
-                String phone = request.getPhoneNumber().trim();
+                String phone = com.api.util.PhoneNumbers.canonicalize(request.getPhoneNumber());
                 if (!phone.equals(user.getPhoneNumber())
                         && userRepository.existsByPhoneNumber(phone)) {
                     throw new IllegalArgumentException("Phone number already in use");
@@ -275,10 +274,6 @@ public class AuthServiceImpl implements AuthService {
         return body;
     }
 
-    @Override
-    public List<Users> findAllUsers() {
-        return userRepository.findAll();
-    }
 
     private AuthResponse tokenFor(Users user, String message) {
         return new AuthResponse(message, jwtService.generateToken(user.getEmail()));
@@ -296,10 +291,8 @@ public class AuthServiceImpl implements AuthService {
      *  that isn't a plausible mobile number so no OTP is sent to junk. */
     private static String normalisePhone(String raw) {
         requireText(raw, "phoneNumber is required");
-        String trimmed = raw.trim();
-        String digits = trimmed.replaceAll("\\D", "");
-        String canonical = trimmed.startsWith("+") ? "+" + digits : digits;
-        assertPlausiblePhone(digits);
+        String canonical = com.api.util.PhoneNumbers.canonicalize(raw);
+        assertPlausiblePhone(canonical.substring(1));
         return canonical;
     }
 

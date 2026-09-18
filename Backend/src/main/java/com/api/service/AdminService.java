@@ -1,6 +1,7 @@
 package com.api.service;
 
 import java.math.BigDecimal;
+import java.security.SecureRandom;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
@@ -28,10 +29,12 @@ import com.api.repository.UserRepository;
 import com.api.security.JwtService;
 import com.api.dto.admin.AdminJobRequest;
 import com.api.dto.admin.AdminJobResponse;
+import com.api.dto.admin.AdminPasswordResetResponse;
 import com.api.dto.admin.AdminTechnicianRequest;
 import com.api.dto.admin.AdminTechnicianResponse;
 import com.api.dto.admin.DashboardStatsResponse;
 import com.api.dto.admin.TechnicianLocationResponse;
+import com.api.dto.auth.UserResponse;
 import com.api.exception.EmailAlreadyExistsException;
 import com.api.exception.ForbiddenException;
 import com.api.exception.InvalidCredentialsException;
@@ -201,7 +204,7 @@ public class AdminService {
         requireText(req.getServiceArea(), "serviceArea is required");
 
         String email = req.getEmail().trim().toLowerCase(Locale.ROOT);
-        String phone = req.getPhoneNumber().trim();
+        String phone = com.api.util.PhoneNumbers.canonicalize(req.getPhoneNumber());
         if (userRepository.existsByEmail(email)) {
             throw new EmailAlreadyExistsException("Email already registered: " + email);
         }
@@ -249,7 +252,7 @@ public class AdminService {
             user.setEmail(email);
         }
         if (!isBlank(req.getPhoneNumber())) {
-            String phone = req.getPhoneNumber().trim();
+            String phone = com.api.util.PhoneNumbers.canonicalize(req.getPhoneNumber());
             if (!phone.equals(user.getPhoneNumber()) && userRepository.existsByPhoneNumber(phone)) {
                 throw new IllegalArgumentException("Phone number already in use: " + phone);
             }
@@ -309,6 +312,52 @@ public class AdminService {
         tech.getUsers().setStatus(STATUS_ACTIVE);
         userRepository.save(tech.getUsers());
         return toDto(tech);
+    }
+
+    // --- Users ---------------------------------------------------------------
+
+    @Transactional(readOnly = true)
+    public List<UserResponse> listUsers(String role, String q) {
+        String needle = q == null ? "" : q.trim().toLowerCase(Locale.ROOT);
+        return userRepository.findAll().stream()
+                .filter(u -> isBlank(role) || role.equalsIgnoreCase(u.getRole()))
+                .filter(u -> needle.isEmpty() || matchesUser(u, needle))
+                .sorted((a, b) -> Long.compare(nz(a.getUserId()), nz(b.getUserId())))
+                .map(UserResponse::from)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Sets a fresh random password on the target user and returns it in plain
+     * text exactly once, so the admin can relay it out of band. There's no
+     * "must change password on next login" flag wired up in this schema, so
+     * the user keeps this password until they change it themselves.
+     */
+    public AdminPasswordResetResponse resetUserPassword(Long id) {
+        Users user = userRepository.findById(id)
+                .orElseThrow(() -> new NoSuchElementException("User not found: " + id));
+        String temporaryPassword = generateTemporaryPassword();
+        user.setPassword(passwordEncoder.encode(temporaryPassword));
+        userRepository.save(user);
+        return new AdminPasswordResetResponse(user.getUserId(), user.getEmail(), temporaryPassword);
+    }
+
+    private static final SecureRandom RANDOM = new SecureRandom();
+    private static final String PASSWORD_ALPHABET =
+            "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%";
+
+    private static String generateTemporaryPassword() {
+        StringBuilder sb = new StringBuilder(12);
+        for (int i = 0; i < 12; i++) {
+            sb.append(PASSWORD_ALPHABET.charAt(RANDOM.nextInt(PASSWORD_ALPHABET.length())));
+        }
+        return sb.toString();
+    }
+
+    private static boolean matchesUser(Users u, String needle) {
+        return contains(nullToEmpty(u.getFirstName()) + " " + nullToEmpty(u.getLastName()), needle)
+                || contains(u.getEmail(), needle)
+                || contains(u.getPhoneNumber(), needle);
     }
 
     // --- Jobs --------------------------------------------------------------

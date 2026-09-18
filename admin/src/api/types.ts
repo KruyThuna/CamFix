@@ -115,3 +115,9 @@ export interface UserInfo {
   status: string;
   dateOfBirth: string | null;
 }
+
+export interface PasswordResetResult {
+  userId: number;
+  email: string;
+  temporaryPassword: string;
+}

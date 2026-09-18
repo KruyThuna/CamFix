@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'app_settings.dart';
 import 'services/profile_image.dart';
+import 'screens/chat_thread_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/job_detail_screen.dart';
 import 'screens/language_screen.dart';
@@ -49,6 +50,7 @@ class CamFixTechApp extends StatelessWidget {
           '/pending': (_) => const PendingScreen(),
           '/home': (_) => const HomeScreen(),
           '/job': (_) => const JobDetailScreen(),
+          '/chat-thread': (_) => const ChatThreadScreen(),
           '/profile': (_) => const ProfileScreen(),
           '/notifications': (_) => const NotificationsScreen(),
           '/location-picker': (_) => const LocationPickerScreen(),

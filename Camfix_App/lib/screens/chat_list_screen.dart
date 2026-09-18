@@ -1,11 +1,16 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import '../l10n/app_strings.dart';
 import '../models/chat.dart';
+import '../services/chat_api.dart';
 import '../theme/app_theme.dart';
 import 'main_shell.dart';
+import 'services_screen.dart' show categoryLabel;
 
-/// Chat list (mockup page 20): search, All / Unread filter and a list of
-/// conversations. Tapping one opens the thread at `/chat-thread`.
+/// Chat list (mockup page 20): search and a list of real per-booking
+/// conversations, polled every 15s so a new reply shows up without a manual
+/// refresh (same pattern as BookingsStore/NotificationsStore).
 class ChatListScreen extends StatefulWidget {
   const ChatListScreen({super.key});
 
@@ -16,42 +21,46 @@ class ChatListScreen extends StatefulWidget {
 class _ChatListScreenState extends State<ChatListScreen> {
   final _searchController = TextEditingController();
   String _query = '';
-  bool _unreadOnly = false;
 
-  static const List<ChatContact> _contacts = [
-    ChatContact(
-        name: 'Vanna Sok',
-        lastMessage: "Hey, What's up",
-        time: '12:17 PM',
-        online: true),
-    ChatContact(name: 'Reak Smey', lastMessage: 'Hello', time: '12:00 PM'),
-    ChatContact(
-        name: 'Vanna Doung',
-        lastMessage: 'Hello',
-        time: '12:00 PM',
-        unreadCount: 1),
-    ChatContact(
-        name: 'Mean Dara',
-        lastMessage: 'Hey',
-        time: '12:00 PM',
-        unreadCount: 1),
-  ];
+  List<ChatThread> _threads = const [];
+  bool _loading = true;
+  Timer? _poll;
 
-  int get _unreadTotal => _contacts.where((c) => c.unreadCount > 0).length;
-
-  List<ChatContact> get _visible {
-    final q = _query.trim().toLowerCase();
-    return _contacts.where((c) {
-      if (_unreadOnly && c.unreadCount == 0) return false;
-      if (q.isNotEmpty && !c.name.toLowerCase().contains(q)) return false;
-      return true;
-    }).toList();
+  @override
+  void initState() {
+    super.initState();
+    _load();
+    _poll = Timer.periodic(const Duration(seconds: 15), (_) => _load(silent: true));
   }
 
   @override
   void dispose() {
+    _poll?.cancel();
     _searchController.dispose();
     super.dispose();
+  }
+
+  Future<void> _load({bool silent = false}) async {
+    if (!silent) setState(() => _loading = true);
+    try {
+      final threads = await ChatApi.instance.myThreads();
+      if (!mounted) return;
+      setState(() {
+        _threads = threads;
+        _loading = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _loading = false);
+    }
+  }
+
+  List<ChatThread> get _visible {
+    final q = _query.trim().toLowerCase();
+    if (q.isEmpty) return _threads;
+    return _threads
+        .where((t) => t.otherPartyName.toLowerCase().contains(q))
+        .toList();
   }
 
   @override
@@ -71,23 +80,29 @@ class _ChatListScreenState extends State<ChatListScreen> {
               padding: const EdgeInsets.fromLTRB(20, 4, 20, 0),
               child: _buildSearchField(),
             ),
-            const SizedBox(height: 14),
-            _buildFilters(),
-            const SizedBox(height: 6),
+            const SizedBox(height: 10),
             Expanded(
-              child: items.isEmpty
-                  ? Center(
-                      child: Text(AppStrings.t('noConversations'),
-                          style: TextStyle(color: p.textSecondary)),
-                    )
-                  : ListView.separated(
-                      padding: EdgeInsets.fromLTRB(
-                          20, 8, 20, 110 + bottomInset),
-                      itemCount: items.length,
-                      separatorBuilder: (_, __) =>
-                          const SizedBox(height: 4),
-                      itemBuilder: (context, i) => _contactTile(items[i]),
-                    ),
+              child: _loading
+                  ? const Center(
+                      child: SizedBox(
+                          width: 22,
+                          height: 22,
+                          child: CircularProgressIndicator(strokeWidth: 2)))
+                  : items.isEmpty
+                      ? Center(
+                          child: Text(AppStrings.t('noConversations'),
+                              style: TextStyle(color: p.textSecondary)),
+                        )
+                      : RefreshIndicator(
+                          onRefresh: _load,
+                          child: ListView.separated(
+                            padding: EdgeInsets.fromLTRB(
+                                20, 8, 20, 110 + bottomInset),
+                            itemCount: items.length,
+                            separatorBuilder: (_, __) => const SizedBox(height: 4),
+                            itemBuilder: (context, i) => _threadTile(items[i]),
+                          ),
+                        ),
             ),
           ],
         ),
@@ -144,100 +159,38 @@ class _ChatListScreenState extends State<ChatListScreen> {
     );
   }
 
-  Widget _buildFilters() {
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        child: Row(
-          children: [
-            _filterChip(AppStrings.t('all'),
-                selected: !_unreadOnly,
-                onTap: () => setState(() => _unreadOnly = false)),
-            const SizedBox(width: 10),
-            _filterChip('${AppStrings.t('unread')} $_unreadTotal',
-                selected: _unreadOnly,
-                onTap: () => setState(() => _unreadOnly = true)),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _filterChip(String label,
-      {required bool selected, required VoidCallback onTap}) {
+  Widget _threadTile(ChatThread t) {
     final p = context.pal;
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 9),
-        decoration: BoxDecoration(
-          color: selected ? AppColors.primaryBlue : p.surface,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: selected ? AppColors.primaryBlue : p.border,
-          ),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-            color: selected ? AppColors.white : p.textPrimary,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _contactTile(ChatContact c) {
-    final p = context.pal;
+    final hasMessage = t.lastMessage != null && t.lastMessage!.isNotEmpty;
     return InkWell(
       borderRadius: BorderRadius.circular(12),
       onTap: () =>
-          Navigator.of(context).pushNamed('/chat-thread', arguments: c),
+          Navigator.of(context).pushNamed('/chat-thread', arguments: t),
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 10),
         child: Row(
           children: [
-            Stack(
-              children: [
-                CircleAvatar(
-                  radius: 24,
-                  backgroundColor: p.surfaceAlt,
-                  child: const Icon(Icons.person,
-                      color: AppColors.primaryBlue, size: 26),
-                ),
-                if (c.online)
-                  Positioned(
-                    right: 0,
-                    bottom: 0,
-                    child: Container(
-                      width: 13,
-                      height: 13,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF2ECC71),
-                        shape: BoxShape.circle,
-                        border: Border.all(color: p.background, width: 2),
-                      ),
-                    ),
-                  ),
-              ],
+            CircleAvatar(
+              radius: 24,
+              backgroundColor: p.surfaceAlt,
+              child: const Icon(Icons.person,
+                  color: AppColors.primaryBlue, size: 26),
             ),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(c.name,
+                  Text(t.otherPartyName,
                       style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w700,
                           color: p.textPrimary)),
                   const SizedBox(height: 2),
                   Text(
-                    c.lastMessage,
+                    hasMessage
+                        ? '${t.lastMessageMine ? "${AppStrings.t('you')}: " : ""}${t.lastMessage}'
+                        : categoryLabel(t.category),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(fontSize: 13, color: p.textSecondary),
@@ -246,37 +199,19 @@ class _ChatListScreenState extends State<ChatListScreen> {
               ),
             ),
             const SizedBox(width: 10),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(c.time,
-                    style: TextStyle(fontSize: 11.5, color: p.textSecondary)),
-                const SizedBox(height: 6),
-                if (c.unreadCount > 0)
-                  Container(
-                    width: 18,
-                    height: 18,
-                    alignment: Alignment.center,
-                    decoration: const BoxDecoration(
-                      color: AppColors.primaryBlue,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Text(
-                      '${c.unreadCount}',
-                      style: const TextStyle(
-                        color: AppColors.white,
-                        fontSize: 10.5,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  )
-                else
-                  const SizedBox(height: 18),
-              ],
-            ),
+            if (t.lastMessageAt != null)
+              Text(_timeLabel(t.lastMessageAt!),
+                  style: TextStyle(fontSize: 11.5, color: p.textSecondary)),
           ],
         ),
       ),
     );
+  }
+
+  static String _timeLabel(DateTime t) {
+    final h = t.hour % 12 == 0 ? 12 : t.hour % 12;
+    final m = t.minute.toString().padLeft(2, '0');
+    final ampm = t.hour < 12 ? 'AM' : 'PM';
+    return '$h:$m $ampm';
   }
 }
