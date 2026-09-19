@@ -1,0 +1,53 @@
+services:
+  mysql:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-12345}
+      MYSQL_DATABASE: CamFix
+    ports:
+      # Host port is configurable so this doesn't clash with a MySQL install
+      # you already have running on 3306 - the backend always talks to the
+      # container over the internal Docker network on 3306 regardless of
+      # this mapping.
+      - "${MYSQL_HOST_PORT:-3309}:3306"
+    volumes:
+      - camfix-mysql-data:/var/lib/mysql
+      - ./Database/docker-init.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p${MYSQL_ROOT_PASSWORD:-12345}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  backend:
+    build:
+      context: ./Backend
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/CamFix?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_ROOT_PASSWORD:-12345}
+      # Optional - uncomment (or set in a root .env file) to enable real
+      # OTP/email delivery and Google sign-in verification. Left unset,
+      # the app falls back to its own dev defaults: OTP codes are logged
+      # to the console instead of sent, and a fixed dev JWT secret is used.
+      # JWT_SECRET: change-me
+      # GOOGLE_CLIENT_ID:
+      # MAIL_HOST: smtp.gmail.com
+      # MAIL_PORT: 587
+      # MAIL_USERNAME:
+      # MAIL_PASSWORD:
+      # MAIL_FROM: "CAM FIX <no-reply@camfix.local>"
+      # TWILIO_ACCOUNT_SID:
+      # TWILIO_AUTH_TOKEN:
+      # TWILIO_FROM_NUMBER:
+      # TEXTBELT_KEY:
+    ports:
+      - "8081:8081"
+
+volumes:
+  camfix-mysql-data:

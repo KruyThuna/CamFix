@@ -1,0 +1,10 @@
+build/
+.gradle/
+target/
+*.iml
+.idea/
+.vscode/
+.classpath
+.project
+.settings/
+run-with-otp-delivery.ps1
