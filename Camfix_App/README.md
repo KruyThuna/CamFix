@@ -8,7 +8,7 @@ sign-in verification are all done by the Spring API.
 
 ```
 C:\Cam
-├── Backend/            # Spring Boot 4.1 API (Java 21, Maven), port 8081
+├── Backend/            # Spring Boot 4.1 API (Java 21, Gradle), port 8081
 └── Camfix_App/         # this Flutter app
     lib/
       main.dart               # MaterialApp + named routes
@@ -79,7 +79,7 @@ bookings, live location) — start it before `flutter run`.
 
 ```bash
 cd ../Backend
-./mvnw spring-boot:run        # Windows: mvnw.cmd spring-boot:run
+./gradlew bootRun        # Windows: gradlew.bat bootRun
 ```
 
 Requirements/notes (see `Backend/src/main/resources/application.properties`):

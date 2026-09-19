@@ -49,4 +49,4 @@ $env:TEXTBELT_KEY = "textbelt"
 
 # -------------------------------------------------------------------------
 Write-Host "Starting CAM FIX API with real OTP delivery..." -ForegroundColor Cyan
-& "$PSScriptRoot\mvnw.cmd" spring-boot:run
+& "$PSScriptRoot\gradlew.bat" bootRun
