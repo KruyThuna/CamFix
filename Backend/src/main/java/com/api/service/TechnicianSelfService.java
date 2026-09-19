@@ -209,10 +209,11 @@ public class TechnicianSelfService {
             str(fields.get("firstName")).ifPresent(v -> user.setFirstName(v));
             str(fields.get("lastName")).ifPresent(v -> user.setLastName(v));
             str(fields.get("phoneNumber")).ifPresent(v -> {
-                if (!v.equals(user.getPhoneNumber()) && userRepository.existsByPhoneNumber(v)) {
-                    throw new IllegalArgumentException("Phone number already in use: " + v);
+                String phone = canonicalPhone(v);
+                if (!phone.equals(user.getPhoneNumber()) && userRepository.existsByPhoneNumber(phone)) {
+                    throw new IllegalArgumentException("Phone number already in use: " + phone);
                 }
-                user.setPhoneNumber(v);
+                user.setPhoneNumber(phone);
             });
             str(fields.get("serviceArea")).ifPresent(tech::setServiceArea);
             str(fields.get("openingHours")).ifPresent(tech::setOpeningHours);
@@ -497,9 +498,7 @@ public class TechnicianSelfService {
      *  {@code AuthServiceImpl.normalisePhone}, so an OTP issued via
      *  {@code /api/auth/phone/request-otp} verifies here. */
     private static String canonicalPhone(String raw) {
-        String trimmed = raw.trim();
-        String digits = trimmed.replaceAll("\\D", "");
-        return trimmed.startsWith("+") ? "+" + digits : digits;
+        return com.api.util.PhoneNumbers.canonicalize(raw);
     }
 
     private static java.util.Optional<String> str(Object v) {

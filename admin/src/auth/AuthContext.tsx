@@ -14,6 +14,7 @@ interface AuthState {
   user: UserInfo | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
+  loginWithToken: (token: string) => Promise<void>;
   logout: () => void;
 }
 
@@ -52,13 +53,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .finally(() => setLoading(false));
   }, [loadMe]);
 
-  const login = useCallback(
-    async (email: string, password: string) => {
-      const { data } = await api.post<{ token: string }>('/api/auth/login', {
-        email,
-        password,
-      });
-      localStorage.setItem(TOKEN_KEY, data.token);
+  const loginWithToken = useCallback(
+    async (token: string) => {
+      localStorage.setItem(TOKEN_KEY, token);
       try {
         const me = await loadMe();
         setUser(me);
@@ -71,14 +68,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [loadMe],
   );
 
+  const login = useCallback(
+    async (email: string, password: string) => {
+      const { data } = await api.post<{ token: string }>('/api/auth/login', {
+        email,
+        password,
+      });
+      await loginWithToken(data.token);
+    },
+    [loginWithToken],
+  );
+
   const logout = useCallback(() => {
     localStorage.removeItem(TOKEN_KEY);
     setUser(null);
   }, []);
 
   const value = useMemo(
-    () => ({ user, loading, login, logout }),
-    [user, loading, login, logout],
+    () => ({ user, loading, login, loginWithToken, logout }),
+    [user, loading, login, loginWithToken, logout],
   );
 
   return <AuthCtx.Provider value={value}>{children}</AuthCtx.Provider>;

@@ -1,7 +1,7 @@
 name: camfix_app
 description: "CAM FIX - On-demand home service booking app"
 publish_to: 'none'
-version: 1.0.0+1
+version: 1.2.0+8
 
 environment:
   sdk: '>=3.0.0 <4.0.0'

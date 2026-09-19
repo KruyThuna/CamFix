@@ -236,6 +236,102 @@ class AppStrings {
       AppLang.km: 'មិនទាន់មានការងារបានបញ្ចប់ទេ។',
     },
 
+    // --- Dashboard v2 (home page redesign) --------------------------------
+    'heroAcTitle': {
+      AppLang.en: 'Cool Comfort, Fast Service',
+      AppLang.km: 'ត្រជាក់ស្រួល សេវាកម្មលឿន',
+    },
+    'heroGeneralTitle': {
+      AppLang.en: 'On-demand home services, anytime',
+      AppLang.km: 'សេវាកម្មតាមផ្ទះ គ្រប់ពេលវេលា',
+    },
+    'topTechnicians': {AppLang.en: 'Top Technicians', AppLang.km: 'ជាងកំពូល'},
+    'view': {AppLang.en: 'View', AppLang.km: 'មើល'},
+    'promo10Title': {
+      AppLang.en: '10% off your first repair',
+      AppLang.km: 'បញ្ចុះតម្លៃ១០% លើការជួសជុលលើកទីមួយ',
+    },
+    'promo10Subtitle': {
+      AppLang.en: 'Use code WELCOME10',
+      AppLang.km: 'ប្រើកូដ WELCOME10',
+    },
+    'popularServices': {
+      AppLang.en: 'Popular Services',
+      AppLang.km: 'សេវាកម្មពេញនិយម',
+    },
+    'servicePackages': {
+      AppLang.en: 'Service Packages',
+      AppLang.km: 'កញ្ចប់សេវាកម្ម',
+    },
+    'homeCareBundle': {
+      AppLang.en: 'Home Care Bundle',
+      AppLang.km: 'កញ្ចប់ថែទាំផ្ទះ',
+    },
+    'homeCareBundleDesc': {
+      AppLang.en: 'AC + Plumbing + Electrical',
+      AppLang.km: 'ម៉ាស៊ីនត្រជាក់ + បំពង់ទឹក + អគ្គិសនី',
+    },
+    'vehicleCheckup': {
+      AppLang.en: 'Vehicle Checkup',
+      AppLang.km: 'ត្រួតពិនិត្យយានយន្ត',
+    },
+    'vehicleCheckupDesc': {
+      AppLang.en: 'Diagnostics + Oil Change',
+      AppLang.km: 'វិនិច្ឆ័យ + ប្តូរប្រេង',
+    },
+    'save20': {AppLang.en: 'Save 20%', AppLang.km: 'សន្សំ២០%'},
+    'save15': {AppLang.en: 'Save 15%', AppLang.km: 'សន្សំ១៥%'},
+    'availableNearYou': {
+      AppLang.en: 'Available Near You',
+      AppLang.km: 'នៅជិតអ្នកដែលទំនេរ',
+    },
+    'howItWorks': {AppLang.en: 'How It Works', AppLang.km: 'របៀបប្រើប្រាស់'},
+    'howItWorksStep1Title': {AppLang.en: 'Choose service', AppLang.km: 'ជ្រើសរើសសេវា'},
+    'howItWorksStep1Desc': {
+      AppLang.en: 'Browse and find the service you need',
+      AppLang.km: 'ស្វែងរកសេវាកម្មដែលអ្នកត្រូវការ',
+    },
+    'howItWorksStep2Title': {AppLang.en: 'Book a technician', AppLang.km: 'កក់ជាង'},
+    'howItWorksStep2Desc': {
+      AppLang.en: 'Pick a date & time that works for you',
+      AppLang.km: 'ជ្រើសរើសកាលបរិច្ឆេទ និងម៉ោងសមស្រប',
+    },
+    'howItWorksStep3Title': {AppLang.en: 'Get it fixed', AppLang.km: 'ជួសជុលរួចរាល់'},
+    'howItWorksStep3Desc': {
+      AppLang.en: 'Relax while our experts do the job',
+      AppLang.km: 'សម្រាក ខណៈអ្នកជំនាញធ្វើការងារ',
+    },
+    'whatCustomersSay': {
+      AppLang.en: 'What Customers Say',
+      AppLang.km: 'អតិថិជនប្រសាសន៍ថា',
+    },
+    'aCamfixCustomer': {
+      AppLang.en: 'A CamFix customer',
+      AppLang.km: 'អតិថិជន CamFix',
+    },
+    'guaranteeVerifiedTechs': {
+      AppLang.en: 'Verified technicians',
+      AppLang.km: 'ជាងបានផ្ទៀងផ្ទាត់',
+    },
+    'guaranteeSecureBooking': {
+      AppLang.en: 'Secure booking',
+      AppLang.km: 'ការកក់មានសុវត្ថិភាព',
+    },
+    'guarantee7DaySupport': {
+      AppLang.en: '7-day support',
+      AppLang.km: 'គាំទ្រ៧ថ្ងៃ',
+    },
+    'yourRecentBooking': {
+      AppLang.en: 'Your Recent Booking',
+      AppLang.km: 'ការកក់ថ្មីៗរបស់អ្នក',
+    },
+    'bookAgain': {AppLang.en: 'Book again', AppLang.km: 'កក់ម្តងទៀត'},
+    'needEmergencyHelp': {
+      AppLang.en: 'Need emergency help?',
+      AppLang.km: 'ត្រូវការជំនួយបន្ទាន់?',
+    },
+    'callSupport': {AppLang.en: 'Call support', AppLang.km: 'ទូរស័ព្ទទៅផ្នែកគាំទ្រ'},
+
     // --- Service categories -------------------------------------------
     'svcAirConditioner': {
       AppLang.en: 'Air Conditioner',
@@ -253,8 +349,8 @@ class AppStrings {
     // --- Bottom navigation --------------------------------------------------
     'navHome': {AppLang.en: 'Home', AppLang.km: 'ទំព័រដើម'},
     'navService': {AppLang.en: 'Service', AppLang.km: 'សេវាកម្ម'},
-    'navChat': {AppLang.en: 'Chat', AppLang.km: 'ជជែក'},
-    'navProfile': {AppLang.en: 'Profile', AppLang.km: 'ប្រវត្តិរូប'},
+    'navChat': {AppLang.en: 'Messages', AppLang.km: 'សារ'},
+    'navProfile': {AppLang.en: 'Account', AppLang.km: 'គណនី'},
 
     // --- Services screen --------------------------------------------------
     'noProvidersInCategory': {
@@ -274,9 +370,18 @@ class AppStrings {
     },
     'all': {AppLang.en: 'All', AppLang.km: 'ទាំងអស់'},
     'unread': {AppLang.en: 'Unread', AppLang.km: 'មិនទាន់អាន'},
+    'you': {AppLang.en: 'You', AppLang.km: 'អ្នក'},
     'online': {AppLang.en: 'Online', AppLang.km: 'នៅលើបណ្តាញ'},
     'offline': {AppLang.en: 'Offline', AppLang.km: 'ក្រៅបណ្តាញ'},
     'messageField': {AppLang.en: 'Message', AppLang.km: 'សារ'},
+    'sayHello': {
+      AppLang.en: 'No messages yet - say hello!',
+      AppLang.km: 'មិនទាន់មានសារទេ - សូមសួរសុខទុក្ខ!',
+    },
+    'bookFirstToChat': {
+      AppLang.en: 'Book this technician first to start chatting.',
+      AppLang.km: 'សូមកក់ជាងនេះជាមុនសិន ដើម្បីចាប់ផ្តើមជជែក។',
+    },
     'today': {AppLang.en: 'Today', AppLang.km: 'ថ្ងៃនេះ'},
 
     // --- Provider detail ----------------------------------------------

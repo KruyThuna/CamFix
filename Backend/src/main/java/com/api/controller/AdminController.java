@@ -18,10 +18,12 @@ import org.springframework.web.bind.annotation.RestController;
 import com.api.service.AdminService;
 import com.api.dto.admin.AdminJobRequest;
 import com.api.dto.admin.AdminJobResponse;
+import com.api.dto.admin.AdminPasswordResetResponse;
 import com.api.dto.admin.AdminTechnicianRequest;
 import com.api.dto.admin.AdminTechnicianResponse;
 import com.api.dto.admin.DashboardStatsResponse;
 import com.api.dto.admin.TechnicianLocationResponse;
+import com.api.dto.auth.UserResponse;
 
 /**
  * Console API consumed by {@code /admin} (the Vite app on :5173). Every handler
@@ -133,6 +135,25 @@ public class AdminController {
             @PathVariable Long id) {
         adminService.requireAdmin(auth);
         return adminService.reactivateTechnician(id);
+    }
+
+    // --- Users -----------------------------------------------------------------
+
+    @GetMapping("/users")
+    public List<UserResponse> listUsers(
+            @RequestHeader(value = AUTH, required = false) String auth,
+            @RequestParam(required = false) String role,
+            @RequestParam(required = false) String q) {
+        adminService.requireAdmin(auth);
+        return adminService.listUsers(role, q);
+    }
+
+    @PostMapping("/users/{id}/reset-password")
+    public AdminPasswordResetResponse resetUserPassword(
+            @RequestHeader(value = AUTH, required = false) String auth,
+            @PathVariable Long id) {
+        adminService.requireAdmin(auth);
+        return adminService.resetUserPassword(id);
     }
 
     // --- Jobs ------------------------------------------------------------------

@@ -6,6 +6,8 @@ import java.time.LocalDateTime;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.*;
 
 @Entity
@@ -32,6 +34,7 @@ public class Users {
     @Column(name = "Phone_number", unique = true, nullable = false, length = 100)
     private String phoneNumber;
 
+    @JsonIgnore
     @Column(name = "Password_hash", nullable = false, length = 100)
     private String password;
 

@@ -1,28 +1,66 @@
-/// A conversation shown in the chat list (mockup page 20).
-class ChatContact {
-  const ChatContact({
-    required this.name,
-    required this.lastMessage,
-    required this.time,
-    this.unreadCount = 0,
-    this.online = false,
+/// One of the customer's chat conversations, from `GET /api/chats/mine` - one
+/// per booking that has an assigned technician.
+class ChatThread {
+  const ChatThread({
+    required this.jobId,
+    required this.otherPartyName,
+    required this.category,
+    required this.status,
+    this.lastMessage,
+    this.lastMessageAt,
+    this.lastMessageMine = false,
   });
 
-  final String name;
-  final String lastMessage;
-  final String time;
-  final int unreadCount;
-  final bool online;
+  final int jobId;
+  final String otherPartyName;
+  final String category;
+  final String status;
+  final String? lastMessage;
+  final DateTime? lastMessageAt;
+  final bool lastMessageMine;
+
+  factory ChatThread.fromJson(Map<String, dynamic> j) => ChatThread(
+        jobId: (j['jobId'] as num).toInt(),
+        otherPartyName: j['otherPartyName']?.toString() ?? '',
+        category: j['category']?.toString() ?? '',
+        status: j['status']?.toString() ?? '',
+        lastMessage: j['lastMessage']?.toString(),
+        lastMessageAt: j['lastMessageAt'] == null
+            ? null
+            : DateTime.tryParse(j['lastMessageAt'].toString())?.toLocal(),
+        lastMessageMine: j['lastMessageMine'] == true,
+      );
 }
 
-/// Who sent a message in a chat thread.
-enum ChatSender { me, them }
-
-/// A single message bubble in a chat thread (mockup page 21).
+/// One message bubble in a chat thread, from `GET/POST /api/bookings/{id}/messages`.
 class ChatMessage {
-  const ChatMessage(this.sender, this.text, this.time);
+  const ChatMessage({
+    required this.id,
+    required this.jobId,
+    required this.senderUserId,
+    required this.mine,
+    required this.text,
+    required this.createdAt,
+    this.senderName,
+  });
 
-  final ChatSender sender;
+  final int id;
+  final int jobId;
+  final int senderUserId;
+  final String? senderName;
+  final bool mine;
   final String text;
-  final String time;
+  final DateTime createdAt;
+
+  factory ChatMessage.fromJson(Map<String, dynamic> j) => ChatMessage(
+        id: (j['id'] as num).toInt(),
+        jobId: (j['jobId'] as num).toInt(),
+        senderUserId: (j['senderUserId'] as num).toInt(),
+        senderName: j['senderName']?.toString(),
+        mine: j['mine'] == true,
+        text: j['text']?.toString() ?? '',
+        createdAt:
+            DateTime.tryParse(j['createdAt']?.toString() ?? '')?.toLocal() ??
+                DateTime.now(),
+      );
 }

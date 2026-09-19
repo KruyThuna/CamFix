@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import '../l10n/app_strings.dart';
 import '../theme/app_theme.dart';
 
-/// Floating capsule bottom navigation with 4 items: Home, Grid, Chat, Profile.
-/// The active "Home" pill expands with a label, matching the mockups.
+/// Floating pill bottom navigation with 4 items: Home, Bookings, Messages,
+/// Account. Every tab always shows its label; the active one gets a filled
+/// blue highlight, matching the mockup.
 class CamFixBottomNavBar extends StatelessWidget {
   const CamFixBottomNavBar({
     super.key,
@@ -25,17 +26,18 @@ class CamFixBottomNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final p = context.pal;
     return Container(
-      height: 64,
-      padding: const EdgeInsets.symmetric(horizontal: 10),
+      height: 74,
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
       decoration: BoxDecoration(
-        color: AppColors.primaryBlue,
-        borderRadius: BorderRadius.circular(40),
+        color: p.surface,
+        borderRadius: BorderRadius.circular(30),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primaryBlue.withValues(alpha: 0.4),
+            color: Colors.black.withValues(alpha: 0.12),
             blurRadius: 16,
-            offset: const Offset(0, 8),
+            offset: const Offset(0, 6),
           ),
         ],
       ),
@@ -43,40 +45,39 @@ class CamFixBottomNavBar extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: List.generate(_icons.length, (i) {
           final bool active = i == currentIndex;
-          return GestureDetector(
-            onTap: () => onTap(i),
-            behavior: HitTestBehavior.opaque,
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              padding: EdgeInsets.symmetric(
-                horizontal: active ? 18 : 12,
-                vertical: active ? 10 : 12,
-              ),
-              decoration: BoxDecoration(
-                color: active
-                    ? AppColors.white
-                    : AppColors.white.withValues(alpha: 0.16),
-                borderRadius: BorderRadius.circular(30),
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    _icons[i],
-                    color: active ? AppColors.primaryBlue : AppColors.white,
-                    size: 22,
-                  ),
-                  if (active) ...[
-                    const SizedBox(width: 8),
+          return Expanded(
+            child: GestureDetector(
+              onTap: () => onTap(i),
+              behavior: HitTestBehavior.opaque,
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                margin: const EdgeInsets.symmetric(horizontal: 3),
+                padding: const EdgeInsets.symmetric(vertical: 6),
+                decoration: BoxDecoration(
+                  color: active ? AppColors.primaryBlue : Colors.transparent,
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      _icons[i],
+                      color: active ? AppColors.white : p.textSecondary,
+                      size: 20,
+                    ),
+                    const SizedBox(height: 2),
                     Text(
                       AppStrings.t(_labelKeys[i]),
-                      style: const TextStyle(
-                        color: AppColors.primaryBlue,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 14,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: active ? AppColors.white : p.textSecondary,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 10.5,
                       ),
                     ),
                   ],
-                ],
+                ),
               ),
             ),
           );

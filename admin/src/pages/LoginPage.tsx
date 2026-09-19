@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 
 export function LoginPage() {
@@ -61,6 +61,9 @@ export function LoginPage() {
             {busy ? 'Signing in…' : 'Sign in'}
           </button>
         </form>
+        <p className="sub">
+          <Link to="/forgot-password">Forgot password?</Link>
+        </p>
       </div>
     </div>
   );
