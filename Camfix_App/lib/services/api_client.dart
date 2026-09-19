@@ -38,8 +38,12 @@ class ApiClient {
       String.fromEnvironment('API_BASE_URL', defaultValue: '');
 
   /// Last resort when discovery finds nothing (e.g. not on the dev LAN at
-  /// all) - keeps today's behaviour of at least trying something.
-  static const String _fallback = 'http://192.168.100.35:8081';
+  /// all) - keeps today's behaviour of at least trying something on a
+  /// physical device. Web never runs LAN discovery (see
+  /// [_localSubnetPrefix]), so default straight to localhost there instead
+  /// of a stale dev-machine IP that won't exist on whoever's network.
+  static String get _fallback =>
+      kIsWeb ? 'http://localhost:8081' : 'http://192.168.100.35:8081';
 
   static const String _cacheKey = 'camfix_discovered_base_url';
   static const Duration _probeTimeout = Duration(milliseconds: 800);
