@@ -5,9 +5,15 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Table(name = "category")
+@Getter
+@Setter
+@NoArgsConstructor
 public class Category {
 
     @Id
@@ -28,50 +34,10 @@ public class Category {
     @JsonBackReference
     private List<Technician> technicians;
 
-    // Default constructor
-    public Category() {
-    }
-
     // Constructor
     public Category(String categoryName, String icon, String description) {
         this.categoryName = categoryName;
         this.icon = icon;
         this.description = description;
-    }
-
-    public Long getCategoryId() {
-        return categoryId;
-    }
-
-    public String getCategoryName() {
-        return categoryName;
-    }
-
-    public String getIcon() {
-        return icon;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public List<Technician> getTechnicians() {
-        return technicians;
-    }
-
-    public void setCategoryName(String categoryName) {
-        this.categoryName = categoryName;
-    }
-
-    public void setIcon(String icon) {
-        this.icon = icon;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public void setTechnicians(List<Technician> technicians) {
-        this.technicians = technicians;
     }
 }

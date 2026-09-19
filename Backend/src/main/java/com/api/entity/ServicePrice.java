@@ -11,6 +11,10 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * The "starting from" catalog price shown to a customer before they book -
@@ -19,6 +23,10 @@ import jakarta.persistence.Table;
  */
 @Entity
 @Table(name = "service_price")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class ServicePrice {
 
     @Id
@@ -41,44 +49,4 @@ public class ServicePrice {
     @UpdateTimestamp
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public Long getCategoryId() {
-        return categoryId;
-    }
-
-    public void setCategoryId(Long categoryId) {
-        this.categoryId = categoryId;
-    }
-
-    public Double getStartingPrice() {
-        return startingPrice;
-    }
-
-    public void setStartingPrice(Double startingPrice) {
-        this.startingPrice = startingPrice;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
 }

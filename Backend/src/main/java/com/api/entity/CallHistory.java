@@ -12,9 +12,17 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Table(name = "call_history")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class CallHistory {
 
     @Id
@@ -45,87 +53,6 @@ public class CallHistory {
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
-
-    public CallHistory() {
-    }
-
-    public CallHistory(Long callId, Users user, Technician technician,
-            String callStatus, LocalDateTime startedAt,
-            LocalDateTime endedAt, Integer durationSeconds, LocalDateTime createdAt) {
-        this.callId = callId;
-        this.user = user;
-        this.technician = technician;
-        this.callStatus = callStatus;
-        this.startedAt = startedAt;
-        this.endedAt = endedAt;
-        this.durationSeconds = durationSeconds;
-        this.createdAt = createdAt;
-    }
-
-    // Getters and Setters
-    public Long getCallId() {
-        return callId;
-    }
-
-    public void setCallId(Long callId) {
-        this.callId = callId;
-    }
-
-    public Users getUser() {
-        return user;
-    }
-
-    public void setUser(Users user) {
-        this.user = user;
-    }
-
-    public Technician getTechnician() {
-        return technician;
-    }
-
-    public void setTechnician(Technician technician) {
-        this.technician = technician;
-    }
-
-    public String getCallStatus() {
-        return callStatus;
-    }
-
-    public void setCallStatus(String callStatus) {
-        this.callStatus = callStatus;
-    }
-
-    public LocalDateTime getStartedAt() {
-        return startedAt;
-    }
-
-    public void setStartedAt(LocalDateTime startedAt) {
-        this.startedAt = startedAt;
-    }
-
-    public LocalDateTime getEndedAt() {
-        return endedAt;
-    }
-
-    public void setEndedAt(LocalDateTime endedAt) {
-        this.endedAt = endedAt;
-    }
-
-    public Integer getDurationSeconds() {
-        return durationSeconds;
-    }
-
-    public void setDurationSeconds(Integer durationSeconds) {
-        this.durationSeconds = durationSeconds;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
 
     @Override
     public boolean equals(Object o) {
