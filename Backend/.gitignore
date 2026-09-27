@@ -35,3 +35,7 @@ build/
 
 # Local OTP-delivery script that holds real provider credentials
 run-with-otp-delivery.ps1
+
+# Build output from the IDE (VS Code Java) and backend run logs
+bin/
+*.err
