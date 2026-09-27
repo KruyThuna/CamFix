@@ -28,6 +28,7 @@ class CancellationFee {
       FeeEstimate(amount: '\$1', noteKey: 'feeFlat');
 
   static FeeEstimate estimate(Booking b) {
+    if (b.isSelfDrop) return _selfDrop(b);
     final scheduled = b.bookingType.toUpperCase() == 'SCHEDULED';
     switch (b.status) {
       case 'REQUESTED':
@@ -40,7 +41,8 @@ class CancellationFee {
         }
         final km = _distanceKm(b);
         final amt = (5 + (km ?? 0)).clamp(5, 20);
-        return FeeEstimate(amount: '\$${amt.toStringAsFixed(0)}+', noteKey: 'feeDistance');
+        return FeeEstimate(
+            amount: '\$${amt.toStringAsFixed(0)}+', noteKey: 'feeDistance');
       case 'ARRIVED':
       case 'QUOTE_PENDING':
         final km = _distanceKm(b);
@@ -48,7 +50,30 @@ class CancellationFee {
         final perKm = scheduled ? 2.5 : 2.0;
         final cap = scheduled ? 25.0 : 15.0;
         final amt = km == null ? base : (perKm * km).clamp(base, cap);
-        return FeeEstimate(amount: '\$${amt.toStringAsFixed(2)}', noteKey: 'feeDistance');
+        return FeeEstimate(
+            amount: '\$${amt.toStringAsFixed(2)}', noteKey: 'feeDistance');
+      default:
+        return const FeeEstimate(
+            amount: '—', noteKey: 'feeNotCancellable', cancellable: false);
+    }
+  }
+
+  /// Nobody travels on a Self Drop, so there's no distance component: the
+  /// flat fee until the item is handed over, then the diagnostic (bench) fee
+  /// the customer saw at booking - if one was configured.
+  static FeeEstimate _selfDrop(Booking b) {
+    switch (b.status) {
+      case 'REQUESTED':
+      case 'ASSIGNED':
+      case 'ON_THE_WAY':
+        return _flatEarlyFee;
+      case 'ARRIVED':
+      case 'QUOTE_PENDING':
+        final bench = b.benchFee;
+        if (bench == null) return _flatEarlyFee;
+        return FeeEstimate(
+            amount: '\$${bench.toStringAsFixed(2)}',
+            noteKey: 'feeSelfDropBench');
       default:
         return const FeeEstimate(
             amount: '—', noteKey: 'feeNotCancellable', cancellable: false);
@@ -60,17 +85,19 @@ class CancellationFee {
     if (at == null) return _flatEarlyFee;
     final hoursLeft = at.difference(DateTime.now()).inMinutes / 60.0;
     if (hoursLeft > 24) return _flatEarlyFee;
-    if (hoursLeft > 2) return const FeeEstimate(amount: '\$2', noteKey: 'feeScheduledTime');
+    if (hoursLeft > 2) {
+      return const FeeEstimate(amount: '\$2', noteKey: 'feeScheduledTime');
+    }
     return const FeeEstimate(amount: '\$5', noteKey: 'feeScheduledTime');
   }
 
   static double? _distanceKm(Booking b) {
     if (!b.hasTechnicianFix || !b.hasDestination) return null;
-    return _haversineKm(
-        b.technicianLat!, b.technicianLng!, b.lat!, b.lng!);
+    return _haversineKm(b.technicianLat!, b.technicianLng!, b.lat!, b.lng!);
   }
 
-  static double _haversineKm(double lat1, double lng1, double lat2, double lng2) {
+  static double _haversineKm(
+      double lat1, double lng1, double lat2, double lng2) {
     const r = 6371.0;
     final dLat = _rad(lat2 - lat1);
     final dLng = _rad(lng2 - lng1);

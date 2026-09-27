@@ -21,7 +21,10 @@ class AppStrings {
 
   static const Map<String, Map<AppLang, String>> _map = {
     // --- Language screen -------------------------------------------------
-    'chooseLanguage': {AppLang.en: 'Choose language', AppLang.km: 'ជ្រើសរើសភាសា'},
+    'chooseLanguage': {
+      AppLang.en: 'Choose language',
+      AppLang.km: 'ជ្រើសរើសភាសា'
+    },
     'khmer': {AppLang.en: 'Khmer', AppLang.km: 'ភាសាខ្មែរ'},
     'english': {AppLang.en: 'English', AppLang.km: 'ភាសាអង់គ្លេស'},
     'continue': {AppLang.en: 'Continue', AppLang.km: 'បន្ត'},
@@ -140,8 +143,14 @@ class AppStrings {
 
     // --- Phone login ----------------------------------------------------
     'enterWord': {AppLang.en: 'Enter', AppLang.km: 'បញ្ចូល'},
-    'phoneNumbersTitle': {AppLang.en: 'Phone numbers', AppLang.km: 'លេខទូរស័ព្ទ'},
-    'sendingCode': {AppLang.en: 'Sending code…', AppLang.km: 'កំពុងផ្ញើលេខកូដ…'},
+    'phoneNumbersTitle': {
+      AppLang.en: 'Phone numbers',
+      AppLang.km: 'លេខទូរស័ព្ទ'
+    },
+    'sendingCode': {
+      AppLang.en: 'Sending code…',
+      AppLang.km: 'កំពុងផ្ញើលេខកូដ…'
+    },
 
     // --- Verify code / email ------------------------------------------
     'verification': {AppLang.en: 'Verification', AppLang.km: 'ការផ្ទៀងផ្ទាត់'},
@@ -173,7 +182,8 @@ class AppStrings {
     },
     'devCodeFilled': {
       AppLang.en: 'Dev mode: code filled in for you (no delivery provider).',
-      AppLang.km: 'របៀបអភិវឌ្ឍន៍៖ លេខកូដត្រូវបានបំពេញឲ្យស្រាប់ (គ្មានសេវាផ្ញើ)។',
+      AppLang.km:
+          'របៀបអភិវឌ្ឍន៍៖ លេខកូដត្រូវបានបំពេញឲ្យស្រាប់ (គ្មានសេវាផ្ញើ)។',
     },
     'otpSentTitle': {
       AppLang.en: 'Verification code sent',
@@ -197,12 +207,19 @@ class AppStrings {
     },
     'send': {AppLang.en: 'Send', AppLang.km: 'ផ្ញើ'},
     'createWord': {AppLang.en: 'Create', AppLang.km: 'បង្កើត'},
-    'newPasswordTitle': {AppLang.en: 'New Password', AppLang.km: 'ពាក្យសម្ងាត់ថ្មី'},
-    'newPasswordField': {AppLang.en: 'New Password', AppLang.km: 'ពាក្យសម្ងាត់ថ្មី'},
+    'newPasswordTitle': {
+      AppLang.en: 'New Password',
+      AppLang.km: 'ពាក្យសម្ងាត់ថ្មី'
+    },
+    'newPasswordField': {
+      AppLang.en: 'New Password',
+      AppLang.km: 'ពាក្យសម្ងាត់ថ្មី'
+    },
     'newPasswordHint': {
       AppLang.en:
           'Your new password must be different\nfrom previously used password',
-      AppLang.km: 'ពាក្យសម្ងាត់ថ្មីរបស់អ្នកត្រូវខុសពី\nពាក្យសម្ងាត់ដែលធ្លាប់ប្រើពីមុន',
+      AppLang.km:
+          'ពាក្យសម្ងាត់ថ្មីរបស់អ្នកត្រូវខុសពី\nពាក្យសម្ងាត់ដែលធ្លាប់ប្រើពីមុន',
     },
 
     // --- Dashboard -------------------------------------------------------
@@ -212,6 +229,19 @@ class AppStrings {
     'searchForService': {
       AppLang.en: 'Search for a service',
       AppLang.km: 'ស្វែងរកសេវាកម្ម',
+    },
+    'recentlySearched': {
+      AppLang.en: 'Recently searched',
+      AppLang.km: 'បានស្វែងរកថ្មីៗ'
+    },
+    'clearAll': {AppLang.en: 'Clear all', AppLang.km: 'សម្អាតទាំងអស់'},
+    'browseByCategory': {
+      AppLang.en: 'Browse by category',
+      AppLang.km: 'រកមើលតាមប្រភេទ'
+    },
+    'noSearchResults': {
+      AppLang.en: 'No technicians match your search',
+      AppLang.km: 'រកមិនឃើញជាងដែលត្រូវនឹងការស្វែងរករបស់អ្នកទេ',
     },
     'bookAService': {AppLang.en: 'Book a service', AppLang.km: 'កក់សេវាកម្ម'},
     'activeJob': {AppLang.en: 'Active Job', AppLang.km: 'ការងារកំពុងដំណើរការ'},
@@ -245,15 +275,16 @@ class AppStrings {
       AppLang.en: 'On-demand home services, anytime',
       AppLang.km: 'សេវាកម្មតាមផ្ទះ គ្រប់ពេលវេលា',
     },
+    'servicesTitle': {AppLang.en: 'Services', AppLang.km: 'សេវាកម្ម'},
     'topTechnicians': {AppLang.en: 'Top Technicians', AppLang.km: 'ជាងកំពូល'},
     'view': {AppLang.en: 'View', AppLang.km: 'មើល'},
     'promo10Title': {
-      AppLang.en: '10% off your first repair',
-      AppLang.km: 'បញ្ចុះតម្លៃ១០% លើការជួសជុលលើកទីមួយ',
+      AppLang.en: 'Quick, easy booking',
+      AppLang.km: 'ការកក់រហ័ស និងងាយស្រួល',
     },
     'promo10Subtitle': {
-      AppLang.en: 'Use code WELCOME10',
-      AppLang.km: 'ប្រើកូដ WELCOME10',
+      AppLang.en: 'Browse services and book in minutes',
+      AppLang.km: 'រកមើលសេវាកម្ម និងកក់ក្នុងរយៈពេលប៉ុន្មាននាទី',
     },
     'popularServices': {
       AppLang.en: 'Popular Services',
@@ -286,17 +317,26 @@ class AppStrings {
       AppLang.km: 'នៅជិតអ្នកដែលទំនេរ',
     },
     'howItWorks': {AppLang.en: 'How It Works', AppLang.km: 'របៀបប្រើប្រាស់'},
-    'howItWorksStep1Title': {AppLang.en: 'Choose service', AppLang.km: 'ជ្រើសរើសសេវា'},
+    'howItWorksStep1Title': {
+      AppLang.en: 'Choose service',
+      AppLang.km: 'ជ្រើសរើសសេវា'
+    },
     'howItWorksStep1Desc': {
       AppLang.en: 'Browse and find the service you need',
       AppLang.km: 'ស្វែងរកសេវាកម្មដែលអ្នកត្រូវការ',
     },
-    'howItWorksStep2Title': {AppLang.en: 'Book a technician', AppLang.km: 'កក់ជាង'},
+    'howItWorksStep2Title': {
+      AppLang.en: 'Book a technician',
+      AppLang.km: 'កក់ជាង'
+    },
     'howItWorksStep2Desc': {
       AppLang.en: 'Pick a date & time that works for you',
       AppLang.km: 'ជ្រើសរើសកាលបរិច្ឆេទ និងម៉ោងសមស្រប',
     },
-    'howItWorksStep3Title': {AppLang.en: 'Get it fixed', AppLang.km: 'ជួសជុលរួចរាល់'},
+    'howItWorksStep3Title': {
+      AppLang.en: 'Get it fixed',
+      AppLang.km: 'ជួសជុលរួចរាល់'
+    },
     'howItWorksStep3Desc': {
       AppLang.en: 'Relax while our experts do the job',
       AppLang.km: 'សម្រាក ខណៈអ្នកជំនាញធ្វើការងារ',
@@ -308,6 +348,10 @@ class AppStrings {
     'aCamfixCustomer': {
       AppLang.en: 'A CamFix customer',
       AppLang.km: 'អតិថិជន CamFix',
+    },
+    'serviceGuarantee': {
+      AppLang.en: 'Service Guarantee',
+      AppLang.km: 'ការធានាសេវាកម្ម',
     },
     'guaranteeVerifiedTechs': {
       AppLang.en: 'Verified technicians',
@@ -330,21 +374,70 @@ class AppStrings {
       AppLang.en: 'Need emergency help?',
       AppLang.km: 'ត្រូវការជំនួយបន្ទាន់?',
     },
-    'callSupport': {AppLang.en: 'Call support', AppLang.km: 'ទូរស័ព្ទទៅផ្នែកគាំទ្រ'},
+    'emergencySupportDesc': {
+      AppLang.en: '24/7 support for immediate assistance',
+      AppLang.km: 'ជំនួយ 24/7 សម្រាប់តម្រូវការបន្ទាន់',
+    },
+    'callSupport': {
+      AppLang.en: 'Call support',
+      AppLang.km: 'ទូរស័ព្ទទៅផ្នែកគាំទ្រ'
+    },
 
     // --- Service categories -------------------------------------------
+    'svcAllServices': {
+      AppLang.en: 'All Services',
+      AppLang.km: 'សេវាកម្មទាំងអស់'
+    },
+    'svcAllServicesDesc': {
+      AppLang.en: 'Browse every category and find the right specialist.',
+      AppLang.km: 'រកមើលគ្រប់ប្រភេទសេវាកម្ម និងស្វែងរកអ្នកជំនាញត្រឹមត្រូវ។',
+    },
     'svcAirConditioner': {
       AppLang.en: 'Air Conditioner',
       AppLang.km: 'ម៉ាស៊ីនត្រជាក់',
     },
     'svcElectrical': {AppLang.en: 'Electrical', AppLang.km: 'អគ្គិសនី'},
     'svcApplianceRepair': {
-      AppLang.en: 'Appliance Repair',
+      AppLang.en: 'Appliances',
       AppLang.km: 'ជួសជុលគ្រឿងប្រើប្រាស់',
     },
     'svcMotorcycle': {AppLang.en: 'Motorcycle', AppLang.km: 'ម៉ូតូ'},
-    'svcCar': {AppLang.en: 'Car', AppLang.km: 'ឡាន'},
-    'svcWaterNetwork': {AppLang.en: 'Water network', AppLang.km: 'បណ្តាញទឹក'},
+    'svcCar': {AppLang.en: 'Car Repair', AppLang.km: 'ឡាន'},
+    'svcWaterNetwork': {AppLang.en: 'Plumbing', AppLang.km: 'បណ្តាញទឹក'},
+    'svcAirConditionerDesc': {
+      AppLang.en:
+          'Installation, cleaning, repair and gas refill for home and office AC units.',
+      AppLang.km:
+          'ការដំឡើង សម្អាត ជួសជុល និងបំពេញឧស្ម័នសម្រាប់ម៉ាស៊ីនត្រជាក់ផ្ទះ និងការិយាល័យ។',
+    },
+    'svcElectricalDesc': {
+      AppLang.en:
+          'Wiring, outlets, lighting and circuit breaker repairs from licensed electricians.',
+      AppLang.km:
+          'ជួសជុលខ្សែភ្លើង រន្ធភ្លើង ភ្លើងបំភ្លឺ និងកុងតាក់ដោយជាងអគ្គិសនីមានអាជ្ញាប័ណ្ណ។',
+    },
+    'svcApplianceRepairDesc': {
+      AppLang.en:
+          'Repair for washing machines, refrigerators, water heaters and other home appliances.',
+      AppLang.km:
+          'ជួសជុលម៉ាស៊ីនបោកគក់ ទូទឹកកក ម៉ាស៊ីនកម្ដៅទឹក និងគ្រឿងប្រើប្រាស់ក្នុងផ្ទះផ្សេងទៀត។',
+    },
+    'svcMotorcycleDesc': {
+      AppLang.en:
+          'On-demand motorcycle maintenance, tune-ups and roadside repair.',
+      AppLang.km: 'ថែទាំ តម្លើងម៉ូតូ និងជួសជុលនៅតាមផ្លូវតាមតម្រូវការ។',
+    },
+    'svcCarDesc': {
+      AppLang.en:
+          'General car maintenance, diagnostics and mobile repair at your location.',
+      AppLang.km:
+          'ថែទាំរថយន្តទូទៅ វិនិច្ឆ័យបញ្ហា និងជួសជុលចល័តនៅកន្លែងរបស់អ្នក។',
+    },
+    'svcWaterNetworkDesc': {
+      AppLang.en:
+          'Pipe repair, leak detection, drain unclogging and water network installation.',
+      AppLang.km: 'ជួសជុលបំពង់ទឹក រកជ្រាបទឹក ស្ទះទុយោ និងតម្លើងបណ្តាញទឹក។',
+    },
 
     // --- Bottom navigation --------------------------------------------------
     'navHome': {AppLang.en: 'Home', AppLang.km: 'ទំព័រដើម'},
@@ -373,6 +466,7 @@ class AppStrings {
     'you': {AppLang.en: 'You', AppLang.km: 'អ្នក'},
     'online': {AppLang.en: 'Online', AppLang.km: 'នៅលើបណ្តាញ'},
     'offline': {AppLang.en: 'Offline', AppLang.km: 'ក្រៅបណ្តាញ'},
+    'activeNow': {AppLang.en: 'Active Now', AppLang.km: 'កំពុងសកម្ម'},
     'messageField': {AppLang.en: 'Message', AppLang.km: 'សារ'},
     'sayHello': {
       AppLang.en: 'No messages yet - say hello!',
@@ -405,6 +499,18 @@ class AppStrings {
     },
     'calling': {AppLang.en: 'Calling', AppLang.km: 'កំពុងហៅ'},
     'chatOptions': {AppLang.en: 'Chat options', AppLang.km: 'ជម្រើសជជែក'},
+    'voiceNotAvailable': {
+      AppLang.en: 'Voice messages aren\'t available yet',
+      AppLang.km: 'សារសំឡេងមិនទាន់អាចប្រើបានទេ',
+    },
+    'cameraNotAvailable': {
+      AppLang.en: 'Photo sharing isn\'t available yet',
+      AppLang.km: 'ការចែករំលែករូបភាពមិនទាន់អាចប្រើបានទេ',
+    },
+    'emojiNotAvailable': {
+      AppLang.en: 'Emoji picker isn\'t available yet',
+      AppLang.km: 'ឧបករណ៍ជ្រើសរើសអារម្មណ៍មិនទាន់អាចប្រើបានទេ',
+    },
     'about': {AppLang.en: 'About', AppLang.km: 'អំពី'},
     'openingHours': {AppLang.en: 'Opening Hours', AppLang.km: 'ម៉ោងបើក'},
     'service': {AppLang.en: 'Service', AppLang.km: 'សេវាកម្ម'},
@@ -419,8 +525,17 @@ class AppStrings {
       AppLang.en: 'Job Completed',
       AppLang.km: 'ការងារបានបញ្ចប់',
     },
+    'noJobsCompletedYet': {
+      AppLang.en: 'No jobs completed yet',
+      AppLang.km: 'មិនទាន់មានការងារបានបញ្ចប់ទេ',
+    },
     'ratingCountSuffix': {AppLang.en: 'rating', AppLang.km: 'ការវាយតម្លៃ'},
     'booking': {AppLang.en: 'Booking', AppLang.km: 'កំពុងកក់'},
+    'personalizedService': {
+      AppLang.en: 'Personalized service - get a quote',
+      AppLang.km: 'សេវាកម្មផ្ទាល់ខ្លួន - ស្នើសុំតម្លៃ',
+    },
+    'startingAt': {AppLang.en: 'Starting at', AppLang.km: 'ចាប់ផ្តើមពី'},
 
     // --- Active job / tracking ------------------------------------------
     'trackingDetails': {
@@ -472,42 +587,76 @@ class AppStrings {
     'bookNow': {AppLang.en: 'Book Now', AppLang.km: 'កក់ឥឡូវនេះ'},
     'bookingTitle': {AppLang.en: 'Book a service', AppLang.km: 'កក់សេវាកម្ម'},
     'startingFrom': {AppLang.en: 'Starting from', AppLang.km: 'ចាប់ផ្តើមពី'},
+    'priceFrom': {AppLang.en: 'From', AppLang.km: 'ចាប់ពី'},
+    'bookingsSuffix': {AppLang.en: 'bookings', AppLang.km: 'ការកក់'},
     'finalPriceNote': {
       AppLang.en: 'final price depends on inspection, labor, parts and travel',
-      AppLang.km: 'តម្លៃចុងក្រោយអាស្រ័យលើការត្រួតពិនិត្យ ថ្លៃការងារ គ្រឿងបន្លាស់ និងការធ្វើដំណើរ',
+      AppLang.km:
+          'តម្លៃចុងក្រោយអាស្រ័យលើការត្រួតពិនិត្យ ថ្លៃការងារ គ្រឿងបន្លាស់ និងការធ្វើដំណើរ',
     },
     'quoteTitle': {AppLang.en: 'Repair quote', AppLang.km: 'សម្រង់ថ្លៃជួសជុល'},
-    'quoteRevisedTitle': {AppLang.en: 'Revised repair quote', AppLang.km: 'សម្រង់ថ្លៃដែលបានកែសម្រួល'},
-    'quoteInspectionFee': {AppLang.en: 'Inspection', AppLang.km: 'ការត្រួតពិនិត្យ'},
+    'quoteRevisedTitle': {
+      AppLang.en: 'Revised repair quote',
+      AppLang.km: 'សម្រង់ថ្លៃដែលបានកែសម្រួល'
+    },
+    'quoteInspectionFee': {
+      AppLang.en: 'Inspection',
+      AppLang.km: 'ការត្រួតពិនិត្យ'
+    },
     'quoteLaborCost': {AppLang.en: 'Labor', AppLang.km: 'ថ្លៃការងារ'},
     'quotePartsCost': {AppLang.en: 'Parts', AppLang.km: 'គ្រឿងបន្លាស់'},
     'quoteTravelFee': {AppLang.en: 'Travel', AppLang.km: 'ការធ្វើដំណើរ'},
     'quoteTotal': {AppLang.en: 'Total', AppLang.km: 'សរុប'},
-    'quoteReasonLabel': {AppLang.en: 'Technician\'s note', AppLang.km: 'កំណត់ចំណាំរបស់ជាង'},
+    'quoteReasonLabel': {
+      AppLang.en: 'Technician\'s note',
+      AppLang.km: 'កំណត់ចំណាំរបស់ជាង'
+    },
     'quoteAccept': {AppLang.en: 'Accept quote', AppLang.km: 'ទទួលយកសម្រង់ថ្លៃ'},
     'quoteReject': {AppLang.en: 'Decline', AppLang.km: 'បដិសេធ'},
-    'quoteAcceptConfirmTitle': {AppLang.en: 'Accept this quote?', AppLang.km: 'ទទួលយកសម្រង់ថ្លៃនេះ?'},
+    'quoteAcceptConfirmTitle': {
+      AppLang.en: 'Accept this quote?',
+      AppLang.km: 'ទទួលយកសម្រង់ថ្លៃនេះ?'
+    },
     'quoteAcceptConfirmMessage': {
       AppLang.en: 'The technician will start the repair once you accept.',
       AppLang.km: 'ជាងនឹងចាប់ផ្តើមជួសជុលនៅពេលអ្នកទទួលយក។',
     },
-    'quoteRejectConfirmTitle': {AppLang.en: 'Decline this quote?', AppLang.km: 'បដិសេធសម្រង់ថ្លៃនេះ?'},
+    'quoteRejectConfirmTitle': {
+      AppLang.en: 'Decline this quote?',
+      AppLang.km: 'បដិសេធសម្រង់ថ្លៃនេះ?'
+    },
     'quoteRejectConfirmMessage': {
-      AppLang.en: 'The technician can send a revised quote, or you can cancel the booking.',
+      AppLang.en:
+          'The technician can send a revised quote, or you can cancel the booking.',
       AppLang.km: 'ជាងអាចផ្ញើសម្រង់ថ្លៃថ្មី ឬអ្នកអាចលុបចោលការកក់។',
     },
     'quotePendingBanner': {
       AppLang.en: 'Your technician sent a quote — review it below.',
       AppLang.km: 'ជាងរបស់អ្នកបានផ្ញើសម្រង់ថ្លៃ — សូមពិនិត្យមើលខាងក្រោម។',
     },
-    'quoteHistory': {AppLang.en: 'Quote history', AppLang.km: 'ប្រវត្តិសម្រង់ថ្លៃ'},
+    'quoteHistory': {
+      AppLang.en: 'Quote history',
+      AppLang.km: 'ប្រវត្តិសម្រង់ថ្លៃ'
+    },
     'quoteStatusAccepted': {AppLang.en: 'Accepted', AppLang.km: 'បានទទួលយក'},
     'quoteStatusRejected': {AppLang.en: 'Declined', AppLang.km: 'បានបដិសេធ'},
     'quoteStatusRevised': {AppLang.en: 'Revised', AppLang.km: 'បានកែសម្រួល'},
-    'quoteStatusPending': {AppLang.en: 'Awaiting your decision', AppLang.km: 'កំពុងរង់ចាំការសម្រេចចិត្តរបស់អ្នក'},
-    'quoteAccepted': {AppLang.en: 'Quote accepted', AppLang.km: 'សម្រង់ថ្លៃត្រូវបានទទួលយក'},
-    'quoteRejected': {AppLang.en: 'Quote declined', AppLang.km: 'សម្រង់ថ្លៃត្រូវបានបដិសេធ'},
-    'rateTechnicianTitle': {AppLang.en: 'Rate your technician', AppLang.km: 'វាយតម្លៃជាងរបស់អ្នក'},
+    'quoteStatusPending': {
+      AppLang.en: 'Awaiting your decision',
+      AppLang.km: 'កំពុងរង់ចាំការសម្រេចចិត្តរបស់អ្នក'
+    },
+    'quoteAccepted': {
+      AppLang.en: 'Quote accepted',
+      AppLang.km: 'សម្រង់ថ្លៃត្រូវបានទទួលយក'
+    },
+    'quoteRejected': {
+      AppLang.en: 'Quote declined',
+      AppLang.km: 'សម្រង់ថ្លៃត្រូវបានបដិសេធ'
+    },
+    'rateTechnicianTitle': {
+      AppLang.en: 'Rate your technician',
+      AppLang.km: 'វាយតម្លៃជាងរបស់អ្នក'
+    },
     'rateTechnicianPrompt': {
       AppLang.en: 'How was the service?',
       AppLang.km: 'សេវាកម្មនេះយ៉ាងណាដែរ?',
@@ -516,7 +665,10 @@ class AppStrings {
       AppLang.en: 'Share more about your experience (optional)',
       AppLang.km: 'ចែករំលែកបទពិសោធន៍របស់អ្នកបន្ថែម (មិនចាំបាច់)',
     },
-    'submitReview': {AppLang.en: 'Submit review', AppLang.km: 'ដាក់ស្នើការវាយតម្លៃ'},
+    'submitReview': {
+      AppLang.en: 'Submit review',
+      AppLang.km: 'ដាក់ស្នើការវាយតម្លៃ'
+    },
     'reviewRequired': {
       AppLang.en: 'Tap a star to rate your technician',
       AppLang.km: 'ចុចផ្កាយដើម្បីវាយតម្លៃជាងរបស់អ្នក',
@@ -525,19 +677,33 @@ class AppStrings {
       AppLang.en: 'Thanks for your review!',
       AppLang.km: 'សូមអរគុណសម្រាប់ការវាយតម្លៃ!',
     },
-    'yourReviewLabel': {AppLang.en: 'Your review', AppLang.km: 'ការវាយតម្លៃរបស់អ្នក'},
+    'yourReviewLabel': {
+      AppLang.en: 'Your review',
+      AppLang.km: 'ការវាយតម្លៃរបស់អ្នក'
+    },
     'favorites': {AppLang.en: 'Favorites', AppLang.km: 'ចំណូលចិត្ត'},
     'favoritesEmpty': {
       AppLang.en: 'No saved technicians yet',
       AppLang.km: 'មិនទាន់មានជាងដែលបានរក្សាទុកទេ',
     },
     'favoritesEmptyHint': {
-      AppLang.en: 'Tap the heart on a technician you\'ve worked with to save them here.',
-      AppLang.km: 'ចុចរូបបេះដូងលើជាងដែលអ្នកធ្លាប់ធ្វើការជាមួយ ដើម្បីរក្សាទុកនៅទីនេះ។',
+      AppLang.en:
+          'Tap the heart on a technician you\'ve worked with to save them here.',
+      AppLang.km:
+          'ចុចរូបបេះដូងលើជាងដែលអ្នកធ្លាប់ធ្វើការជាមួយ ដើម្បីរក្សាទុកនៅទីនេះ។',
     },
-    'addedToFavorites': {AppLang.en: 'Added to favorites', AppLang.km: 'បានបន្ថែមទៅចំណូលចិត្ត'},
-    'removedFromFavorites': {AppLang.en: 'Removed from favorites', AppLang.km: 'បានដកចេញពីចំណូលចិត្ត'},
-    'saveTechnicianTooltip': {AppLang.en: 'Save technician', AppLang.km: 'រក្សាទុកជាង'},
+    'addedToFavorites': {
+      AppLang.en: 'Added to favorites',
+      AppLang.km: 'បានបន្ថែមទៅចំណូលចិត្ត'
+    },
+    'removedFromFavorites': {
+      AppLang.en: 'Removed from favorites',
+      AppLang.km: 'បានដកចេញពីចំណូលចិត្ត'
+    },
+    'saveTechnicianTooltip': {
+      AppLang.en: 'Save technician',
+      AppLang.km: 'រក្សាទុកជាង'
+    },
     'camfixUser': {AppLang.en: 'CAM FIX user', AppLang.km: 'អ្នកប្រើ CAM FIX'},
     'noReviewsYet': {
       AppLang.en: 'No reviews yet',
@@ -548,16 +714,28 @@ class AppStrings {
     'svcClean': {AppLang.en: 'Clean', AppLang.km: 'សម្អាត'},
     'svcInstallation': {AppLang.en: 'Installation', AppLang.km: 'ដំឡើង'},
     'svcInspection': {AppLang.en: 'Inspection', AppLang.km: 'ត្រួតពិនិត្យ'},
-    'bookingAddress': {AppLang.en: 'Service address', AppLang.km: 'អាសយដ្ឋានសេវាកម្ម'},
-    'bookingNote': {AppLang.en: 'Note (optional)', AppLang.km: 'កំណត់ចំណាំ (ស្រេចចិត្ត)'},
+    'bookingAddress': {
+      AppLang.en: 'Service address',
+      AppLang.km: 'អាសយដ្ឋានសេវាកម្ម'
+    },
+    'bookingNote': {
+      AppLang.en: 'Note (optional)',
+      AppLang.km: 'កំណត់ចំណាំ (ស្រេចចិត្ត)'
+    },
     'bookingNoteHint': {
       AppLang.en: 'Anything the technician should know…',
       AppLang.km: 'អ្វីៗដែលជាងគួរដឹង…',
     },
     'pickDate': {AppLang.en: 'Pick a date', AppLang.km: 'ជ្រើសរើសកាលបរិច្ឆេទ'},
     'pickTime': {AppLang.en: 'Pick a time', AppLang.km: 'ជ្រើសរើសម៉ោង'},
-    'confirmBooking': {AppLang.en: 'Confirm Booking', AppLang.km: 'បញ្ជាក់ការកក់'},
-    'bookingDone': {AppLang.en: 'Booking requested', AppLang.km: 'បានស្នើសុំការកក់'},
+    'confirmBooking': {
+      AppLang.en: 'Confirm Booking',
+      AppLang.km: 'បញ្ជាក់ការកក់'
+    },
+    'bookingDone': {
+      AppLang.en: 'Booking requested',
+      AppLang.km: 'បានស្នើសុំការកក់'
+    },
     'bookingDoneBody': {
       AppLang.en: 'The technician will confirm shortly.',
       AppLang.km: 'ជាងនឹងបញ្ជាក់ក្នុងពេលឆាប់ៗ។',
@@ -605,7 +783,10 @@ class AppStrings {
 
     // --- Profile -------------------------------------------------------------
     'profile': {AppLang.en: 'Profile', AppLang.km: 'ប្រវត្តិរូប'},
-    'editProfile': {AppLang.en: 'Edit Profile', AppLang.km: 'កែសម្រួលប្រវត្តិរូប'},
+    'editProfile': {
+      AppLang.en: 'Edit Profile',
+      AppLang.km: 'កែសម្រួលប្រវត្តិរូប'
+    },
     'edit': {AppLang.en: 'Edit', AppLang.km: 'កែសម្រួល'},
     'phone': {AppLang.en: 'Phone', AppLang.km: 'ទូរស័ព្ទ'},
     'email': {AppLang.en: 'Email', AppLang.km: 'អ៊ីមែល'},
@@ -613,7 +794,15 @@ class AppStrings {
     'notSet': {AppLang.en: 'Not set', AppLang.km: 'មិនទាន់កំណត់'},
     'darkMode': {AppLang.en: 'Dark Mode', AppLang.km: 'របៀបងងឹត'},
     'language': {AppLang.en: 'Language', AppLang.km: 'ភាសា'},
+    'languageOptionsDesc': {
+      AppLang.en: 'English (US) / Khmer',
+      AppLang.km: 'English (US) / ខ្មែរ',
+    },
     'notifications': {AppLang.en: 'Notifications', AppLang.km: 'ការជូនដំណឹង'},
+    'notificationsDesc': {
+      AppLang.en: 'Get notified about your bookings and job updates',
+      AppLang.km: 'ទទួលការជូនដំណឹងអំពីការកក់ និងស្ថានភាពការងាររបស់អ្នក',
+    },
     'preference': {AppLang.en: 'Preference', AppLang.km: 'ចំណូលចិត្ត'},
     'privacyPolicy': {
       AppLang.en: 'Privacy Policy',
@@ -640,15 +829,20 @@ class AppStrings {
       AppLang.km: 'មិនអាចបើកកម្មវិធីអ៊ីមែលបានទេ',
     },
     'distanceUnit': {AppLang.en: 'Distance unit', AppLang.km: 'ឯកតារយៈចម្ងាយ'},
-    'kilometers': {AppLang.en: 'Kilometers (km)', AppLang.km: 'គីឡូម៉ែត្រ (km)'},
+    'kilometers': {
+      AppLang.en: 'Kilometers (km)',
+      AppLang.km: 'គីឡូម៉ែត្រ (km)'
+    },
     'miles': {AppLang.en: 'Miles (mi)', AppLang.km: 'ម៉ាយល៍ (mi)'},
     'defaultAddress': {
       AppLang.en: 'Default address',
       AppLang.km: 'អាសយដ្ឋានលំនាំដើម',
     },
     'defaultAddressHint': {
-      AppLang.en: 'Pre-fills new bookings so you don\'t have to pick it every time',
-      AppLang.km: 'បំពេញអាសយដ្ឋានជាមុនសម្រាប់ការកក់ថ្មី ដើម្បីកុំឲ្យត្រូវជ្រើសរើសម្តងទៀត',
+      AppLang.en:
+          'Pre-fills new bookings so you don\'t have to pick it every time',
+      AppLang.km:
+          'បំពេញអាសយដ្ឋានជាមុនសម្រាប់ការកក់ថ្មី ដើម្បីកុំឲ្យត្រូវជ្រើសរើសម្តងទៀត',
     },
     'setOnMap': {AppLang.en: 'Set on map', AppLang.km: 'កំណត់លើផែនទី'},
     'clear': {AppLang.en: 'Clear', AppLang.km: 'សម្អាត'},
@@ -708,19 +902,27 @@ class AppStrings {
     },
     'privacyContactBody': {
       AppLang.en: 'Questions about your data? Reach us at camfix098@gmail.com.',
-      AppLang.km: 'មានសំណួរអំពីទិន្នន័យរបស់អ្នក? ទាក់ទងមកយើងខ្ញុំតាម camfix098@gmail.com។',
+      AppLang.km:
+          'មានសំណួរអំពីទិន្នន័យរបស់អ្នក? ទាក់ទងមកយើងខ្ញុំតាម camfix098@gmail.com។',
     },
 
     // --- Edit Profile ------------------------------------------------------
     'fullName': {AppLang.en: 'Full Name', AppLang.km: 'ឈ្មោះពេញ'},
     'phoneNumber': {AppLang.en: 'Phone Number', AppLang.km: 'លេខទូរស័ព្ទ'},
-    'dateOfBirth': {AppLang.en: 'Date of Birth', AppLang.km: 'ថ្ងៃខែឆ្នាំកំណើត'},
+    'phoneNumberHint': {AppLang.en: '97 123 4567', AppLang.km: '៩៧ ១២៣ ៤៥៦៧'},
+    'dateOfBirth': {
+      AppLang.en: 'Date of Birth',
+      AppLang.km: 'ថ្ងៃខែឆ្នាំកំណើត'
+    },
     'saveChange': {
       AppLang.en: 'Save Change',
       AppLang.km: 'រក្សាទុកការផ្លាស់ប្តូរ',
     },
     'saving': {AppLang.en: 'Saving…', AppLang.km: 'កំពុងរក្សាទុក…'},
-    'selectDate': {AppLang.en: 'Select date', AppLang.km: 'ជ្រើសរើសកាលបរិច្ឆេទ'},
+    'selectDate': {
+      AppLang.en: 'Select date',
+      AppLang.km: 'ជ្រើសរើសកាលបរិច្ឆេទ'
+    },
     'chooseOnMap': {AppLang.en: 'Choose on map', AppLang.km: 'ជ្រើសរើសលើផែនទី'},
     'useCurrentLocation': {
       AppLang.en: 'Use my current location',
@@ -742,7 +944,10 @@ class AppStrings {
       AppLang.en: "Couldn't get your location",
       AppLang.km: 'មិនអាចទាញយកទីតាំងបានទេ',
     },
-    'pickLocation': {AppLang.en: 'Pick a location', AppLang.km: 'ជ្រើសរើសទីតាំង'},
+    'pickLocation': {
+      AppLang.en: 'Pick a location',
+      AppLang.km: 'ជ្រើសរើសទីតាំង'
+    },
     'searchLocationHint': {
       AppLang.en: 'Search for a place or address',
       AppLang.km: 'ស្វែងរកកន្លែង ឬអាសយដ្ឋាន',
@@ -776,6 +981,10 @@ class AppStrings {
 
     // --- Booking sheet: Immediate vs Scheduled ---------------------------
     'bookingWhen': {AppLang.en: 'When', AppLang.km: 'ពេលណា'},
+    'bookingAvailableTime': {
+      AppLang.en: 'Available Time',
+      AppLang.km: 'ពេលវេលាទំនេរ'
+    },
     'bookNowChip': {AppLang.en: 'Book now', AppLang.km: 'កក់ឥឡូវនេះ'},
     'bookNowChipSub': {
       AppLang.en: 'A technician is dispatched right away',
@@ -787,13 +996,102 @@ class AppStrings {
       AppLang.km: 'ជ្រើសរើសថ្ងៃ និងម៉ោង',
     },
 
+    // --- Booking sheet: Appointment vs Self Drop -------------------------
+    'bookingType': {AppLang.en: 'Booking Type', AppLang.km: 'ប្រភេទការកក់'},
+    'appointment': {AppLang.en: 'Appointment', AppLang.km: 'ណាត់ជួប'},
+    'appointmentSub': {
+      AppLang.en: 'Technician comes to you',
+      AppLang.km: 'ជាងមករកអ្នក',
+    },
+    'selfDrop': {AppLang.en: 'Self Drop', AppLang.km: 'យកទៅដាក់ខ្លួនឯង'},
+    'selfDropSub': {
+      AppLang.en: 'You bring it to the shop',
+      AppLang.km: 'អ្នកយកវាទៅហាង',
+    },
+    'selfDropUnavailable': {
+      AppLang.en: 'Self Drop is only available with a registered technician.',
+      AppLang.km: 'យកទៅដាក់ខ្លួនឯង អាចធ្វើបានតែជាមួយជាងដែលបានចុះឈ្មោះប៉ុណ្ណោះ។',
+    },
+    'dropOffLocation': {
+      AppLang.en: 'Drop-Off Location',
+      AppLang.km: 'ទីតាំងដាក់'
+    },
+    'directions': {AppLang.en: 'Directions', AppLang.km: 'ផ្លូវទៅ'},
+    'arrivalTime': {AppLang.en: 'Arrival Time', AppLang.km: 'ពេលមកដល់'},
+    'arriveNow': {AppLang.en: 'Now', AppLang.km: 'ឥឡូវនេះ'},
+    'arriveInOneHour': {AppLang.en: 'In 1 hour', AppLang.km: 'ក្នុង ១ ម៉ោង'},
+    'arriveAfternoon': {AppLang.en: 'This afternoon', AppLang.km: 'រសៀលនេះ'},
+    'arriveTomorrowAfternoon': {
+      AppLang.en: 'Tomorrow 2 PM',
+      AppLang.km: 'ថ្ងៃស្អែក ម៉ោង ២ រសៀល',
+    },
+    'arriveCustom': {AppLang.en: 'Pick a time', AppLang.km: 'ជ្រើសម៉ោង'},
+    'feesTitle': {
+      AppLang.en: 'Deposit & Waiver',
+      AppLang.km: 'ប្រាក់កក់ និងការលើកលែង'
+    },
+    'benchFee': {
+      AppLang.en: 'Diagnostic fee (paid at drop-off)',
+      AppLang.km: 'ថ្លៃពិនិត្យ (បង់ពេលដាក់)',
+    },
+    'travelFeeWaived': {AppLang.en: 'Travel fee', AppLang.km: 'ថ្លៃធ្វើដំណើរ'},
+    'waived': {AppLang.en: 'Waived', AppLang.km: 'លើកលែង'},
+    'homeVisitFrom': {
+      AppLang.en: 'Home visit from',
+      AppLang.km: 'មកផ្ទះ ចាប់ពី'
+    },
+    'selfDropFrom': {
+      AppLang.en: 'Self Drop from',
+      AppLang.km: 'យកទៅដាក់ ចាប់ពី'
+    },
+    'visitType': {AppLang.en: 'Visit Type', AppLang.km: 'ប្រភេទសេវា'},
+    'confirmSelfDrop': {
+      AppLang.en: 'Confirm Self Drop-Off Booking',
+      AppLang.km: 'បញ្ជាក់ការកក់ យកទៅដាក់ខ្លួនឯង',
+    },
+    'stepDispatched': {AppLang.en: 'Dispatched', AppLang.km: 'បានបញ្ជូន'},
+    'inLabel': {AppLang.en: 'In', AppLang.km: 'ក្នុង'},
+    'waitingForTechnicianShort': {
+      AppLang.en: 'Finding a technician',
+      AppLang.km: 'កំពុងស្វែងរកជាង',
+    },
+    'trackLiveMap': {AppLang.en: 'Track Live Map', AppLang.km: 'តាមដានលើផែនទី'},
+    'stepReadyForDropOff': {
+      AppLang.en: 'Ready for drop-off',
+      AppLang.km: 'រួចរាល់សម្រាប់ការយកមកដាក់',
+    },
+    'stepItemReceived': {AppLang.en: 'Item received', AppLang.km: 'បានទទួលរបស់'},
+    'selfDropBringInfo': {
+      AppLang.en: 'Bring your item to the shop at',
+      AppLang.km: 'សូមយករបស់របស់អ្នកទៅហាងនៅ',
+    },
+    'selfDropReceivedInfo': {
+      AppLang.en:
+          'The technician has your item and will send a quote after inspection.',
+      AppLang.km: 'ជាងបានទទួលរបស់អ្នក ហើយនឹងផ្ញើសម្រង់ថ្លៃបន្ទាប់ពីពិនិត្យ។',
+    },
+    'feeSelfDropBench': {
+      AppLang.en:
+          'Your item has already been inspected, so the diagnostic fee shown at booking applies.',
+      AppLang.km: 'របស់របស់អ្នកត្រូវបានពិនិត្យរួចហើយ ដូច្នេះថ្លៃពិនិត្យដែលបានបង្ហាញពេលកក់ត្រូវអនុវត្ត។',
+    },
+    'selfDropHowItWorks': {
+      AppLang.en:
+          'Bring the item to the technician at the time you choose. The final repair price is quoted after inspection.',
+      AppLang.km:
+          'យករបស់ទៅជាងតាមពេលដែលអ្នកជ្រើស។ តម្លៃជួសជុលចុងក្រោយនឹងត្រូវបានប្រាប់បន្ទាប់ពីពិនិត្យ។',
+    },
+
     // --- Booking tracking screen ------------------------------------------
     'pending': {AppLang.en: 'Pending', AppLang.km: 'កំពុងរង់ចាំ'},
     'stepPending': {AppLang.en: 'Pending', AppLang.km: 'កំពុងរង់ចាំ'},
     'stepAccepted': {AppLang.en: 'Accepted', AppLang.km: 'បានទទួល'},
     'stepOnTheWay': {AppLang.en: 'On the way', AppLang.km: 'កំពុងធ្វើដំណើរមក'},
     'stepArrived': {AppLang.en: 'Arrived', AppLang.km: 'បានមកដល់'},
-    'stepQuotePending': {AppLang.en: 'Quote review', AppLang.km: 'ពិនិត្យសម្រង់ថ្លៃ'},
+    'stepQuotePending': {
+      AppLang.en: 'Quote review',
+      AppLang.km: 'ពិនិត្យសម្រង់ថ្លៃ'
+    },
     'stepInProgress': {AppLang.en: 'In progress', AppLang.km: 'កំពុងដំណើរការ'},
     'waitingForTechnician': {
       AppLang.en: 'Waiting for a technician to accept your booking…',
@@ -829,7 +1127,10 @@ class AppStrings {
       AppLang.en: 'Could not start the call',
       AppLang.km: 'មិនអាចហៅទូរស័ព្ទបានទេ',
     },
-    'scheduledFor': {AppLang.en: 'Scheduled for', AppLang.km: 'បានកំណត់សម្រាប់'},
+    'scheduledFor': {
+      AppLang.en: 'Scheduled for',
+      AppLang.km: 'បានកំណត់សម្រាប់'
+    },
     'descriptionLabel': {AppLang.en: 'Details', AppLang.km: 'ព័ត៌មានលម្អិត'},
     'estimatedFee': {
       AppLang.en: 'Estimated cancellation fee',
@@ -856,7 +1157,8 @@ class AppStrings {
           'ជាងរបស់អ្នកកំពុងធ្វើដំណើរមកហើយ ដូច្នេះការលុបចោលឥឡូវនេះរួមបញ្ចូលថ្លៃសេវាបន្តិច។',
     },
     'feeScheduledTime': {
-      AppLang.en: 'Cancelling this close to your scheduled time includes a fee.',
+      AppLang.en:
+          'Cancelling this close to your scheduled time includes a fee.',
       AppLang.km: 'ការលុបចោលក្បែរពេលវេលាដែលបានកំណត់ រួមបញ្ចូលថ្លៃសេវា។',
     },
     'feeDistance': {
@@ -869,5 +1171,509 @@ class AppStrings {
       AppLang.en: 'This booking can no longer be cancelled.',
       AppLang.km: 'ការកក់នេះលែងអាចលុបចោលបានទៀតហើយ។',
     },
+
+    // --- Payment ----------------------------------------------------------
+    'paymentSummaryTitle': {
+      AppLang.en: 'Payment Summary',
+      AppLang.km: 'សេចក្តីសង្ខេបការទូទាត់'
+    },
+    'costBreakdown': {
+      AppLang.en: 'COST BREAKDOWN',
+      AppLang.km: 'ការបំបែកតម្លៃ'
+    },
+    'baseServiceFee': {
+      AppLang.en: 'Base Service Fee',
+      AppLang.km: 'ថ្លៃសេវាមូលដ្ឋាន'
+    },
+    'standardPartsLabor': {
+      AppLang.en: 'Standard Parts & Labor',
+      AppLang.km: 'គ្រឿងបន្លាស់ និងកម្លាំងពលកម្ម'
+    },
+    'platformProcessing': {
+      AppLang.en: 'Platform Processing',
+      AppLang.km: 'ថ្លៃដំណើរការវេទិកា'
+    },
+    'taxes85': {AppLang.en: 'Taxes (8.5%)', AppLang.km: 'ពន្ធ (៨.៥%)'},
+
+    // --- Quote line items + KHQR --------------------------------------------
+    'inspectionSummary': {AppLang.en: 'Inspection Summary', AppLang.km: 'សេចក្ដីសង្ខេបការត្រួតពិនិត្យ'},
+    'techRecommended': {AppLang.en: 'Tech Recommended', AppLang.km: 'ជាងណែនាំ'},
+    'quotedWork': {AppLang.en: 'Quoted work', AppLang.km: 'ការងារដែលបានប៉ាន់'},
+    'itemIncluded': {AppLang.en: 'Included', AppLang.km: 'រួមបញ្ចូល'},
+    'itemSkipped': {AppLang.en: 'Skipped', AppLang.km: 'មិនយក'},
+    'alwaysIncluded': {
+      AppLang.en: 'ALWAYS INCLUDED',
+      AppLang.km: 'រួមបញ្ចូលជានិច្ច',
+    },
+    'feesWord': {AppLang.en: 'Fees', AppLang.km: 'ថ្លៃសេវា'},
+    'confirmWord': {AppLang.en: 'Confirm', AppLang.km: 'បញ្ជាក់'},
+    'declineWholeQuote': {
+      AppLang.en: 'Decline this quote',
+      AppLang.km: 'បដិសេធសម្រង់ថ្លៃនេះ',
+    },
+    'customizeQuoteNote': {
+      AppLang.en: 'Tick only the items you want done. Unticked items will not be performed or charged.',
+      AppLang.km: 'ធីកតែការងារដែលអ្នកចង់ឱ្យធ្វើ។ ការងារដែលមិនបានធីក នឹងមិនត្រូវធ្វើ ឬគិតថ្លៃទេ។',
+    },
+    'khqrTitle': {AppLang.en: 'KHQR (Bakong)', AppLang.km: 'KHQR (បាគង)'},
+    'khqrSubtitle': {
+      AppLang.en: 'Scan with ABA, ACLEDA or any Bakong app',
+      AppLang.km: 'ស្កេនជាមួយ ABA, ACLEDA ឬកម្មវិធីបាគងណាមួយ',
+    },
+    'scanWithBanking': {
+      AppLang.en: 'Scan with Mobile Banking',
+      AppLang.km: 'ស្កេនជាមួយកម្មវិធីធនាគារ',
+    },
+    'khqrBanksHint': {
+      AppLang.en: 'Works with any Bakong member bank app',
+      AppLang.km: 'ប្រើបានជាមួយកម្មវិធីធនាគារសមាជិកបាគងទាំងអស់',
+    },
+    'khqrWaiting': {
+      AppLang.en: 'Waiting for your payment - confirmed automatically',
+      AppLang.km: 'កំពុងរង់ចាំការទូទាត់ - បញ្ជាក់ដោយស្វ័យប្រវត្តិ',
+    },
+    'khqrExpired': {
+      AppLang.en: 'This QR expired. Generate a new one to pay.',
+      AppLang.km: 'QR នេះផុតកំណត់ហើយ។ សូមបង្កើតថ្មីដើម្បីបង់។',
+    },
+    'newQr': {AppLang.en: 'New QR', AppLang.km: 'QR ថ្មី'},
+    'copyKhqr': {AppLang.en: 'Copy KHQR code', AppLang.km: 'ចម្លងកូដ KHQR'},
+    'khqrCopied': {AppLang.en: 'KHQR code copied', AppLang.km: 'បានចម្លងកូដ KHQR'},
+
+    // --- Tracking technician (redesign) -------------------------------------
+    'trackingTechnician': {AppLang.en: 'Tracking technician', AppLang.km: 'តាមដានជាង'},
+    'stageWaiting': {AppLang.en: 'Waiting Acceptance', AppLang.km: 'រង់ចាំការទទួលយក'},
+    'stageTraveling': {AppLang.en: 'Technician Traveling', AppLang.km: 'ជាងកំពុងធ្វើដំណើរ'},
+    'stageArrived': {AppLang.en: 'Arrived', AppLang.km: 'បានមកដល់'},
+    'stageDiagnose': {AppLang.en: 'Diagnose & Inspection', AppLang.km: 'វិភាគ និងត្រួតពិនិត្យ'},
+    'stageRepair': {AppLang.en: 'Repair in Progress', AppLang.km: 'កំពុងជួសជុល'},
+    'stageComplete': {AppLang.en: 'Work Complete', AppLang.km: 'ការងារបានបញ្ចប់'},
+    'stageReview': {AppLang.en: 'Review & Rating', AppLang.km: 'មតិ និងការវាយតម្លៃ'},
+    'stageWaitingDesc': {AppLang.en: 'You booked', AppLang.km: 'អ្នកបានកក់'},
+    'stageTravelingDesc': {
+      AppLang.en: 'is on the way to your address',
+      AppLang.km: 'កំពុងធ្វើដំណើរមកអាសយដ្ឋានរបស់អ្នក',
+    },
+    'stageArrivedDesc': {
+      AppLang.en: 'Technician arrived at your location',
+      AppLang.km: 'ជាងបានមកដល់ទីតាំងរបស់អ្នក',
+    },
+    'stageDiagnoseDesc': {
+      AppLang.en: 'Technician inspects and sends you an itemized quote',
+      AppLang.km: 'ជាងត្រួតពិនិត្យ ហើយផ្ញើសម្រង់ថ្លៃលម្អិតមកអ្នក',
+    },
+    'stageRepairDesc': {
+      AppLang.en: 'Work starts once you accept the quote',
+      AppLang.km: 'ការងារចាប់ផ្តើមពេលអ្នកទទួលយកសម្រង់ថ្លៃ',
+    },
+    'stageCompleteDesc': {
+      AppLang.en: 'Technician marks the job complete',
+      AppLang.km: 'ជាងសម្គាល់ថាការងារបានបញ្ចប់',
+    },
+    'stageReviewDesc': {
+      AppLang.en: 'Rate your technician and leave a comment',
+      AppLang.km: 'វាយតម្លៃជាងរបស់អ្នក ហើយផ្តល់មតិ',
+    },
+    'notYetAccepted': {AppLang.en: 'Not yet accepted', AppLang.km: 'មិនទាន់ទទួលយក'},
+    'bookingAccepted': {AppLang.en: 'Booking accepted', AppLang.km: 'ការកក់ត្រូវបានទទួលយក'},
+    'liveWord': {AppLang.en: 'Live', AppLang.km: 'ផ្ទាល់'},
+    'statusCaps': {AppLang.en: 'STATUS', AppLang.km: 'ស្ថានភាព'},
+    'acceptedYourBooking': {
+      AppLang.en: 'accepted your booking',
+      AppLang.km: 'បានទទួលយកការកក់របស់អ្នក',
+    },
+    'technicianHasArrived': {
+      AppLang.en: 'Technician has arrived',
+      AppLang.km: 'ជាងបានមកដល់ហើយ',
+    },
+    'liveServiceTracking': {
+      AppLang.en: 'LIVE SERVICE TRACKING',
+      AppLang.km: 'តាមដានសេវាផ្ទាល់',
+    },
+    'arrivingIn': {AppLang.en: 'Arriving in', AppLang.km: 'មកដល់ក្នុង'},
+    'jobDoneWord': {AppLang.en: 'job done', AppLang.km: 'ការងារបានធ្វើ'},
+    'upNextState': {AppLang.en: 'Up next', AppLang.km: 'បន្ទាប់'},
+    'jobsDoneWord': {AppLang.en: 'jobs done', AppLang.km: 'ការងារបានធ្វើ'},
+    'quoteReviewTitle': {
+      AppLang.en: 'Technician Quotation Review',
+      AppLang.km: 'ពិនិត្យសម្រង់ថ្លៃរបស់ជាង',
+    },
+    'quoteReviewSub': {
+      AppLang.en: 'Review the itemized quote and decide to proceed',
+      AppLang.km: 'ពិនិត្យសម្រង់ថ្លៃលម្អិត ហើយសម្រេចចិត្តបន្ត',
+    },
+    'actionRequired': {AppLang.en: 'Action Required', AppLang.km: 'ត្រូវការសកម្មភាព'},
+    'serviceProgress': {AppLang.en: 'Service Progress', AppLang.km: 'វឌ្ឍនភាពសេវា'},
+    'serviceProgressSub': {
+      AppLang.en: 'Every step of this booking, as it happens',
+      AppLang.km: 'គ្រប់ជំហាននៃការកក់នេះ',
+    },
+    'doneState': {AppLang.en: 'Done', AppLang.km: 'រួចរាល់'},
+    'inProgressState': {AppLang.en: 'In progress', AppLang.km: 'កំពុងដំណើរការ'},
+    'pendingState': {AppLang.en: 'Pending', AppLang.km: 'កំពុងរង់ចាំ'},
+
+    // --- Sign-in animation --------------------------------------------------
+    'welcomeBack': {AppLang.en: 'Welcome back', AppLang.km: 'សូមស្វាគមន៍ការត្រឡប់មកវិញ'},
+    'signedInLoading': {
+      AppLang.en: 'Signed in • getting things ready…',
+      AppLang.km: 'បានចូល • កំពុងរៀបចំ…',
+    },
+
+    // --- Booking page (Appointment | Self Drop) ---------------------------
+    'openNow': {AppLang.en: 'Open now', AppLang.km: 'កំពុងបើក'},
+    'closedNow': {AppLang.en: 'Closed', AppLang.km: 'បិទ'},
+    'untilWord': {AppLang.en: 'until', AppLang.km: 'ដល់'},
+    'opensWord': {AppLang.en: 'opens', AppLang.km: 'បើកនៅ'},
+    'nearbyWord': {AppLang.en: 'Nearby', AppLang.km: 'នៅជិត'},
+    'changeWord': {AppLang.en: 'Change', AppLang.km: 'ប្ដូរ'},
+    'saveWord': {AppLang.en: 'Save', AppLang.km: 'សន្សំ'},
+    'travelFeeBySelfDrop': {
+      AppLang.en: 'travel fee by self dropping',
+      AppLang.km: 'ថ្លៃធ្វើដំណើរ ដោយយកមកដាក់ខ្លួនឯង',
+    },
+    'benchFeePaidAtCounter': {
+      AppLang.en: 'You only pay the diagnostic fee at the counter when you drop the item off',
+      AppLang.km: 'អ្នកបង់តែថ្លៃពិនិត្យនៅកន្លែងទទួល ពេលអ្នកយករបស់មកដាក់',
+    },
+    'noTravelFeeSelfDrop': {
+      AppLang.en: 'No travel fee is charged when you bring the item in yourself.',
+      AppLang.km: 'មិនគិតថ្លៃធ្វើដំណើរ ពេលអ្នកយករបស់មកដាក់ខ្លួនឯង។',
+    },
+    'arrivalTimeWindow': {AppLang.en: 'Arrival Time Window', AppLang.km: 'ពេលមកដល់'},
+    'depositBreakdownCaps': {
+      AppLang.en: 'DEPOSIT & WAIVER BREAKDOWN',
+      AppLang.km: 'ការបំបែកប្រាក់កក់ និងការលើកលែង',
+    },
+    'selfDropTravelWaiver': {
+      AppLang.en: 'Self Drop travel waiver',
+      AppLang.km: 'លើកលែងថ្លៃធ្វើដំណើរ',
+    },
+    'totalDepositDue': {AppLang.en: 'Total Deposit Due', AppLang.km: 'ប្រាក់កក់សរុប'},
+    'payableAtCounter': {
+      AppLang.en: 'Payable at the counter when you drop off',
+      AppLang.km: 'បង់នៅកន្លែងទទួល ពេលអ្នកយកមកដាក់',
+    },
+    'arriveImmediately': {AppLang.en: 'Immediately', AppLang.km: 'ភ្លាមៗ'},
+    'headOverNow': {AppLang.en: 'Head over now', AppLang.km: 'ចេញដំណើរឥឡូវនេះ'},
+    'aroundWord': {AppLang.en: 'Around', AppLang.km: 'ប្រហែល'},
+    'customSlot': {AppLang.en: 'Custom Slot', AppLang.km: 'ជ្រើសម៉ោងខ្លួនឯង'},
+    'selectTime': {AppLang.en: 'Select time', AppLang.km: 'ជ្រើសម៉ោង'},
+    'totalEstimated': {AppLang.en: 'Total Estimated', AppLang.km: 'តម្លៃប៉ាន់ស្មានសរុប'},
+    'travelFeeWaivedShort': {AppLang.en: 'Travel fee', AppLang.km: 'ថ្លៃធ្វើដំណើរ'},
+    'confirmDropOff': {
+      AppLang.en: 'Confirm Drop-off Booking',
+      AppLang.km: 'បញ្ជាក់ការកក់យកមកដាក់',
+    },
+
+    // --- Provider Achievements (select a service) ------------------------
+    'doneWord': {AppLang.en: 'done', AppLang.km: 'បានធ្វើ'},
+    'selectedWord': {AppLang.en: 'Selected', AppLang.km: 'បានជ្រើស'},
+    'bookingWord': {AppLang.en: 'Booking', AppLang.km: 'កក់'},
+    'estWord': {AppLang.en: 'Est.', AppLang.km: 'ប្រហែល'},
+    'continueWithSelected': {
+      AppLang.en: 'Continue with Selected',
+      AppLang.km: 'បន្តជាមួយសេវាដែលបានជ្រើស',
+    },
+
+    // --- Profile (redesign) ----------------------------------------------
+    'statRepairs': {AppLang.en: 'Repairs', AppLang.km: 'ការជួសជុល'},
+    'statSaved': {AppLang.en: 'Saved', AppLang.km: 'បានរក្សាទុក'},
+    'statAllTime': {AppLang.en: 'All time', AppLang.km: 'គ្រប់ពេល'},
+    'accountPreferencesCaps': {
+      AppLang.en: 'ACCOUNT & PREFERENCES',
+      AppLang.km: 'គណនី និងចំណូលចិត្ត',
+    },
+    'supportTrustCaps': {AppLang.en: 'SUPPORT & TRUST', AppLang.km: 'ជំនួយ និងទំនុកចិត្ត'},
+    'pushNotifications': {AppLang.en: 'Push Notifications', AppLang.km: 'ការជូនដំណឹង'},
+    'appLanguage': {AppLang.en: 'App Language', AppLang.km: 'ភាសាកម្មវិធី'},
+    'darkModeDesc': {AppLang.en: 'Easier on the eyes at night', AppLang.km: 'ស្រួលភ្នែកពេលយប់'},
+    'preferenceDesc': {
+      AppLang.en: 'Default address and distance units',
+      AppLang.km: 'អាសយដ្ឋានលំនាំដើម និងឯកតាចម្ងាយ',
+    },
+    'helpCenter': {AppLang.en: 'Help Center', AppLang.km: 'មជ្ឈមណ្ឌលជំនួយ'},
+    'helpCenterDesc': {
+      AppLang.en: 'Contact us or browse common questions',
+      AppLang.km: 'ទាក់ទងយើង ឬមើលសំណួរញឹកញាប់',
+    },
+    'trustShield': {AppLang.en: 'CAMFIX Trust & Shield', AppLang.km: 'ទំនុកចិត្ត និងសុវត្ថិភាព CAMFIX'},
+    'trustShieldDesc': {
+      AppLang.en: 'How we keep bookings safe • Privacy',
+      AppLang.km: 'របៀបយើងរក្សាសុវត្ថិភាពការកក់ • ឯកជនភាព',
+    },
+    'trustPointReview': {
+      AppLang.en: 'Every technician is reviewed by our admin team before they can appear in the app or take jobs.',
+      AppLang.km: 'ជាងគ្រប់រូបត្រូវបានពិនិត្យដោយក្រុមអ្នកគ្រប់គ្រងមុនពេលពួកគេអាចបង្ហាញក្នុងកម្មវិធី ឬទទួលការងារ។',
+    },
+    'trustPointRatings': {
+      AppLang.en: 'Ratings come only from customers who completed a real booking with that technician.',
+      AppLang.km: 'ការវាយតម្លៃមកពីអតិថិជនដែលបានបញ្ចប់ការកក់ពិតប្រាកដជាមួយជាងនោះប៉ុណ្ណោះ។',
+    },
+    'trustPointQuotes': {
+      AppLang.en: 'You see an itemized quote and accept it before any repair work starts.',
+      AppLang.km: 'អ្នកឃើញសម្រង់ថ្លៃលម្អិត ហើយទទួលយកវាមុនពេលការងារជួសជុលចាប់ផ្តើម។',
+    },
+    'trustPointChat': {
+      AppLang.en: 'Chats are private to you and the technician on that booking.',
+      AppLang.km: 'ការជជែកគឺឯកជនសម្រាប់អ្នក និងជាងនៃការកក់នោះប៉ុណ្ណោះ។',
+    },
+
+    // --- Real per-booking chat -------------------------------------------
+    'messageNotSent': {AppLang.en: 'Message not sent', AppLang.km: 'សារមិនត្រូវបានផ្ញើ'},
+    'yesterday': {AppLang.en: 'Yesterday', AppLang.km: 'ម្សិលមិញ'},
+    'chatEmptyHint': {
+      AppLang.en: 'No messages yet. Say hello to your technician about this booking.',
+      AppLang.km: 'មិនទាន់មានសារទេ។ ផ្ញើសារទៅជាងរបស់អ្នកអំពីការកក់នេះ។',
+    },
+    'bookingHash': {AppLang.en: 'Booking #', AppLang.km: 'ការកក់ #'},
+    'call': {AppLang.en: 'Call', AppLang.km: 'ហៅ'},
+    'seen': {AppLang.en: 'Seen', AppLang.km: 'បានឃើញ'},
+    'noConversationsYet': {
+      AppLang.en: 'No conversations yet. Once a technician takes your booking, you can chat with them here.',
+      AppLang.km: 'មិនទាន់មានការសន្ទនាទេ។ ពេលជាងទទួលការកក់របស់អ្នក អ្នកអាចជជែកជាមួយពួកគេនៅទីនេះ។',
+    },
+    'chatStartPrompt': {AppLang.en: 'Tap to start chatting', AppLang.km: 'ចុចដើម្បីចាប់ផ្តើមជជែក'},
+    'youPrefix': {AppLang.en: 'You:', AppLang.km: 'អ្នក៖'},
+    'messageTechnician': {AppLang.en: 'Message technician', AppLang.km: 'ផ្ញើសារទៅជាង'},
+    'chatNeedsBooking': {
+      AppLang.en: 'Book this technician first - chat opens once they have your booking.',
+      AppLang.km: 'សូមកក់ជាងនេះជាមុនសិន - ការជជែកនឹងបើកពេលពួកគេមានការកក់របស់អ្នក។',
+    },
+
+    // --- Total Spend / service history -----------------------------------
+    'totalSpendTitle': {AppLang.en: 'Total Spend', AppLang.km: 'ការចំណាយសរុប'},
+    'serviceHistory': {AppLang.en: 'Service History', AppLang.km: 'ប្រវត្តិសេវា'},
+    'serviceHistorySub': {
+      AppLang.en: 'Track all your maintenance and repair records in one place.',
+      AppLang.km: 'តាមដានកំណត់ត្រាថែទាំ និងជួសជុលទាំងអស់របស់អ្នកនៅកន្លែងតែមួយ។',
+    },
+    'totalSpentCaps': {AppLang.en: 'TOTAL SPENT', AppLang.km: 'ចំណាយសរុប'},
+    'jobsDoneCaps': {AppLang.en: 'JOBS DONE', AppLang.km: 'ការងារបានបញ្ចប់'},
+    'spendingBreakdown': {
+      AppLang.en: 'Spending & Category Breakdown',
+      AppLang.km: 'ការចំណាយតាមប្រភេទ',
+    },
+    'spendingBreakdownSub': {
+      AppLang.en: 'Swipe to see totals per category',
+      AppLang.km: 'អូសដើម្បីមើលសរុបតាមប្រភេទ',
+    },
+    'categoryWord': {AppLang.en: 'category', AppLang.km: 'ប្រភេទ'},
+    'categoriesWord': {AppLang.en: 'categories', AppLang.km: 'ប្រភេទ'},
+    'overviewCaps': {AppLang.en: 'OVERVIEW', AppLang.km: 'ទិដ្ឋភាពទូទៅ'},
+    'acrossWord': {AppLang.en: 'Across', AppLang.km: 'ពី'},
+    'paidServices': {AppLang.en: 'paid services', AppLang.km: 'សេវាដែលបានបង់'},
+    'ofTotalSpending': {AppLang.en: 'of total spending', AppLang.km: 'នៃការចំណាយសរុប'},
+    'bookingHistory': {AppLang.en: 'Booking History', AppLang.km: 'ប្រវត្តិការកក់'},
+    'bookingHistorySub': {
+      AppLang.en: 'Manage and track your service history.',
+      AppLang.km: 'គ្រប់គ្រង និងតាមដានប្រវត្តិសេវារបស់អ្នក។',
+    },
+    'activeTab': {AppLang.en: 'Active', AppLang.km: 'សកម្ម'},
+    'completedTab': {AppLang.en: 'Completed', AppLang.km: 'បានបញ្ចប់'},
+    'allFilter': {AppLang.en: 'All', AppLang.km: 'ទាំងអស់'},
+    'sortNewest': {AppLang.en: 'Newest', AppLang.km: 'ថ្មីបំផុត'},
+    'sortOldest': {AppLang.en: 'Oldest', AppLang.km: 'ចាស់បំផុត'},
+    'sortHighLow': {AppLang.en: '\$ High-Low', AppLang.km: '\$ ខ្ពស់-ទាប'},
+    'sortLowHigh': {AppLang.en: '\$ Low-High', AppLang.km: '\$ ទាប-ខ្ពស់'},
+    'dateWord': {AppLang.en: 'Date', AppLang.km: 'កាលបរិច្ឆេទ'},
+    'amountWord': {AppLang.en: 'Amount', AppLang.km: 'ចំនួន'},
+    'noActiveBookings': {
+      AppLang.en: 'No active bookings right now.',
+      AppLang.km: 'មិនមានការកក់សកម្មទេ។',
+    },
+    'noPastBookings': {
+      AppLang.en: 'No completed bookings yet.',
+      AppLang.km: 'មិនទាន់មានការកក់ដែលបានបញ្ចប់ទេ។',
+    },
+    'invoiceCaps': {AppLang.en: 'INVOICE', AppLang.km: 'វិក្កយបត្រ'},
+    'paidVia': {AppLang.en: 'Paid via', AppLang.km: 'បង់តាម'},
+    'viewInvoice': {AppLang.en: 'View Invoice', AppLang.km: 'មើលវិក្កយបត្រ'},
+    'trackWord': {AppLang.en: 'Track', AppLang.km: 'តាមដាន'},
+    'statusCancelled': {AppLang.en: 'Cancelled', AppLang.km: 'បានបោះបង់'},
+
+    // --- Booking receipt --------------------------------------------------
+    'bookingReceipt': {AppLang.en: 'Booking Receipt', AppLang.km: 'បង្កាន់ដៃការកក់'},
+    'dateWindow': {AppLang.en: 'Date & Time', AppLang.km: 'កាលបរិច្ឆេទ និងម៉ោង'},
+    'serviceAddress': {AppLang.en: 'Service Address', AppLang.km: 'អាសយដ្ឋានសេវា'},
+    'paymentBreakdown': {
+      AppLang.en: 'PAYMENT BREAKDOWN',
+      AppLang.km: 'ការបំបែកការទូទាត់',
+    },
+    'subtotal': {AppLang.en: 'Subtotal', AppLang.km: 'សរុបរង'},
+    'paidBadge': {AppLang.en: 'Paid', AppLang.km: 'បានបង់'},
+    'unpaidBadge': {AppLang.en: 'Unpaid', AppLang.km: 'មិនទាន់បង់'},
+    'receiptCopied': {
+      AppLang.en: 'Receipt copied - paste it anywhere to share',
+      AppLang.km: 'បានចម្លងបង្កាន់ដៃ - បិទភ្ជាប់ដើម្បីចែករំលែក',
+    },
+    'viewReceipt': {AppLang.en: 'View Receipt', AppLang.km: 'មើលបង្កាន់ដៃ'},
+    'approvedTechnician': {
+      AppLang.en: 'Approved Technician',
+      AppLang.km: 'ជាងដែលបានអនុម័ត',
+    },
+    'receiptNoQuote': {
+      AppLang.en: 'No accepted quote yet - the breakdown appears once you accept the technician\'s quote.',
+      AppLang.km: 'មិនទាន់មានសម្រង់ថ្លៃដែលបានទទួលយក - ការបំបែកនឹងបង្ហាញបន្ទាប់ពីអ្នកទទួលយកសម្រង់ថ្លៃរបស់ជាង។',
+    },
+    'paidOn': {AppLang.en: 'Paid on', AppLang.km: 'បានបង់នៅ'},
+    'completedOn': {AppLang.en: 'Completed', AppLang.km: 'បានបញ្ចប់'},
+    'totalAmount': {
+      AppLang.en: 'Total Amount',
+      AppLang.km: 'ចំនួនទឹកប្រាក់សរុប'
+    },
+    'pay': {AppLang.en: 'Pay', AppLang.km: 'ទូទាត់'},
+    'paymentMethodTitle': {
+      AppLang.en: 'Payment Method',
+      AppLang.km: 'វិធីទូទាត់'
+    },
+    'choosePaymentMethod': {
+      AppLang.en: 'CHOOSE PAYMENT METHOD',
+      AppLang.km: 'ជ្រើសរើសវិធីទូទាត់'
+    },
+    'choosePaymentMethodHint': {
+      AppLang.en: 'Select your preferred way to pay for the service.',
+      AppLang.km: 'ជ្រើសរើសវិធីដែលអ្នកចង់ប្រើដើម្បីទូទាត់ថ្លៃសេវា។',
+    },
+    'applePay': {AppLang.en: 'Apple Pay', AppLang.km: 'Apple Pay'},
+    'applePaySubtitle': {
+      AppLang.en: 'Fast and secure checkout',
+      AppLang.km: 'ការទូទាត់រហ័ស និងសុវត្ថិភាព'
+    },
+    'creditDebitCard': {
+      AppLang.en: 'Credit or Debit Card',
+      AppLang.km: 'កាតឥណទាន ឬឥណពន្ធ'
+    },
+    'creditDebitCardSubtitle': {
+      AppLang.en: 'Visa, Mastercard, AMEX',
+      AppLang.km: 'Visa, Mastercard, AMEX'
+    },
+    'cardEndingIn': {
+      AppLang.en: 'Card ending in',
+      AppLang.km: 'កាតបញ្ចប់ដោយលេខ'
+    },
+    'paypalWallet': {
+      AppLang.en: 'PayPal / Digital Wallet',
+      AppLang.km: 'PayPal / កាបូបឌីជីថល'
+    },
+    'paypalWalletSubtitle': {
+      AppLang.en: 'Secure external wallet payment',
+      AppLang.km: 'ការទូទាត់ដោយកាបូបខាងក្រៅដែលមានសុវត្ថិភាព'
+    },
+    'paymentsSecureNote': {
+      AppLang.en: 'Payments are secure and encrypted.',
+      AppLang.km: 'ការទូទាត់មានសុវត្ថិភាព និងបានអ៊ិនគ្រីប។'
+    },
+    'paymentWallet': {
+      AppLang.en: 'Payment & Wallet',
+      AppLang.km: 'ការទូទាត់ និងកាបូប'
+    },
+    'assetsBound': {
+      AppLang.en: 'Assets bound',
+      AppLang.km: 'វិធីទូទាត់ដែលបានភ្ជាប់'
+    },
+    'cash': {AppLang.en: 'Cash', AppLang.km: 'សាច់ប្រាក់'},
+    'cashSubtitle': {
+      AppLang.en: 'Pay the technician directly',
+      AppLang.km: 'ទូទាត់ដោយផ្ទាល់ជាមួយជាង'
+    },
+    'expires': {AppLang.en: 'Expires', AppLang.km: 'ផុតកំណត់'},
+    'addCardHint': {
+      AppLang.en: 'Tap to add a card',
+      AppLang.km: 'ចុចដើម្បីបន្ថែមកាត'
+    },
+    'addNewCardLink': {
+      AppLang.en: 'Add new Credit & Debit Card',
+      AppLang.km: 'បន្ថែមកាតឥណទាន ឬឥណពន្ធថ្មី'
+    },
+    'addCreditDebitCard': {
+      AppLang.en: 'Add Credit/Debit card',
+      AppLang.km: 'បន្ថែមកាតឥណទាន/ឥណពន្ធ'
+    },
+    'defaultLabel': {AppLang.en: 'Default', AppLang.km: 'លំនាំដើម'},
+    'confirmPayment': {
+      AppLang.en: 'Confirm Payment',
+      AppLang.km: 'បញ្ជាក់ការទូទាត់'
+    },
+    'addNewCardTitle': {
+      AppLang.en: 'Add New Card',
+      AppLang.km: 'បន្ថែមកាតថ្មី'
+    },
+    'cardholderName': {
+      AppLang.en: 'Cardholder Name',
+      AppLang.km: 'ឈ្មោះម្ចាស់កាត'
+    },
+    'cardholderNameHint': {
+      AppLang.en: 'Enter full name',
+      AppLang.km: 'បញ្ចូលឈ្មោះពេញ'
+    },
+    'cardNumber': {AppLang.en: 'Card Number', AppLang.km: 'លេខកាត'},
+    'expiryDate': {
+      AppLang.en: 'Expiry Date',
+      AppLang.km: 'កាលបរិច្ឆេទផុតកំណត់'
+    },
+    'yourName': {AppLang.en: 'YOUR NAME', AppLang.km: 'ឈ្មោះរបស់អ្នក'},
+    'cardHolderRequired': {
+      AppLang.en: 'Enter the cardholder name',
+      AppLang.km: 'សូមបញ្ចូលឈ្មោះម្ចាស់កាត'
+    },
+    'cardNumberInvalid': {
+      AppLang.en: 'Enter a valid 16-digit card number',
+      AppLang.km: 'សូមបញ្ចូលលេខកាត ១៦ខ្ទង់ដែលត្រឹមត្រូវ'
+    },
+    'cardExpiryInvalid': {
+      AppLang.en: 'Enter a valid expiry date (MM/YY)',
+      AppLang.km: 'សូមបញ្ចូលកាលបរិច្ឆេទផុតកំណត់ត្រឹមត្រូវ (ខែ/ឆ្នាំ)'
+    },
+    'cardCvvInvalid': {
+      AppLang.en: 'Enter a valid CVV',
+      AppLang.km: 'សូមបញ្ចូល CVV ត្រឹមត្រូវ'
+    },
+    'addCard': {AppLang.en: 'Add Card', AppLang.km: 'បន្ថែមកាត'},
+    'cardEncryptionNote': {
+      AppLang.en: 'PCI-DSS compliant 256-bit encryption',
+      AppLang.km: 'អ៊ិនគ្រីប 256-bit អនុលោមតាម PCI-DSS'
+    },
+    'paymentSuccessfulTitle': {
+      AppLang.en: 'Payment Successful',
+      AppLang.km: 'ការទូទាត់បានជោគជ័យ'
+    },
+    'paymentSuccessfulBody': {
+      AppLang.en: 'Your transaction has been processed successfully.',
+      AppLang.km: 'ប្រតិបត្តិការរបស់អ្នកត្រូវបានដំណើរការដោយជោគជ័យ។',
+    },
+    'serviceId': {AppLang.en: 'Service ID', AppLang.km: 'លេខសម្គាល់សេវា'},
+    'amountPaid': {
+      AppLang.en: 'Amount Paid',
+      AppLang.km: 'ចំនួនទឹកប្រាក់បានទូទាត់'
+    },
+    'dateTime': {AppLang.en: 'Date & Time', AppLang.km: 'កាលបរិច្ឆេទ និងម៉ោង'},
+    'paymentMethodLabel': {
+      AppLang.en: 'Payment Method',
+      AppLang.km: 'វិធីទូទាត់'
+    },
+    'downloadReceipt': {
+      AppLang.en: 'Download Receipt',
+      AppLang.km: 'ទាញយកបង្កាន់ដៃ'
+    },
+    'returnToHome': {
+      AppLang.en: 'Return to Home',
+      AppLang.km: 'ត្រឡប់ទៅទំព័រដើម'
+    },
+    'receiptTitle': {AppLang.en: 'Receipt', AppLang.km: 'បង្កាន់ដៃ'},
+    'promoCodeHint': {AppLang.en: 'Promo Code', AppLang.km: 'កូដប្រូម៉ូសិន'},
+    'apply': {AppLang.en: 'Apply', AppLang.km: 'អនុវត្ត'},
+    'promoCodeEmpty': {
+      AppLang.en: 'Enter a promo code first',
+      AppLang.km: 'សូមបញ្ចូលកូដប្រូម៉ូសិនជាមុន'
+    },
+    'promoCodeNoneAvailable': {
+      AppLang.en: 'No promo codes are available right now',
+      AppLang.km: 'មិនមានកូដប្រូម៉ូសិននៅពេលនេះទេ',
+    },
+    'noPaymentMethodYet': {
+      AppLang.en: 'No payment method added yet',
+      AppLang.km: 'មិនទាន់មានវិធីទូទាត់ទេ'
+    },
+    'editCard': {AppLang.en: 'Edit', AppLang.km: 'កែសម្រួល'},
   };
 }

@@ -5,6 +5,7 @@ import '../services/auth_api.dart';
 import '../theme/app_theme.dart';
 import '../widgets/app_buttons.dart';
 import '../widgets/app_text_field.dart';
+import 'login_success_screen.dart';
 
 class CreateNewPasswordScreen extends StatefulWidget {
   const CreateNewPasswordScreen({super.key});
@@ -50,8 +51,7 @@ class _CreateNewPasswordScreenState extends State<CreateNewPasswordScreen> {
       // in (see VerifyEmailScreen._verify), so this call is authenticated.
       await AuthApi.instance.setPassword(password);
       if (!mounted) return;
-      Navigator.of(context)
-          .pushNamedAndRemoveUntil('/dashboard', (route) => false);
+      goToDashboardAfterLogin(context);
     } on ApiException catch (e) {
       _snack(e.message);
     } finally {

@@ -123,8 +123,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             CircleAvatar(
               radius: 18,
               backgroundColor: AppColors.primaryBlue.withValues(alpha: 0.12),
-              child: Icon(_icon(n.type),
-                  size: 18, color: AppColors.primaryBlue),
+              child:
+                  Icon(_icon(n.type), size: 18, color: AppColors.primaryBlue),
             ),
             const SizedBox(width: 12),
             Expanded(

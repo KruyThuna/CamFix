@@ -19,6 +19,8 @@ class TechnicianProfile {
     this.lastLng,
     this.rejectionReason,
     this.photoUrl,
+    this.bannerUrl,
+    this.bannerTitle,
   });
 
   final int id;
@@ -39,6 +41,8 @@ class TechnicianProfile {
   final double? lastLng;
   final String? rejectionReason;
   final String? photoUrl;
+  final String? bannerUrl;
+  final String? bannerTitle;
 
   bool get isApproved => approvalStatus == 'APPROVED';
   bool get isRejected => approvalStatus == 'REJECTED';
@@ -73,6 +77,8 @@ class TechnicianProfile {
         lastLng: (j['lastLng'] as num?)?.toDouble(),
         rejectionReason: j['rejectionReason']?.toString(),
         photoUrl: j['photoUrl']?.toString(),
+        bannerUrl: j['bannerUrl']?.toString(),
+        bannerTitle: j['bannerTitle']?.toString(),
       );
 }
 
@@ -84,4 +90,17 @@ const kServiceCategories = <String>[
   'Motorcycle',
   'Car',
   'Water network',
+];
+
+/// Preset opening-hours strings offered in the profile editor's dropdown, so
+/// technicians pick a consistent value instead of free-typing one. The field
+/// itself stays a plain string on the backend - picking "Custom" reveals a
+/// text field for anything not covered here.
+const kOpeningHoursOptions = <String>[
+  'Everyday, 8:00 AM – 6:00 PM',
+  'Everyday, 24 Hours',
+  'Monday – Friday, 8:00 AM – 6:00 PM',
+  'Monday – Saturday, 8:00 AM – 6:00 PM',
+  'Monday – Saturday, 6:00 AM – 11:00 PM',
+  'Monday – Sunday, 7:00 AM – 9:00 PM',
 ];

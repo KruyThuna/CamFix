@@ -1,29 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
-import 'package:latlong2/latlong.dart';
 
 import '../app_settings.dart';
 import '../l10n/app_strings.dart';
+import '../models/live_technician.dart';
 import '../models/service_provider.dart';
 import '../services/current_user.dart';
-import '../services/device_location.dart';
-import '../services/technicians_api.dart';
 import '../theme/app_theme.dart';
 import 'services_screen.dart' show categoryLabel;
 
-/// Map fallback centre (Phnom Penh) for when device location isn't available
-/// yet - only a starting viewport, never a claimed user position.
-const _fallbackCentre = LatLng(11.5564, 104.9282);
-
 /// "Nearby Technicians" live map: the current user's area plus every
-/// approved technician's live position. Tap a marker (or a list row) to open
-/// the provider. OpenStreetMap tiles, no API key.
-///
-/// Technicians come from `GET /api/technicians` - real accounts, not sample
-/// data. A technician who has never gone online has no lat/lng
-/// ([ServiceProvider.hasLocation] false); they still appear in the list
-/// below (so "why don't I see them" isn't a mystery) but can't be pinned or
-/// given a distance, since there's no real position to compute one from.
+/// technician's live position. Tap a marker (or a list row) to open the
+/// provider. OpenStreetMap tiles, no API key.
 class TechniciansLiveScreen extends StatefulWidget {
   const TechniciansLiveScreen({super.key});
 
@@ -32,18 +20,14 @@ class TechniciansLiveScreen extends StatefulWidget {
 }
 
 class _TechniciansLiveScreenState extends State<TechniciansLiveScreen> {
-  List<ServiceProvider> _techs = const [];
-  ServiceProvider? _selected;
-  LatLng? _userPos;
-  bool _loading = true;
-  String? _error;
+  final _techs = LiveTechnician.sample;
+  LiveTechnician? _selected;
 
   @override
   void initState() {
     super.initState();
     CurrentUser.instance.addListener(_onUser);
     CurrentUser.instance.refresh();
-    _load();
   }
 
   @override
@@ -61,49 +45,20 @@ class _TechniciansLiveScreenState extends State<TechniciansLiveScreen> {
     return n.isEmpty ? AppStrings.t('notSet') : n.split(RegExp(r'\s+')).first;
   }
 
-  /// Reads GPS, fetches the real technician list, and computes each
-  /// technician's distance from the user's actual position on-device (the
-  /// backend doesn't do this itself). A failed GPS read still shows the
-  /// list - only the distance figures and map pin are affected.
-  Future<void> _load() async {
-    setState(() {
-      _loading = true;
-      _error = null;
-    });
-
-    final fix = await getCurrentLocation();
-    if (!mounted) return;
-    if (fix.ok) {
-      _userPos = LatLng(fix.position!.latitude, fix.position!.longitude);
-    }
-
-    try {
-      final list = await TechniciansApi.instance.list();
-      if (!mounted) return;
-      setState(() {
-        _techs = list;
-        _loading = false;
-      });
-    } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _techs = const [];
-        _loading = false;
-        _error = e.toString().replaceFirst('Exception: ', '');
-      });
-    }
-  }
-
-  /// Real distance from the user to [t], or null when either position is
-  /// unknown - never a placeholder number standing in for a real one.
-  double? _distanceKm(ServiceProvider t) {
-    final me = _userPos;
-    if (me == null || !t.hasLocation) return null;
-    return distanceKmBetween(me.latitude, me.longitude, t.latitude, t.longitude);
-  }
-
-  void _openProvider(ServiceProvider t) {
-    Navigator.of(context).pushNamed('/provider', arguments: t);
+  void _openProvider(LiveTechnician t) {
+    Navigator.of(context).pushNamed(
+      '/provider',
+      arguments: ServiceProvider(
+        name: t.name,
+        category: t.category,
+        location: 'Phnom Penh',
+        rating: 4.5,
+        distanceKm: t.distanceKm,
+        available: t.available,
+        latitude: t.pos.latitude,
+        longitude: t.pos.longitude,
+      ),
+    );
   }
 
   @override
@@ -116,7 +71,7 @@ class _TechniciansLiveScreenState extends State<TechniciansLiveScreen> {
         children: [
           FlutterMap(
             options: MapOptions(
-              initialCenter: _userPos ?? _fallbackCentre,
+              initialCenter: LiveTechnician.userPos,
               initialZoom: 13,
               minZoom: 3,
               maxZoom: 18,
@@ -130,26 +85,21 @@ class _TechniciansLiveScreenState extends State<TechniciansLiveScreen> {
               ),
               MarkerLayer(
                 markers: [
-                  // Only drawn once GPS actually resolved - never claim a
-                  // fake user position.
-                  if (_userPos != null)
-                    Marker(
-                      point: _userPos!,
-                      width: 26,
-                      height: 26,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: AppColors.primaryBlue,
-                          shape: BoxShape.circle,
-                          border: Border.all(color: AppColors.white, width: 3),
-                        ),
+                  Marker(
+                    point: LiveTechnician.userPos,
+                    width: 26,
+                    height: 26,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: AppColors.primaryBlue,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: AppColors.white, width: 3),
                       ),
                     ),
-                  // Unlocated technicians show in the list below but can't be
-                  // pinned - there is no real position to pin them at.
-                  for (final t in _techs.where((t) => t.hasLocation))
+                  ),
+                  for (final t in _techs)
                     Marker(
-                      point: LatLng(t.latitude, t.longitude),
+                      point: t.pos,
                       width: 44,
                       height: 44,
                       child: GestureDetector(
@@ -257,9 +207,8 @@ class _TechniciansLiveScreenState extends State<TechniciansLiveScreen> {
             bottom: 0,
             child: SafeArea(
               top: false,
-              child: _selected != null
-                  ? _selectedCard(p, _selected!)
-                  : _list(p),
+              child:
+                  _selected != null ? _selectedCard(p, _selected!) : _list(p),
             ),
           ),
         ],
@@ -267,7 +216,7 @@ class _TechniciansLiveScreenState extends State<TechniciansLiveScreen> {
     );
   }
 
-  Widget _selectedCard(AppPalette p, ServiceProvider t) {
+  Widget _selectedCard(AppPalette p, LiveTechnician t) {
     return Container(
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(16),
@@ -317,59 +266,23 @@ class _TechniciansLiveScreenState extends State<TechniciansLiveScreen> {
               color: p.shadow, blurRadius: 16, offset: const Offset(0, 6)),
         ],
       ),
-      child: _loading
-          ? const Padding(
-              padding: EdgeInsets.symmetric(vertical: 28),
-              child: Center(
-                child: SizedBox(
-                  width: 22,
-                  height: 22,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                ),
-              ),
-            )
-          : _techs.isEmpty
-              ? _emptyState(p)
-              : ListView.separated(
-                  shrinkWrap: true,
-                  padding: const EdgeInsets.symmetric(horizontal: 14),
-                  itemCount: _techs.length,
-                  separatorBuilder: (_, __) =>
-                      Divider(height: 1, color: p.border),
-                  itemBuilder: (_, i) => InkWell(
-                    onTap: () => _openProvider(_techs[i]),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 10),
-                      child: _techRow(p, _techs[i]),
-                    ),
-                  ),
-                ),
-    );
-  }
-
-  /// Shown when the fetch genuinely returned nobody (or failed) - better
-  /// than an empty box, and it says why.
-  Widget _emptyState(AppPalette p) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(18, 18, 18, 14),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.person_search, size: 30, color: p.textSecondary),
-          const SizedBox(height: 8),
-          Text(
-            _error ?? AppStrings.t('noTechniciansNearby'),
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 13, color: p.textSecondary),
+      child: ListView.separated(
+        shrinkWrap: true,
+        padding: const EdgeInsets.symmetric(horizontal: 14),
+        itemCount: _techs.length,
+        separatorBuilder: (_, __) => Divider(height: 1, color: p.border),
+        itemBuilder: (_, i) => InkWell(
+          onTap: () => _openProvider(_techs[i]),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            child: _techRow(p, _techs[i]),
           ),
-          const SizedBox(height: 10),
-          TextButton(onPressed: _load, child: Text(AppStrings.t('retry'))),
-        ],
+        ),
       ),
     );
   }
 
-  Widget _techRow(AppPalette p, ServiceProvider t) {
+  Widget _techRow(AppPalette p, LiveTechnician t) {
     return Row(
       children: [
         CircleAvatar(
@@ -395,25 +308,18 @@ class _TechniciansLiveScreenState extends State<TechniciansLiveScreen> {
         Column(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            Builder(builder: (_) {
-              final km = _distanceKm(t);
-              return Text(
-                  km != null
-                      ? '${AppSettings.instance.convertKm(km).toStringAsFixed(1)} '
-                          '${AppStrings.t(AppSettings.instance.distanceUnitKey)} '
-                          '${AppStrings.t('nearby')}'
-                      : AppStrings.t('locationUnknown'),
-                  style: TextStyle(fontSize: 11.5, color: p.textSecondary));
-            }),
+            Text(
+                '${AppSettings.instance.convertKm(t.distanceKm).toStringAsFixed(1)} '
+                '${AppStrings.t(AppSettings.instance.distanceUnitKey)} '
+                '${AppStrings.t('nearby')}',
+                style: TextStyle(fontSize: 11.5, color: p.textSecondary)),
             const SizedBox(height: 2),
             Row(
               children: [
                 Icon(
                   t.available ? Icons.verified : Icons.schedule,
                   size: 13,
-                  color: t.available
-                      ? AppColors.primaryBlue
-                      : p.textSecondary,
+                  color: t.available ? AppColors.primaryBlue : p.textSecondary,
                 ),
                 const SizedBox(width: 3),
                 Text(
@@ -421,9 +327,8 @@ class _TechniciansLiveScreenState extends State<TechniciansLiveScreen> {
                   style: TextStyle(
                     fontSize: 11.5,
                     fontWeight: FontWeight.w600,
-                    color: t.available
-                        ? AppColors.primaryBlue
-                        : p.textSecondary,
+                    color:
+                        t.available ? AppColors.primaryBlue : p.textSecondary,
                   ),
                 ),
               ],

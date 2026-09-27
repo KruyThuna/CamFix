@@ -7,12 +7,14 @@ import {
   getTechnician,
   reactivateTechnician,
   rejectTechnician,
+  resetTechnicianPassword,
   suspendTechnician,
   updateTechnician,
 } from '../api/technicians';
 import { errorMessage } from '../api/client';
 import { AccountBadge, ApprovalBadge, Badge } from '../components/StatusBadge';
 import { TechnicianForm } from '../components/TechnicianForm';
+import { TechnicianIdCard } from '../components/TechnicianIdCard';
 import { fmtDate, fmtRelative } from '../lib/format';
 
 export function TechnicianDetailPage() {
@@ -22,6 +24,7 @@ export function TechnicianDetailPage() {
   const navigate = useNavigate();
   const [editing, setEditing] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [newPassword, setNewPassword] = useState<string | null>(null);
 
   const { data: t, isLoading, error } = useQuery({
     queryKey: ['technician', techId],
@@ -55,6 +58,15 @@ export function TechnicianDetailPage() {
     onSuccess: () => {
       invalidate();
       navigate('/technicians', { replace: true });
+    },
+    onError: (e) => setActionError(errorMessage(e)),
+  });
+
+  const resetPassword = useMutation({
+    mutationFn: () => resetTechnicianPassword(techId),
+    onSuccess: (temporaryPassword) => {
+      setActionError(null);
+      setNewPassword(temporaryPassword);
     },
     onError: (e) => setActionError(errorMessage(e)),
   });
@@ -98,6 +110,7 @@ export function TechnicianDetailPage() {
       {actionError && <p className="error-text">{actionError}</p>}
 
       <div className="stack">
+        <TechnicianIdCard id={techId} identityEmailVerified={t.identityEmailVerified} />
         <div className="card pad">
           <div className="inline" style={{ marginBottom: 14 }}>
             <ApprovalBadge status={t.approvalStatus} />
@@ -144,11 +157,53 @@ export function TechnicianDetailPage() {
                 Reactivate
               </button>
             )}
+            <button
+              disabled={resetPassword.isPending}
+              onClick={() => {
+                if (
+                  window.confirm(
+                    `Reset the password for ${t.firstName} ${t.lastName}? Their current password will stop working immediately.`,
+                  )
+                ) {
+                  setNewPassword(null);
+                  resetPassword.mutate();
+                }
+              }}
+            >
+              Reset password
+            </button>
           </div>
           {t.rejectionReason && (
             <p className="muted" style={{ marginTop: 12 }}>
               Rejection reason: {t.rejectionReason}
             </p>
+          )}
+          {newPassword && (
+            <div
+              className="card pad"
+              style={{ marginTop: 14, background: 'var(--surface-alt, #f4f6f8)' }}
+            >
+              <p style={{ margin: 0, marginBottom: 8 }}>
+                <strong>New temporary password</strong> — share this with the technician now,
+                it won't be shown again:
+              </p>
+              <div className="inline" style={{ alignItems: 'center' }}>
+                <code
+                  style={{
+                    fontSize: 16,
+                    fontWeight: 600,
+                    background: 'var(--surface, #fff)',
+                    padding: '4px 10px',
+                    borderRadius: 6,
+                    border: '1px solid var(--border, #ddd)',
+                  }}
+                >
+                  {newPassword}
+                </code>
+                <button onClick={() => navigator.clipboard?.writeText(newPassword)}>Copy</button>
+                <button onClick={() => setNewPassword(null)}>Dismiss</button>
+              </div>
+            </div>
           )}
         </div>
 

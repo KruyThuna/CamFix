@@ -69,3 +69,13 @@ export async function listTechnicianLocations(): Promise<TechnicianLocation[]> {
   const { data } = await api.get<TechnicianLocation[]>('/api/admin/technicians/locations');
   return data;
 }
+
+/** Sets a new random temporary password for this technician's account and
+ * returns it in plaintext, once - there's no email/SMS delivery wired up in
+ * this project, so relay it to the technician directly. */
+export async function resetTechnicianPassword(id: number): Promise<string> {
+  const { data } = await api.post<{ temporaryPassword: string }>(
+    `/api/admin/technicians/${id}/reset-password`,
+  );
+  return data.temporaryPassword;
+}

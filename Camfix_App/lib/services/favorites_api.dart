@@ -28,6 +28,11 @@ class FavoritesApi {
 
   bool get isLoaded => _loaded;
 
+  void clear() {
+    _favoritedIds.clear();
+    _loaded = false;
+  }
+
   /// Server-checked favorite status for one technician (used where fetching
   /// the whole list first would be overkill, e.g. a single tracking screen).
   Future<bool> check(int technicianId) async {

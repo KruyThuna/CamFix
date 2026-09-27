@@ -2,16 +2,21 @@ import 'package:flutter/material.dart';
 import '../app_settings.dart';
 import '../l10n/app_strings.dart';
 import '../models/user_info.dart';
+import '../services/bookings_api.dart';
+import '../services/bookings_store.dart';
 import '../services/current_user.dart';
+import '../services/favorites_api.dart';
 import '../services/notifications_store.dart';
+import '../services/saved_card_store.dart';
 import '../services/token_store.dart';
 import '../theme/app_theme.dart';
 import '../widgets/user_avatar.dart';
-import 'main_shell.dart';
+import 'payment_wallet_screen.dart';
 
-/// Profile screen (mockup pages 22–23): user summary card, quick settings
-/// (Dark Mode / Language / Notifications), a secondary settings group and
-/// a Logout row. The account rows deep-link to Edit Profile.
+/// Profile screen (mockup pages 22-23 / 44-45): user summary card, real
+/// account info, quick settings (Payment / Notifications / Language), a
+/// secondary settings group and a Logout row. The account rows deep-link to
+/// Edit Profile.
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
@@ -22,27 +27,40 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   // Shown until GET /api/auth/me resolves (or if signed out).
   static const String _fallbackName = 'CAM FIX user';
-  static const String _address = 'St, SenSok, PhnomPenh...';
 
   UserInfo? get _user => CurrentUser.instance.value;
   String get _name => _user?.displayName ?? _fallbackName;
-  String get _phone => (_user?.realPhone.isNotEmpty ?? false)
-      ? _user!.realPhone
-      : AppStrings.t('notSet');
-  String get _email => (_user?.email.isNotEmpty ?? false)
-      ? _user!.email
-      : AppStrings.t('notSet');
+
+  double? _totalSpend;
+  int? _favoritesCount;
 
   @override
   void initState() {
     super.initState();
     CurrentUser.instance.addListener(_onUser);
     CurrentUser.instance.refresh();
+    BookingsStore.instance.addListener(_onUser);
+    BookingsStore.instance.refresh();
+    _loadStats();
+  }
+
+  Future<void> _loadStats() async {
+    try {
+      final spend = await BookingsApi.instance.myTotalSpend();
+      if (mounted) setState(() => _totalSpend = spend);
+    } catch (_) {
+      // offline or server hiccup - the tile just shows a dash
+    }
+    try {
+      final favorites = await FavoritesApi.instance.list();
+      if (mounted) setState(() => _favoritesCount = favorites.length);
+    } catch (_) {}
   }
 
   @override
   void dispose() {
     CurrentUser.instance.removeListener(_onUser);
+    BookingsStore.instance.removeListener(_onUser);
     super.dispose();
   }
 
@@ -51,6 +69,63 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   void _openEditProfile() => Navigator.of(context).pushNamed('/edit-profile');
+
+  /// What CAMFIX actually does to keep bookings safe - only things the app
+  /// really does, plus the privacy policy link (moved here from its own row).
+  void _showTrustInfo() {
+    showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      builder: (sheetContext) {
+        final p = sheetContext.pal;
+        Widget point(IconData icon, String key) => Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child:
+                  Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Icon(icon, size: 20, color: AppColors.primaryBlue),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(AppStrings.t(key),
+                      style: TextStyle(
+                          fontSize: 13.5, height: 1.4, color: p.textPrimary)),
+                ),
+              ]),
+            );
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(AppStrings.t('trustShield'),
+                    style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                        color: p.textPrimary)),
+                const SizedBox(height: 16),
+                point(Icons.verified_user_outlined, 'trustPointReview'),
+                point(Icons.star_outline_rounded, 'trustPointRatings'),
+                point(Icons.receipt_long_outlined, 'trustPointQuotes'),
+                point(Icons.lock_outline_rounded, 'trustPointChat'),
+                const SizedBox(height: 4),
+                OutlinedButton.icon(
+                  onPressed: () {
+                    Navigator.of(sheetContext).pop();
+                    Navigator.of(context).pushNamed('/privacy-policy');
+                  },
+                  icon: const Icon(Icons.privacy_tip_outlined, size: 18),
+                  label: Text(AppStrings.t('privacyPolicy')),
+                  style: OutlinedButton.styleFrom(
+                      minimumSize: const Size.fromHeight(46)),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
 
   Future<void> _logout() async {
     final confirmed = await showDialog<bool>(
@@ -65,7 +140,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(true),
-            style: TextButton.styleFrom(foregroundColor: const Color(0xFFE5484D)),
+            style:
+                TextButton.styleFrom(foregroundColor: const Color(0xFFE5484D)),
             child: Text(AppStrings.t('logout')),
           ),
         ],
@@ -75,9 +151,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     await TokenStore.instance.clear();
     CurrentUser.instance.clear();
+    FavoritesApi.instance.clear();
+    BookingsStore.instance.clear();
+    NotificationsStore.instance.clear();
     if (mounted) {
-      Navigator.of(context)
-          .pushNamedAndRemoveUntil('/login', (route) => false);
+      Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
     }
   }
 
@@ -124,13 +202,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ),
               const SizedBox(height: 20),
-              _buildAccountCard(),
-              const SizedBox(height: 16),
+              _buildStatsRow(),
+              const SizedBox(height: 22),
+              _sectionLabel(AppStrings.t('accountPreferencesCaps')),
               _buildSettingsCard(),
-              const SizedBox(height: 16),
+              const SizedBox(height: 20),
+              _sectionLabel(AppStrings.t('supportTrustCaps')),
               _buildMoreCard(),
-              const SizedBox(height: 16),
+              const SizedBox(height: 20),
               _buildLogoutRow(),
+              const SizedBox(height: 14),
+              Center(
+                child: Text(
+                  AppSettings.instance.hasDefaultAddress
+                      ? 'CAMFIX v$_appVersion (Build $_buildNumber)  •  ${AppSettings.instance.defaultAddress}'
+                      : 'CAMFIX v$_appVersion (Build $_buildNumber)',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(fontSize: 11, color: p.textSecondary),
+                ),
+              ),
             ],
           ),
         ),
@@ -138,24 +229,116 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildHeader() {
+  // Matches pubspec.yaml's version - real, not a placeholder.
+  static const String _appVersion = '1.2.8';
+  static const String _buildNumber = '16';
+
+  Widget _sectionLabel(String text) => Padding(
+        padding: const EdgeInsets.only(left: 4, bottom: 8),
+        child: Text(text,
+            style: TextStyle(
+                fontSize: 11.5,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.5,
+                color: context.pal.textSecondary)),
+      );
+
+  Widget _buildStatsRow() {
     final p = context.pal;
-    return Row(
-      children: [
-        IconButton(
-          onPressed: () => MainShell.of(context)?.goToTab(0),
-          icon: Icon(Icons.arrow_back, color: p.textPrimary),
-        ),
-        Expanded(
-          child: Center(
-            child: Text(
-              AppStrings.t('profile'),
-              style: AppText.h2.copyWith(fontSize: 20, color: p.textPrimary),
+    final completedRepairs = BookingsStore.instance.completed
+        .where((b) => b.status == 'COMPLETED')
+        .length;
+
+    // One card, three columns split by hairlines, each with a tinted pill.
+    Widget tile(String label, String value, String sub, Color tint,
+        {VoidCallback? onTap}) {
+      return Expanded(
+        child: InkWell(
+          borderRadius: BorderRadius.circular(14),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 4),
+            child: Column(
+              children: [
+                Text(label,
+                    style: TextStyle(fontSize: 11, color: p.textSecondary)),
+                const SizedBox(height: 4),
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(value,
+                      style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w800,
+                          color: p.textPrimary)),
+                ),
+                const SizedBox(height: 6),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 9, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: tint.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Text(sub,
+                      style: TextStyle(
+                          fontSize: 9.5,
+                          fontWeight: FontWeight.w700,
+                          color: tint)),
+                ),
+              ],
             ),
           ),
         ),
-        const SizedBox(width: 48),
-      ],
+      );
+    }
+
+    Widget split() => Container(width: 1, height: 52, color: p.border);
+
+    return Container(
+      decoration: BoxDecoration(
+        color: p.surface,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: p.border),
+        boxShadow: [
+          BoxShadow(
+              color: p.shadow, blurRadius: 12, offset: const Offset(0, 4)),
+        ],
+      ),
+      child: Row(
+        children: [
+          tile(AppStrings.t('statRepairs'), '$completedRepairs',
+              AppStrings.t('completedTab'), const Color(0xFF1E9E52)),
+          split(),
+          tile(
+              AppStrings.t('favorites'),
+              _favoritesCount == null ? '—' : '$_favoritesCount',
+              AppStrings.t('statSaved'),
+              AppColors.primaryBlue,
+              onTap: () => Navigator.of(context).pushNamed('/favorites')),
+          split(),
+          tile(
+              AppStrings.t('totalSpendTitle'),
+              _totalSpend == null
+                  ? '—'
+                  : '\$${_totalSpend!.toStringAsFixed(0)}',
+              AppStrings.t('statAllTime'),
+              const Color(0xFF8E44E8),
+              onTap: () => Navigator.of(context).pushNamed('/total-spend')),
+        ],
+      ),
+    );
+  }
+
+  // A top-level tab (reached via the bottom nav), not a pushed screen - no
+  // back arrow, same as Dashboard/Services/Chat's own headers.
+  Widget _buildHeader() {
+    final p = context.pal;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      child: Text(
+        AppStrings.t('profile'),
+        style: AppText.h2.copyWith(fontSize: 22, color: p.textPrimary),
+      ),
     );
   }
 
@@ -165,36 +348,36 @@ class _ProfileScreenState extends State<ProfileScreen> {
       child: GestureDetector(
         onTap: _openEditProfile,
         child: SizedBox(
-          width: 96,
-          height: 96,
+          width: 104,
+          height: 104,
           child: Stack(
             clipBehavior: Clip.none,
             children: [
-              const UserAvatar(radius: 44),
+              // Soft blue ring around the photo, as in the mockup.
+              Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: p.surface,
+                  border: Border.all(
+                      color: AppColors.primaryBlue.withValues(alpha: 0.25),
+                      width: 3),
+                ),
+                child: const UserAvatar(radius: 44),
+              ),
               Positioned(
                 bottom: 0,
                 right: 0,
                 child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  width: 26,
+                  height: 26,
                   decoration: BoxDecoration(
                     color: AppColors.primaryBlue,
-                    borderRadius: BorderRadius.circular(20),
+                    shape: BoxShape.circle,
                     border: Border.all(color: p.background, width: 2),
                   ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.edit, size: 11, color: AppColors.white),
-                      const SizedBox(width: 3),
-                      Text(AppStrings.t('edit'),
-                          style: const TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.white,
-                          )),
-                    ],
-                  ),
+                  child:
+                      const Icon(Icons.edit, size: 13, color: AppColors.white),
                 ),
               ),
             ],
@@ -211,7 +394,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
         color: p.surface,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
-          BoxShadow(color: p.shadow, blurRadius: 12, offset: const Offset(0, 4)),
+          BoxShadow(
+              color: p.shadow, blurRadius: 12, offset: const Offset(0, 4)),
         ],
       ),
       child: Column(children: children),
@@ -226,112 +410,117 @@ class _ProfileScreenState extends State<ProfileScreen> {
         color: context.pal.border,
       );
 
-  Widget _buildAccountCard() {
-    return _card(
-      children: [
-        _accountRow(Icons.phone_outlined, AppStrings.t('phone'), _phone),
-        _divider(),
-        _accountRow(Icons.email_outlined, AppStrings.t('email'), _email),
-        _divider(),
-        _accountRow(
-            Icons.location_on_outlined, AppStrings.t('address'), _address),
-      ],
-    );
-  }
-
-  Widget _accountRow(IconData icon, String label, String value) {
+  Widget _switchRow(IconData icon, Color tint, String title, String subtitle,
+      bool value, ValueChanged<bool> onChanged) {
     final p = context.pal;
-    return InkWell(
-      onTap: _openEditProfile,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        child: Row(
-          children: [
-            _iconBubble(icon),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(label,
-                      style: TextStyle(fontSize: 12, color: p.textSecondary)),
-                  const SizedBox(height: 2),
-                  Text(value,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Row(
+        children: [
+          _iconBubble(icon, tint: tint),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title,
+                    style: TextStyle(
                         fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: p.textPrimary,
-                      )),
-                ],
-              ),
+                        fontWeight: FontWeight.w700,
+                        color: p.textPrimary)),
+                const SizedBox(height: 2),
+                Text(subtitle,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(fontSize: 11.5, color: p.textSecondary)),
+              ],
             ),
-            Icon(Icons.chevron_right, color: p.textSecondary),
-          ],
-        ),
+          ),
+          Switch(value: value, onChanged: onChanged),
+        ],
       ),
     );
   }
 
   Widget _buildSettingsCard() {
     final p = context.pal;
+    final card = SavedCardStore.instance.card;
     return _card(
       children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-          child: Row(
-            children: [
-              _iconBubble(Icons.dark_mode_outlined),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(AppStrings.t('darkMode'),
-                    style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: p.textPrimary)),
-              ),
-              Switch(
-                value: AppSettings.instance.isDark,
-                onChanged: (v) {
-                  AppSettings.instance.setDarkMode(v);
-                  setState(() {});
-                },
-              ),
-            ],
-          ),
+        _richNavRow(
+          Icons.credit_card_rounded,
+          AppStrings.t('paymentWallet'),
+          card != null
+              ? 'Card •••• ${card.last4}'
+              : AppStrings.t('noPaymentMethodYet'),
+          tint: AppColors.primaryBlue,
+          trailing: card != null
+              ? Container(
+                  width: 8,
+                  height: 8,
+                  margin: const EdgeInsets.only(right: 8),
+                  decoration: const BoxDecoration(
+                      color: Color(0xFF2ECC71), shape: BoxShape.circle),
+                )
+              : null,
+          onTap: () async {
+            await Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const PaymentWalletScreen()));
+            if (mounted) setState(() {});
+          },
         ),
         _divider(),
-        _navRow(Icons.translate_rounded, AppStrings.t('language'),
-            onTap: _pickLanguage),
+        _switchRow(
+          Icons.notifications_none_rounded,
+          const Color(0xFFB455E0),
+          AppStrings.t('pushNotifications'),
+          AppStrings.t('notificationsDesc'),
+          AppSettings.instance.notificationsEnabled,
+          (v) {
+            AppSettings.instance.setNotificationsEnabled(v);
+            if (v) {
+              NotificationsStore.instance.startPolling();
+            } else {
+              NotificationsStore.instance.stopPolling();
+            }
+            setState(() {});
+          },
+        ),
         _divider(),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-          child: Row(
-            children: [
-              _iconBubble(Icons.notifications_none_rounded),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(AppStrings.t('notifications'),
-                    style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: p.textPrimary)),
-              ),
-              Switch(
-                value: AppSettings.instance.notificationsEnabled,
-                onChanged: (v) {
-                  AppSettings.instance.setNotificationsEnabled(v);
-                  if (v) {
-                    NotificationsStore.instance.startPolling();
-                  } else {
-                    NotificationsStore.instance.stopPolling();
-                  }
-                  setState(() {});
-                },
-              ),
-            ],
+        _richNavRow(
+          Icons.translate_rounded,
+          AppStrings.t('appLanguage'),
+          AppStrings.t('languageOptionsDesc'),
+          tint: const Color(0xFF1E9E52),
+          trailing: Padding(
+            padding: const EdgeInsets.only(right: 4),
+            child: Text(
+                AppSettings.instance.lang == AppLang.km
+                    ? AppStrings.t('khmer')
+                    : AppStrings.t('english'),
+                style: TextStyle(fontSize: 12.5, color: p.textSecondary)),
           ),
+          onTap: _pickLanguage,
+        ),
+        _divider(),
+        _switchRow(
+          Icons.dark_mode_outlined,
+          const Color(0xFF34495E),
+          AppStrings.t('darkMode'),
+          AppStrings.t('darkModeDesc'),
+          AppSettings.instance.isDark,
+          (v) {
+            AppSettings.instance.setDarkMode(v);
+            setState(() {});
+          },
+        ),
+        _divider(),
+        _richNavRow(
+          Icons.tune_rounded,
+          AppStrings.t('preference'),
+          AppStrings.t('preferenceDesc'),
+          tint: const Color(0xFFD9822B),
+          onTap: () => Navigator.of(context).pushNamed('/preference'),
         ),
       ],
     );
@@ -340,56 +529,87 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _buildMoreCard() {
     return _card(
       children: [
-        _navRow(Icons.favorite_border_rounded, AppStrings.t('favorites'),
-            onTap: () => Navigator.of(context).pushNamed('/favorites')),
+        _richNavRow(
+          Icons.help_outline_rounded,
+          AppStrings.t('helpCenter'),
+          AppStrings.t('helpCenterDesc'),
+          tint: const Color(0xFF16A085),
+          onTap: () => Navigator.of(context).pushNamed('/help-support'),
+        ),
         _divider(),
-        _navRow(Icons.tune_rounded, AppStrings.t('preference'),
-            onTap: () => Navigator.of(context).pushNamed('/preference')),
-        _divider(),
-        _navRow(Icons.privacy_tip_outlined, AppStrings.t('privacyPolicy'),
-            onTap: () => Navigator.of(context).pushNamed('/privacy-policy')),
-        _divider(),
-        _navRow(Icons.help_outline_rounded, AppStrings.t('helpAndSupport'),
-            onTap: () => Navigator.of(context).pushNamed('/help-support')),
-      ],
-    );
-  }
-
-  Widget _buildLogoutRow() {
-    return _card(
-      children: [
-        _navRow(
-          Icons.logout_rounded,
-          AppStrings.t('logout'),
-          color: const Color(0xFFE5484D),
-          onTap: _logout,
+        _richNavRow(
+          Icons.handshake_outlined,
+          AppStrings.t('trustShield'),
+          AppStrings.t('trustShieldDesc'),
+          tint: AppColors.primaryBlue,
+          onTap: _showTrustInfo,
         ),
       ],
     );
   }
 
-  Widget _navRow(
+  Widget _richNavRow(
     IconData icon,
-    String label, {
-    Color? color,
+    String title,
+    String subtitle, {
     required VoidCallback onTap,
+    Widget? trailing,
+    Color tint = AppColors.primaryBlue,
   }) {
     final p = context.pal;
-    final tint = color ?? p.textPrimary;
     return InkWell(
       onTap: onTap,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         child: Row(
           children: [
-            _iconBubble(icon, tint: color ?? AppColors.primaryBlue),
+            _iconBubble(icon, tint: tint),
             const SizedBox(width: 12),
             Expanded(
-              child: Text(label,
-                  style: TextStyle(
-                      fontSize: 14, fontWeight: FontWeight.w600, color: tint)),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title,
+                      style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: p.textPrimary)),
+                  const SizedBox(height: 2),
+                  Text(subtitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(fontSize: 11.5, color: p.textSecondary)),
+                ],
+              ),
             ),
+            if (trailing != null) trailing,
             Icon(Icons.chevron_right, color: p.textSecondary),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLogoutRow() {
+    const red = Color(0xFFE5484D);
+    return InkWell(
+      onTap: _logout,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        decoration: BoxDecoration(
+          color: red.withValues(alpha: 0.07),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: red.withValues(alpha: 0.25)),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.logout_rounded, size: 18, color: red),
+            const SizedBox(width: 8),
+            Text(AppStrings.t('logout'),
+                style: const TextStyle(
+                    fontSize: 14, fontWeight: FontWeight.w700, color: red)),
           ],
         ),
       ),
@@ -436,9 +656,7 @@ class _LanguageSheet extends StatelessWidget {
                         color: p.textPrimary)),
               ),
               Icon(
-                selected
-                    ? Icons.radio_button_checked
-                    : Icons.radio_button_off,
+                selected ? Icons.radio_button_checked : Icons.radio_button_off,
                 color: selected ? AppColors.primaryBlue : p.textSecondary,
               ),
             ],
@@ -474,8 +692,8 @@ class _LanguageSheet extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 6),
-          option(AppLang.km, '🇰🇭', 'khmer'),
-          option(AppLang.en, '🇬🇧', 'english'),
+          option(AppLang.km, '\u{1F1F0}\u{1F1ED}', 'khmer'),
+          option(AppLang.en, '\u{1F1EC}\u{1F1E7}', 'english'),
           const SizedBox(height: 8),
         ],
       ),

@@ -7,6 +7,10 @@ class ServiceProvider {
     required this.location,
     required this.rating,
     this.technicianId,
+    this.hasLocation = true,
+    this.photoUrl,
+    this.bannerUrl,
+    this.bannerTitle,
     this.role = 'Professional',
     this.phone = '012 222 888',
     this.distanceKm = 1.6,
@@ -22,8 +26,7 @@ class ServiceProvider {
     this.ratingBreakdown = const [85, 9, 5, 0, 7], // % fill for 5★…1★
     this.latitude = 11.5564,
     this.longitude = 104.9282,
-    this.hasLocation = true,
-    this.photoUrl,
+    this.completedJobCount = 0,
   });
 
   /// Real backend id once this card comes from `GET /api/technicians`; null
@@ -34,6 +37,12 @@ class ServiceProvider {
   /// Relative path (e.g. `/api/technician/1/photo`) - null if this
   /// technician hasn't uploaded one. Prefix with [ApiClient.baseUrl] to load.
   final String? photoUrl;
+
+  /// Relative path (e.g. `/api/technician/1/banner`) - null if this
+  /// technician hasn't posted a promotional banner. Technicians with one
+  /// show up in the dashboard's hero carousel.
+  final String? bannerUrl;
+  final String? bannerTitle;
 
   final String name;
   final String category;
@@ -48,9 +57,6 @@ class ServiceProvider {
   final String address;
 
   /// Approximate shop location, for the map preview on the detail screen.
-  /// Falls back to the Phnom Penh centre point when [hasLocation] is false -
-  /// check that flag before trusting these as a real position (e.g. before
-  /// dropping a "you'll find them here" pin on a map).
   final double latitude;
   final double longitude;
 
@@ -66,6 +72,10 @@ class ServiceProvider {
   /// Bar fill percentage (0–100) for each star level, highest first:
   /// [5★, 4★, 3★, 2★, 1★].
   final List<int> ratingBreakdown;
+
+  /// Real total completed-job count for this technician - computed
+  /// server-side, never a made-up number.
+  final int completedJobCount;
 
   factory ServiceProvider.fromTechnician(Map<String, dynamic> j) {
     final rating = (j['rating'] as num?)?.toDouble() ?? 0;
@@ -90,11 +100,15 @@ class ServiceProvider {
       // single bucket at the rounded average so the chart isn't empty.
       ratingBreakdown: count == 0
           ? const [0, 0, 0, 0, 0]
-          : List.generate(5, (i) => i == (5 - rating.round()).clamp(0, 4) ? 100 : 0),
+          : List.generate(
+              5, (i) => i == (5 - rating.round()).clamp(0, 4) ? 100 : 0),
       latitude: (j['lat'] as num?)?.toDouble() ?? 11.5564,
       longitude: (j['lng'] as num?)?.toDouble() ?? 104.9282,
       hasLocation: j['lat'] != null && j['lng'] != null,
       photoUrl: j['photoUrl']?.toString(),
+      bannerUrl: j['bannerUrl']?.toString(),
+      bannerTitle: j['bannerTitle']?.toString(),
+      completedJobCount: (j['completedJobCount'] as num?)?.toInt() ?? 0,
     );
   }
 }

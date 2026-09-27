@@ -37,6 +37,7 @@ export interface Technician {
   createdAt: string;
   approvedAt: string | null;
   rejectionReason: string | null;
+  identityEmailVerified: boolean;
 }
 
 export interface TechnicianLocation {
@@ -114,10 +115,4 @@ export interface UserInfo {
   role: string;
   status: string;
   dateOfBirth: string | null;
-}
-
-export interface PasswordResetResult {
-  userId: number;
-  email: string;
-  temporaryPassword: string;
 }

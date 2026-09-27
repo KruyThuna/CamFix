@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'app_settings.dart';
 import 'services/connectivity_service.dart';
 import 'services/profile_image.dart';
+import 'services/saved_card_store.dart';
+import 'services/search_history_store.dart';
 import 'theme/app_theme.dart';
 import 'widgets/connectivity_banner.dart';
 import 'screens/splash_screen.dart';
@@ -19,6 +21,7 @@ import 'screens/main_shell.dart';
 import 'screens/live_tracking_screen.dart';
 import 'screens/technicians_live_screen.dart';
 import 'screens/services_screen.dart';
+import 'screens/search_screen.dart';
 import 'screens/provider_detail_screen.dart';
 import 'screens/directions_map_screen.dart';
 import 'screens/chat_list_screen.dart';
@@ -32,6 +35,8 @@ import 'screens/help_support_screen.dart';
 import 'screens/preference_screen.dart';
 import 'screens/privacy_policy_screen.dart';
 import 'screens/favorites_screen.dart';
+import 'screens/booking_receipt_screen.dart';
+import 'screens/total_spend_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -39,6 +44,8 @@ Future<void> main() async {
   // opens in the language the user last chose.
   await AppSettings.instance.load();
   await ProfileImage.instance.load(); // restore the saved profile photo
+  await SavedCardStore.instance.load(); // restore the saved payment card
+  await SearchHistoryStore.instance.load(); // restore recent search queries
   // Start watching Wi-Fi / mobile / no-connection state right away and verify
   // the internet is actually reachable. The splash waits on the first result;
   // every screen shows a banner while it's down (see ConnectivityBanner).
@@ -79,6 +86,7 @@ class CamFixApp extends StatelessWidget {
           '/live-tracking': (context) => const LiveTrackingScreen(),
           '/technicians-live': (context) => const TechniciansLiveScreen(),
           '/services': (context) => const ServicesScreen(),
+          '/search': (context) => const SearchScreen(),
           '/provider': (context) => const ProviderDetailScreen(),
           '/directions': (context) => const DirectionsMapScreen(),
           '/chat': (context) => const ChatListScreen(),
@@ -88,6 +96,8 @@ class CamFixApp extends StatelessWidget {
           '/map-picker': (context) => const MapPickerScreen(),
           '/notifications': (context) => const NotificationsScreen(),
           '/booking-tracking': (context) => const BookingTrackingScreen(),
+          '/booking-receipt': (context) => const BookingReceiptScreen(),
+          '/total-spend': (context) => const TotalSpendScreen(),
           '/help-support': (context) => const HelpSupportScreen(),
           '/preference': (context) => const PreferenceScreen(),
           '/privacy-policy': (context) => const PrivacyPolicyScreen(),

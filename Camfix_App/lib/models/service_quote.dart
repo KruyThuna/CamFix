@@ -15,6 +15,7 @@ class ServiceQuote {
     this.reason,
     required this.status,
     this.createdAt,
+    this.items = const [],
   });
 
   final int id;
@@ -29,6 +30,12 @@ class ServiceQuote {
   final String? reason;
   final String status; // PENDING | ACCEPTED | REJECTED | REVISED | EXPIRED
   final DateTime? createdAt;
+
+  /// Named line items the customer approves one by one (may be empty).
+  final List<QuoteItem> items;
+
+  /// Fixed fees charged regardless of item choices.
+  double get feesTotal => inspectionFee + laborCost + partsCost + travelFee;
 
   bool get isPending => status == 'PENDING';
   bool get isAccepted => status == 'ACCEPTED';
@@ -49,5 +56,41 @@ class ServiceQuote {
         createdAt: j['createdAt'] == null
             ? null
             : DateTime.tryParse(j['createdAt'].toString())?.toLocal(),
+        items: (j['items'] as List? ?? const [])
+            .whereType<Map<String, dynamic>>()
+            .map(QuoteItem.fromJson)
+            .toList(),
+      );
+}
+
+/// One named item on a quote, e.g. "AC Deep Clean $15".
+class QuoteItem {
+  const QuoteItem({
+    required this.id,
+    required this.title,
+    required this.price,
+    this.note,
+    this.recommended = false,
+    this.approved,
+  });
+
+  final int id;
+  final String title;
+  final double price;
+  final String? note;
+
+  /// The technician recommends it (optional for the customer).
+  final bool recommended;
+
+  /// Customer decision: null until the quote is accepted.
+  final bool? approved;
+
+  factory QuoteItem.fromJson(Map<String, dynamic> j) => QuoteItem(
+        id: (j['id'] as num?)?.toInt() ?? 0,
+        title: (j['title'] ?? '').toString(),
+        price: (j['price'] as num?)?.toDouble() ?? 0,
+        note: j['note']?.toString(),
+        recommended: j['recommended'] == true,
+        approved: j['approved'] as bool?,
       );
 }

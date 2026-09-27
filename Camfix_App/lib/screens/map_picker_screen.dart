@@ -100,7 +100,8 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
   /// sees a real address instead of raw numbers once a point is picked.
   Future<void> _resolveAddress(LatLng point) async {
     setState(() => _resolvingAddress = true);
-    final label = await GeocodingApi.instance.reverse(point.latitude, point.longitude);
+    final label =
+        await GeocodingApi.instance.reverse(point.latitude, point.longitude);
     if (!mounted || _picked != point) return;
     setState(() => _resolvingAddress = false);
     _suppressNextChange = true;
@@ -180,8 +181,7 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
             ),
             children: [
               TileLayer(
-                urlTemplate:
-                    'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                 userAgentPackageName: 'com.example.camfix_app',
                 maxZoom: 19,
               ),
@@ -220,8 +220,7 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
                         const SizedBox(width: 10),
                         Expanded(
                           child: Container(
-                            padding:
-                                const EdgeInsets.symmetric(horizontal: 6),
+                            padding: const EdgeInsets.symmetric(horizontal: 6),
                             decoration: BoxDecoration(
                               color: p.surface,
                               borderRadius: BorderRadius.circular(12),
@@ -250,8 +249,7 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
                                           ? AppStrings.t('gettingLocation')
                                           : AppStrings.t('searchLocationHint'),
                                       hintStyle: TextStyle(
-                                          fontSize: 13,
-                                          color: p.textSecondary),
+                                          fontSize: 13, color: p.textSecondary),
                                     ),
                                   ),
                                 ),
@@ -262,7 +260,8 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
                                       width: 14,
                                       height: 14,
                                       child: CircularProgressIndicator(
-                                          strokeWidth: 2, color: p.textSecondary),
+                                          strokeWidth: 2,
+                                          color: p.textSecondary),
                                     ),
                                   )
                                 else if (_searchController.text.isNotEmpty)

@@ -44,15 +44,33 @@ class AppSettings extends ChangeNotifier {
 
   /// Load the saved preferences. Call once from `main()` before `runApp`.
   Future<void> load() async {
-    final prefs = await SharedPreferences.getInstance();
-    final lang = prefs.getString(_langKey);
-    if (lang == 'km') _lang = AppLang.km;
-    if (prefs.getBool(_darkKey) ?? false) _themeMode = ThemeMode.dark;
-    if (prefs.getString(_unitKey) == 'mi') _distanceUnit = DistanceUnit.mi;
-    _notificationsEnabled = prefs.getBool(_notifKey) ?? true;
-    _defaultAddress = prefs.getString(_addrKey);
-    _defaultLat = prefs.getDouble(_addrLatKey);
-    _defaultLng = prefs.getDouble(_addrLngKey);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      T? safeRead<T>(T? Function() read) {
+        try {
+          return read();
+        } catch (_) {
+          return null;
+        }
+      }
+
+      final lang = safeRead(() => prefs.getString(_langKey));
+      if (lang == 'km') _lang = AppLang.km;
+      if (safeRead(() => prefs.getBool(_darkKey)) ?? false) {
+        _themeMode = ThemeMode.dark;
+      }
+      if (safeRead(() => prefs.getString(_unitKey)) == 'mi') {
+        _distanceUnit = DistanceUnit.mi;
+      }
+      _notificationsEnabled =
+          safeRead(() => prefs.getBool(_notifKey)) ?? true;
+      _defaultAddress = safeRead(() => prefs.getString(_addrKey));
+      _defaultLat = safeRead(() => prefs.getDouble(_addrLatKey));
+      _defaultLng = safeRead(() => prefs.getDouble(_addrLngKey));
+    } catch (_) {
+      // Keep usable defaults if platform storage is temporarily unavailable
+      // or an older build left a value with an incompatible type.
+    }
     notifyListeners();
   }
 

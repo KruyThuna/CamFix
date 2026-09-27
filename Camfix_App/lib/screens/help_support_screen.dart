@@ -45,7 +45,8 @@ class HelpSupportScreen extends StatelessWidget {
               const SizedBox(height: 24),
               Text(
                 AppStrings.t('helpSupportIntro'),
-                style: TextStyle(fontSize: 14, color: p.textSecondary, height: 1.4),
+                style: TextStyle(
+                    fontSize: 14, color: p.textSecondary, height: 1.4),
               ),
               const SizedBox(height: 20),
               _card(context, [
@@ -104,7 +105,8 @@ class HelpSupportScreen extends StatelessWidget {
           color: p.surface,
           shape: BoxShape.circle,
           boxShadow: [
-            BoxShadow(color: p.shadow, blurRadius: 10, offset: const Offset(0, 4)),
+            BoxShadow(
+                color: p.shadow, blurRadius: 10, offset: const Offset(0, 4)),
           ],
         ),
         child: Icon(Icons.arrow_back, color: p.textPrimary, size: 20),
@@ -119,7 +121,8 @@ class HelpSupportScreen extends StatelessWidget {
         color: p.surface,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
-          BoxShadow(color: p.shadow, blurRadius: 12, offset: const Offset(0, 4)),
+          BoxShadow(
+              color: p.shadow, blurRadius: 12, offset: const Offset(0, 4)),
         ],
       ),
       child: Column(children: children),
@@ -163,8 +166,7 @@ class HelpSupportScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(label,
-                      style: TextStyle(
-                          fontSize: 12.5, color: p.textSecondary)),
+                      style: TextStyle(fontSize: 12.5, color: p.textSecondary)),
                   const SizedBox(height: 2),
                   Text(value,
                       style: TextStyle(

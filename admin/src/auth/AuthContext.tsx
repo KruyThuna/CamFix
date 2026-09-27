@@ -14,7 +14,6 @@ interface AuthState {
   user: UserInfo | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  loginWithToken: (token: string) => Promise<void>;
   logout: () => void;
 }
 
@@ -32,7 +31,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const loadMe = useCallback(async () => {
     const { data } = await api.get<UserInfo>('/api/auth/me');
-    if (data.role?.toUpperCase() !== 'ADMIN') {
+    if (!['MAIN_ADMIN', 'ADMIN'].includes(data.role?.toUpperCase()) || data.status !== 'ACTIVE') {
       throw new NotAdminError();
     }
     return data;
@@ -53,9 +52,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .finally(() => setLoading(false));
   }, [loadMe]);
 
-  const loginWithToken = useCallback(
-    async (token: string) => {
-      localStorage.setItem(TOKEN_KEY, token);
+  const login = useCallback(
+    async (email: string, password: string) => {
+      const { data } = await api.post<{ token: string }>('/api/auth/login', {
+        email,
+        password,
+      });
+      localStorage.setItem(TOKEN_KEY, data.token);
       try {
         const me = await loadMe();
         setUser(me);
@@ -68,25 +71,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [loadMe],
   );
 
-  const login = useCallback(
-    async (email: string, password: string) => {
-      const { data } = await api.post<{ token: string }>('/api/auth/login', {
-        email,
-        password,
-      });
-      await loginWithToken(data.token);
-    },
-    [loginWithToken],
-  );
-
   const logout = useCallback(() => {
     localStorage.removeItem(TOKEN_KEY);
     setUser(null);
   }, []);
 
   const value = useMemo(
-    () => ({ user, loading, login, loginWithToken, logout }),
-    [user, loading, login, loginWithToken, logout],
+    () => ({ user, loading, login, logout }),
+    [user, loading, login, logout],
   );
 
   return <AuthCtx.Provider value={value}>{children}</AuthCtx.Provider>;

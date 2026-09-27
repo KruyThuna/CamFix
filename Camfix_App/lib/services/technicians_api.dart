@@ -1,5 +1,6 @@
 import '../models/review.dart';
 import '../models/service_provider.dart';
+import '../models/technician_service_listing.dart';
 import 'api_client.dart';
 
 /// The public technician directory (`/api/technicians/**`, no auth) - a
@@ -32,5 +33,17 @@ class TechniciansApi {
         '/api/technicians/$technicianId/reviews',
         withAuth: false);
     return raw.whereType<Map<String, dynamic>>().map(Review.fromJson).toList();
+  }
+
+  /// A technician's own named/priced service listings - real, technician-set
+  /// data, not a fabricated per-service breakdown.
+  Future<List<TechnicianServiceListing>> services(int technicianId) async {
+    final raw = await _client.getJsonList(
+        '/api/technicians/$technicianId/services',
+        withAuth: false);
+    return raw
+        .whereType<Map<String, dynamic>>()
+        .map(TechnicianServiceListing.fromJson)
+        .toList();
   }
 }

@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { Link, Navigate, useNavigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 
 export function LoginPage() {
@@ -35,7 +35,7 @@ export function LoginPage() {
     <div className="login-wrap">
       <div className="card pad login-card">
         <h1>CamFix Admin</h1>
-        <p className="sub">Sign in with an administrator account.</p>
+        <p className="sub">Sign in with a Main Admin or Admin account.</p>
         <form onSubmit={submit} className="stack">
           <div>
             <label>Email</label>
@@ -61,9 +61,6 @@ export function LoginPage() {
             {busy ? 'Signing in…' : 'Sign in'}
           </button>
         </form>
-        <p className="sub">
-          <Link to="/forgot-password">Forgot password?</Link>
-        </p>
       </div>
     </div>
   );

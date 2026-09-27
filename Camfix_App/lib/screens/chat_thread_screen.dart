@@ -1,14 +1,20 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
+
 import '../l10n/app_strings.dart';
 import '../models/chat.dart';
+import '../services/api_client.dart';
 import '../services/chat_api.dart';
 import '../theme/app_theme.dart';
+import 'services_screen.dart' show categoryLabel;
 
-/// Chat thread (mockup page 21): a day divider, real incoming/outgoing
-/// message bubbles for one booking, and a composer. Polls every 5s while
-/// open so a reply shows up without leaving the screen.
+/// A real chat with the technician on one booking (`/api/chats/{jobId}`).
+/// Polls for new messages every few seconds while open; opening it marks
+/// the technician's messages as read on the server.
+///
+/// Route argument: [ChatThreadArgs].
 class ChatThreadScreen extends StatefulWidget {
   const ChatThreadScreen({super.key});
 
@@ -20,21 +26,21 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
   final _controller = TextEditingController();
   final _scrollController = ScrollController();
 
-  int? _jobId;
-  List<ChatMessage> _messages = const [];
+  ChatThreadArgs? _args;
+  final List<ChatMessage> _messages = [];
   bool _loading = true;
   bool _sending = false;
+  String? _error;
   Timer? _poll;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (_jobId != null) return;
-    final thread = ModalRoute.of(context)?.settings.arguments as ChatThread?;
-    if (thread == null) return;
-    _jobId = thread.jobId;
+    if (_args != null) return;
+    _args = ModalRoute.of(context)?.settings.arguments as ChatThreadArgs?;
+    if (_args == null) return;
     _load();
-    _poll = Timer.periodic(const Duration(seconds: 5), (_) => _load(silent: true));
+    _poll = Timer.periodic(const Duration(seconds: 4), (_) => _load());
   }
 
   @override
@@ -45,47 +51,52 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
     super.dispose();
   }
 
-  Future<void> _load({bool silent = false}) async {
-    final jobId = _jobId;
-    if (jobId == null) return;
-    if (!silent) setState(() => _loading = true);
+  Future<void> _load() async {
     try {
-      final messages = await ChatApi.instance.messages(jobId);
+      // Full reload keeps read receipts ("Seen") up to date; threads are
+      // small (one booking), so this stays cheap.
+      final list = await ChatApi.instance.messages(_args!.jobId);
       if (!mounted) return;
-      final grew = messages.length > _messages.length;
+      final grew = list.length > _messages.length;
       setState(() {
-        _messages = messages;
+        _messages
+          ..clear()
+          ..addAll(list);
         _loading = false;
+        _error = null;
       });
-      if (grew) _scrollToBottom();
+      if (grew) _scrollToEnd();
     } catch (e) {
-      if (!mounted) return;
-      setState(() => _loading = false);
-      if (!silent) _snack(e.toString());
+      if (mounted) {
+        setState(() {
+          _loading = false;
+          _error = e.toString();
+        });
+      }
     }
   }
 
   Future<void> _send() async {
-    final jobId = _jobId;
     final text = _controller.text.trim();
-    if (jobId == null || text.isEmpty || _sending) return;
+    if (text.isEmpty || _sending) return;
     setState(() => _sending = true);
-    _controller.clear();
     try {
-      final sent = await ChatApi.instance.send(jobId, text);
+      final m = await ChatApi.instance.send(_args!.jobId, text);
       if (!mounted) return;
-      setState(() => _messages = [..._messages, sent]);
-      _scrollToBottom();
+      _controller.clear();
+      setState(() => _messages.add(m));
+      _scrollToEnd();
     } catch (e) {
-      if (!mounted) return;
-      _controller.text = text;
-      _snack(e.toString());
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('${AppStrings.t('messageNotSent')}: $e')));
+      }
     } finally {
       if (mounted) setState(() => _sending = false);
     }
   }
 
-  void _scrollToBottom() {
+  void _scrollToEnd() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scrollController.hasClients) {
         _scrollController.animateTo(
@@ -97,37 +108,91 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
     });
   }
 
+  static String _time(DateTime? d) {
+    if (d == null) return '';
+    final h = d.hour % 12 == 0 ? 12 : d.hour % 12;
+    return '$h:${d.minute.toString().padLeft(2, '0')} ${d.hour < 12 ? 'AM' : 'PM'}';
+  }
+
+  static const _months = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+  ];
+
+  String _dayLabel(DateTime d) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final day = DateTime(d.year, d.month, d.day);
+    if (day == today) return AppStrings.t('today');
+    if (day == today.subtract(const Duration(days: 1))) {
+      return AppStrings.t('yesterday');
+    }
+    return '${_months[d.month - 1]} ${d.day}, ${d.year}';
+  }
+
   @override
   Widget build(BuildContext context) {
     final p = context.pal;
-    final thread = ModalRoute.of(context)?.settings.arguments as ChatThread?;
+    final args = _args;
+    if (args == null) {
+      return Scaffold(
+        appBar: AppBar(),
+        body: Center(child: Text(AppStrings.t('noConversations'))),
+      );
+    }
+
+    // Day dividers between messages from different days.
+    final rows = <Widget>[];
+    DateTime? lastDay;
+    for (var i = 0; i < _messages.length; i++) {
+      final m = _messages[i];
+      final c = m.createdAt;
+      if (c != null) {
+        final day = DateTime(c.year, c.month, c.day);
+        if (lastDay == null || day != lastDay) {
+          rows.add(_dayDivider(_dayLabel(c)));
+          lastDay = day;
+        }
+      }
+      final isLastMine =
+          m.mine && !_messages.skip(i + 1).any((later) => later.mine);
+      rows.add(_messageRow(m, showSeen: isLastMine));
+    }
 
     return Scaffold(
       backgroundColor: p.background,
       body: SafeArea(
         child: Column(
           children: [
-            _buildHeader(thread),
+            _buildHeader(args),
             Expanded(
               child: _loading
-                  ? const Center(
-                      child: SizedBox(
-                          width: 22,
-                          height: 22,
-                          child: CircularProgressIndicator(strokeWidth: 2)))
+                  ? const Center(child: CircularProgressIndicator())
                   : _messages.isEmpty
                       ? Center(
-                          child: Text(AppStrings.t('sayHello'),
-                              style: TextStyle(color: p.textSecondary)),
+                          child: Padding(
+                            padding: const EdgeInsets.all(32),
+                            child: Text(
+                              _error ?? AppStrings.t('chatEmptyHint'),
+                              textAlign: TextAlign.center,
+                              style: TextStyle(color: p.textSecondary),
+                            ),
+                          ),
                         )
                       : ListView(
                           controller: _scrollController,
                           padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-                          children: [
-                            _dayDivider(AppStrings.t('today')),
-                            const SizedBox(height: 8),
-                            ..._messages.map(_messageRow),
-                          ],
+                          children: rows,
                         ),
             ),
             _buildComposer(),
@@ -137,8 +202,11 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
     );
   }
 
-  Widget _buildHeader(ChatThread? c) {
+  Widget _buildHeader(ChatThreadArgs c) {
     final p = context.pal;
+    final photo = c.technicianId == null
+        ? null
+        : '${ApiClient.instance.baseUrl}/api/technician/${c.technicianId}/photo';
     return Container(
       padding: const EdgeInsets.fromLTRB(8, 6, 8, 10),
       decoration: BoxDecoration(
@@ -158,16 +226,49 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
           CircleAvatar(
             radius: 18,
             backgroundColor: p.surfaceAlt,
+            foregroundImage: photo == null ? null : NetworkImage(photo),
+            onForegroundImageError: photo == null ? null : (_, __) {},
             child: const Icon(Icons.person,
                 color: AppColors.primaryBlue, size: 20),
           ),
           const SizedBox(width: 10),
           Expanded(
-            child: Text(c?.otherPartyName ?? '',
-                style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    color: p.textPrimary)),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(c.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: p.textPrimary)),
+                Text(
+                  [
+                    if ((c.category ?? '').isNotEmpty)
+                      categoryLabel(c.category!),
+                    '${AppStrings.t('bookingHash')}${c.jobId}',
+                  ].join(' • '),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(fontSize: 11.5, color: p.textSecondary),
+                ),
+              ],
+            ),
+          ),
+          if ((c.phone ?? '').isNotEmpty)
+            IconButton(
+              tooltip: AppStrings.t('call'),
+              onPressed: () => launchUrl(Uri.parse('tel:${c.phone}')),
+              icon: const Icon(Icons.call_outlined,
+                  color: AppColors.primaryBlue, size: 20),
+            ),
+          IconButton(
+            tooltip: AppStrings.t('trackBooking'),
+            onPressed: () => Navigator.of(context)
+                .pushNamed('/booking-tracking', arguments: c.jobId),
+            icon: const Icon(Icons.receipt_long_outlined,
+                color: AppColors.primaryBlue, size: 20),
           ),
         ],
       ),
@@ -176,27 +277,30 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
 
   Widget _dayDivider(String label) {
     final p = context.pal;
-    return Center(
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
-        decoration: BoxDecoration(
-          color: p.surfaceAlt,
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-              fontSize: 11.5,
-              fontWeight: FontWeight.w600,
-              color: p.textSecondary),
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Center(
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
+          decoration: BoxDecoration(
+            color: p.surfaceAlt,
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+                fontSize: 11.5,
+                fontWeight: FontWeight.w600,
+                color: p.textSecondary),
+          ),
         ),
       ),
     );
   }
 
-  Widget _messageRow(ChatMessage m) {
+  Widget _messageRow(ChatMessage m, {required bool showSeen}) {
     final p = context.pal;
-    final bool mine = m.mine;
+    final mine = m.mine;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Column(
@@ -218,7 +322,7 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
               ),
             ),
             child: Text(
-              m.text,
+              m.body,
               style: TextStyle(
                 fontSize: 14,
                 color: mine ? AppColors.white : p.textPrimary,
@@ -226,22 +330,19 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
             ),
           ),
           const SizedBox(height: 4),
-          Text(_timeLabel(m.createdAt),
+          Text(
+              showSeen && m.readAt != null
+                  ? '${_time(m.createdAt)} • ${AppStrings.t('seen')}'
+                  : _time(m.createdAt),
               style: TextStyle(fontSize: 10.5, color: p.textSecondary)),
         ],
       ),
     );
   }
 
-  static String _timeLabel(DateTime t) {
-    final h = t.hour % 12 == 0 ? 12 : t.hour % 12;
-    final m = t.minute.toString().padLeft(2, '0');
-    final ampm = t.hour < 12 ? 'AM' : 'PM';
-    return '$h:$m $ampm';
-  }
-
   Widget _buildComposer() {
     final p = context.pal;
+    final canSend = _controller.text.trim().isNotEmpty && !_sending;
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),
       decoration: BoxDecoration(
@@ -262,44 +363,47 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: TextField(
                 controller: _controller,
+                minLines: 1,
+                maxLines: 4,
+                maxLength: 2000,
                 textInputAction: TextInputAction.send,
                 onSubmitted: (_) => _send(),
+                onChanged: (_) => setState(() {}),
                 style: TextStyle(fontSize: 14, color: p.textPrimary),
                 decoration: InputDecoration(
                   hintText: AppStrings.t('messageField'),
                   hintStyle: TextStyle(color: p.textSecondary, fontSize: 14),
                   border: InputBorder.none,
+                  counterText: '',
                   contentPadding: const EdgeInsets.symmetric(vertical: 12),
                 ),
               ),
             ),
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: 8),
           GestureDetector(
-            onTap: _sending ? null : _send,
+            onTap: canSend ? _send : null,
             child: Container(
               width: 44,
               height: 44,
               decoration: BoxDecoration(
-                color: AppColors.primaryBlue.withValues(alpha: _sending ? 0.5 : 1),
+                color: canSend
+                    ? AppColors.primaryBlue
+                    : AppColors.primaryBlue.withValues(alpha: 0.4),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.send_rounded,
-                  color: AppColors.white, size: 20),
+              child: _sending
+                  ? const Padding(
+                      padding: EdgeInsets.all(12),
+                      child: CircularProgressIndicator(
+                          strokeWidth: 2, color: AppColors.white),
+                    )
+                  : const Icon(Icons.send_rounded,
+                      color: AppColors.white, size: 20),
             ),
           ),
         ],
       ),
     );
-  }
-
-  void _snack(String message) {
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(
-        content: Text(message),
-        behavior: SnackBarBehavior.floating,
-        duration: const Duration(seconds: 2),
-      ));
   }
 }

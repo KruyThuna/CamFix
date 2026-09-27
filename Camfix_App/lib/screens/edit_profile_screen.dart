@@ -152,91 +152,86 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     final p = context.pal;
     return Scaffold(
       backgroundColor: p.background,
-      body: SafeArea(
-        bottom: false,
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _buildHeader(),
-              const SizedBox(height: 12),
-              _buildAvatar(),
-              const SizedBox(height: 24),
-              _label(AppStrings.t('fullName')),
-              _field(controller: _fullName),
-              const SizedBox(height: 18),
-              _label(AppStrings.t('phoneNumber')),
-              Row(
+      body: Align(
+        alignment: Alignment.topCenter,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: AppLayout.maxPhoneWidth),
+          child: SafeArea(
+            bottom: false,
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  SizedBox(
-                    width: 76,
-                    child: _field(
-                      controller: _dialCode,
-                      textAlign: TextAlign.center,
-                    ),
+                  _buildHeader(),
+                  const SizedBox(height: 18),
+                  _buildAvatar(),
+                  const SizedBox(height: 28),
+                  _label(AppStrings.t('fullName')),
+                  _field(controller: _fullName),
+                  const SizedBox(height: 18),
+                  _label(AppStrings.t('phoneNumber')),
+                  Row(
+                    children: [
+                      SizedBox(
+                        width: 72,
+                        child: _field(
+                          controller: _dialCode,
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: _field(
+                          controller: _phone,
+                          keyboardType: TextInputType.phone,
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _field(
-                      controller: _phone,
-                      keyboardType: TextInputType.phone,
-                    ),
+                  const SizedBox(height: 18),
+                  _label(AppStrings.t('dateOfBirth')),
+                  _field(
+                    controller: _dob,
+                    readOnly: true,
+                    onTap: _pickDob,
+                    hint: AppStrings.t('selectDate'),
+                    suffixIcon: Icon(Icons.edit_calendar_outlined,
+                        size: 20, color: p.textSecondary),
+                  ),
+                  const SizedBox(height: 18),
+                  _label(AppStrings.t('address')),
+                  _field(
+                    controller: _address,
+                    readOnly: true,
+                    onTap: _pickAddress,
+                    hint: 'SenSok, PhnomPenh, Cambodia',
+                    suffixIcon: _locating
+                        ? const Padding(
+                            padding: EdgeInsets.all(14),
+                            child: SizedBox(
+                                width: 14,
+                                height: 14,
+                                child:
+                                    CircularProgressIndicator(strokeWidth: 2)),
+                          )
+                        : IconButton(
+                            onPressed: _locating ? null : _useCurrentLocation,
+                            icon: Icon(Icons.my_location,
+                                size: 18, color: p.textSecondary),
+                          ),
+                  ),
+                  const SizedBox(height: 30),
+                  PrimaryButton(
+                    label: _saving
+                        ? AppStrings.t('saving')
+                        : AppStrings.t('saveChange'),
+                    background: AppColors.primaryBlue,
+                    onPressed: _saving ? null : _save,
                   ),
                 ],
               ),
-              const SizedBox(height: 18),
-              _label(AppStrings.t('dateOfBirth')),
-              _field(
-                controller: _dob,
-                readOnly: true,
-                onTap: _pickDob,
-                hint: AppStrings.t('selectDate'),
-                suffixIcon: Icon(Icons.calendar_today_outlined,
-                    size: 18, color: p.textSecondary),
-              ),
-              const SizedBox(height: 18),
-              _label(AppStrings.t('address')),
-              _field(
-                controller: _address,
-                readOnly: true,
-                onTap: _pickAddress,
-                hint: AppStrings.t('chooseOnMap'),
-                suffixIcon: Icon(Icons.map_outlined,
-                    size: 18, color: p.textSecondary),
-              ),
-              const SizedBox(height: 6),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: TextButton.icon(
-                  onPressed: _locating ? null : _useCurrentLocation,
-                  icon: _locating
-                      ? const SizedBox(
-                          width: 14,
-                          height: 14,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(Icons.my_location, size: 16),
-                  label: Text(_locating
-                      ? AppStrings.t('gettingLocation')
-                      : AppStrings.t('useCurrentLocation')),
-                  style: TextButton.styleFrom(
-                    foregroundColor: AppColors.primaryBlue,
-                    padding: const EdgeInsets.symmetric(horizontal: 4),
-                    textStyle: const TextStyle(
-                        fontSize: 13, fontWeight: FontWeight.w600),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 24),
-              PrimaryButton(
-                label: _saving
-                    ? AppStrings.t('saving')
-                    : AppStrings.t('saveChange'),
-                background: AppColors.primaryBlue,
-                onPressed: _saving ? null : _save,
-              ),
-            ],
+            ),
           ),
         ),
       ),
@@ -252,7 +247,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           child: Center(
             child: Text(
               AppStrings.t('editProfile'),
-              style: AppText.h2.copyWith(fontSize: 20, color: p.textPrimary),
+              style: AppText.h2.copyWith(fontSize: 18, color: p.textPrimary),
             ),
           ),
         ),
@@ -290,25 +285,25 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       child: GestureDetector(
         onTap: () => pickProfilePhoto(context),
         child: SizedBox(
-          width: 92,
-          height: 92,
+          width: 86,
+          height: 86,
           child: Stack(
             clipBehavior: Clip.none,
             children: [
-              const UserAvatar(radius: 42),
+              const UserAvatar(radius: 39),
               Positioned(
                 bottom: 0,
                 right: 0,
                 child: Container(
-                  width: 28,
-                  height: 28,
+                  width: 24,
+                  height: 24,
                   decoration: BoxDecoration(
-                    color: AppColors.primaryBlue,
-                    shape: BoxShape.circle,
+                    color: p.surface,
+                    borderRadius: BorderRadius.circular(8),
                     border: Border.all(color: p.background, width: 2),
                   ),
                   child: const Icon(Icons.photo_camera,
-                      size: 14, color: AppColors.white),
+                      size: 13, color: AppColors.primaryBlue),
                 ),
               ),
             ],
@@ -323,7 +318,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         child: Text(
           text,
           style: TextStyle(
-            fontSize: 13,
+            fontSize: 11.5,
             fontWeight: FontWeight.w600,
             color: context.pal.textSecondary,
           ),
@@ -343,10 +338,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     return Container(
       decoration: BoxDecoration(
         color: p.surface,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: p.border),
         boxShadow: [
-          BoxShadow(
-              color: p.shadow, blurRadius: 10, offset: const Offset(0, 4)),
+          BoxShadow(color: p.shadow, blurRadius: 6, offset: const Offset(0, 2)),
         ],
       ),
       child: TextField(
@@ -355,14 +350,15 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         textAlign: textAlign,
         readOnly: readOnly,
         onTap: onTap,
-        style: TextStyle(fontSize: 15, color: p.textPrimary),
+        style: TextStyle(
+            fontSize: 13.5, fontWeight: FontWeight.w600, color: p.textPrimary),
         decoration: InputDecoration(
           hintText: hint,
           hintStyle: TextStyle(color: p.textSecondary, fontSize: 14),
           suffixIcon: suffixIcon,
           border: InputBorder.none,
           contentPadding:
-              const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+              const EdgeInsets.symmetric(vertical: 17, horizontal: 18),
         ),
       ),
     );

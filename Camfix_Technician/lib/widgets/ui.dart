@@ -86,6 +86,7 @@ class LabeledField extends StatelessWidget {
     this.hint,
     this.maxLines = 1,
     this.suffixIcon,
+    this.prefixText,
   });
 
   final String label;
@@ -95,6 +96,7 @@ class LabeledField extends StatelessWidget {
   final String? hint;
   final int maxLines;
   final Widget? suffixIcon;
+  final String? prefixText;
 
   @override
   Widget build(BuildContext context) {
@@ -120,6 +122,9 @@ class LabeledField extends StatelessWidget {
             filled: true,
             fillColor: p.surfaceAlt,
             suffixIcon: suffixIcon,
+            prefixText: prefixText,
+            prefixStyle: TextStyle(
+                color: p.textPrimary, fontWeight: FontWeight.w600),
             contentPadding:
                 const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
             border: OutlineInputBorder(
@@ -130,6 +135,35 @@ class LabeledField extends StatelessWidget {
         ),
         const SizedBox(height: 14),
       ],
+    );
+  }
+}
+
+/// Registration's 3-step progress dots (Create account / Verify identity /
+/// Confirm phone) - the step number is 1-based.
+class StepDots extends StatelessWidget {
+  const StepDots({super.key, required this.step, this.total = 3});
+
+  final int step;
+  final int total;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.pal;
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: List.generate(total, (i) {
+        final active = i < step;
+        return Container(
+          margin: const EdgeInsets.symmetric(horizontal: 3),
+          width: active ? 22 : 8,
+          height: 8,
+          decoration: BoxDecoration(
+            color: active ? AppColors.primaryBlue : p.surfaceAlt,
+            borderRadius: BorderRadius.circular(4),
+          ),
+        );
+      }),
     );
   }
 }

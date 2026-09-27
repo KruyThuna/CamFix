@@ -6,7 +6,9 @@ import '../theme/app_theme.dart';
 import '../widgets/app_buttons.dart';
 import '../widgets/app_text_field.dart';
 import '../widgets/auth_header.dart';
+import '../widgets/animated_camfix_logo.dart';
 import '../widgets/google_signin_button.dart';
+import 'login_success_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -45,8 +47,7 @@ class _LoginScreenState extends State<LoginScreen> {
     try {
       await AuthApi.instance.login(email, password);
       if (!mounted) return;
-      Navigator.of(context)
-          .pushNamedAndRemoveUntil('/dashboard', (route) => false);
+      goToDashboardAfterLogin(context);
     } on ApiException catch (e) {
       _snack(e.message); // e.g. "Invalid email or password"
     } finally {
@@ -56,6 +57,15 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (_loading) {
+      return const PopScope(
+        canPop: false,
+        child: Scaffold(
+          backgroundColor: AnimatedCamFixLogo.backgroundColor,
+          body: Center(child: AnimatedCamFixLogo()),
+        ),
+      );
+    }
     return Scaffold(
       backgroundColor: AppColors.primaryBlue,
       body: SafeArea(
@@ -68,110 +78,126 @@ class _LoginScreenState extends State<LoginScreen> {
                 onBack: () =>
                     Navigator.of(context).pushReplacementNamed('/language'),
               ),
-              const SizedBox(height: 44),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    AppTextField(
-                      hint: AppStrings.t('email'),
-                      icon: Icons.email_outlined,
-                      controller: _email,
-                      keyboardType: TextInputType.emailAddress,
-                    ),
-                    const SizedBox(height: 16),
-                    AppTextField(
-                      hint: AppStrings.t('passwordField'),
-                      icon: Icons.lock_outline,
-                      controller: _password,
-                      obscureText: _obscure,
-                      suffix: IconButton(
-                        icon: Icon(
-                          _obscure
-                              ? Icons.visibility_off_outlined
-                              : Icons.visibility_outlined,
-                          color: AppColors.hintGrey,
-                          size: 20,
-                        ),
-                        onPressed: () => setState(() => _obscure = !_obscure),
+              const SizedBox(height: 50),
+              // Form fades + slides up just after the header animates in.
+              TweenAnimationBuilder<double>(
+                tween: Tween(
+                    begin: MediaQuery.disableAnimationsOf(context) ? 1 : 0,
+                    end: 1),
+                duration: const Duration(milliseconds: 700),
+                curve: const Interval(.35, 1, curve: Curves.easeOutCubic),
+                builder: (context, t, child) => Opacity(
+                  opacity: t,
+                  child: Transform.translate(
+                      offset: Offset(0, 24 * (1 - t)), child: child),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      AppTextField(
+                        hint: AppStrings.t('email'),
+                        icon: Icons.email_outlined,
+                        controller: _email,
+                        keyboardType: TextInputType.emailAddress,
                       ),
-                    ),
-                    const SizedBox(height: 10),
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: TextButton(
-                        onPressed: () =>
-                            Navigator.of(context).pushNamed('/forgot-password'),
-                        style: TextButton.styleFrom(
-                          padding: EdgeInsets.zero,
-                          minimumSize: const Size(0, 0),
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        ),
-                        child: Text(
-                          AppStrings.t('forgotPasswordQ'),
-                          style: const TextStyle(
-                            color: AppColors.white,
-                            fontWeight: FontWeight.w500,
+                      const SizedBox(height: 16),
+                      AppTextField(
+                        hint: AppStrings.t('passwordField'),
+                        icon: Icons.lock_outline,
+                        controller: _password,
+                        obscureText: _obscure,
+                        suffix: IconButton(
+                          icon: Icon(
+                            _obscure
+                                ? Icons.visibility_off_outlined
+                                : Icons.visibility_outlined,
+                            color: AppColors.hintGrey,
+                            size: 20,
                           ),
+                          onPressed: () => setState(() => _obscure = !_obscure),
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 18),
-                    PrimaryButton(
-                      label: _loading
-                          ? AppStrings.t('signingIn')
-                          : AppStrings.t('signIn'),
-                      onPressed: _loading ? null : _signIn,
-                    ),
-                    const SizedBox(height: 14),
-                    SecondaryButton(
-                      label: AppStrings.t('loginWithPhone'),
-                      onPressed: () =>
-                          Navigator.of(context).pushNamed('/phone-login'),
-                    ),
-                    const SizedBox(height: 18),
-                    Row(
-                      children: [
-                        Expanded(
-                            child: Divider(
-                                color: AppColors.white.withValues(alpha: 0.4))),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 12),
-                          child: Text(AppStrings.t('or'), style: AppText.body),
-                        ),
-                        Expanded(
-                            child: Divider(
-                                color: AppColors.white.withValues(alpha: 0.4))),
-                      ],
-                    ),
-                    const SizedBox(height: 18),
-                    const GoogleSignInButton(),
-                    const SizedBox(height: 20),
-                    Center(
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(AppStrings.t('dontHaveAccount'),
-                              style: AppText.body),
-                          GestureDetector(
-                            onTap: () =>
-                                Navigator.of(context).pushNamed('/signup'),
-                            child: Text(
-                              AppStrings.t('signUp'),
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.white,
-                                decoration: TextDecoration.underline,
-                                fontSize: 14,
-                              ),
+                      const SizedBox(height: 10),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: TextButton(
+                          onPressed: () => Navigator.of(context)
+                              .pushNamed('/forgot-password'),
+                          style: TextButton.styleFrom(
+                            padding: EdgeInsets.zero,
+                            minimumSize: const Size(0, 0),
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          ),
+                          child: Text(
+                            AppStrings.t('forgotPasswordQ'),
+                            style: const TextStyle(
+                              color: AppColors.white,
+                              fontWeight: FontWeight.w500,
                             ),
                           ),
+                        ),
+                      ),
+                      const SizedBox(height: 18),
+                      PrimaryButton(
+                        label: _loading
+                            ? AppStrings.t('signingIn')
+                            : AppStrings.t('signIn'),
+                        onPressed: _loading ? null : _signIn,
+                      ),
+                      const SizedBox(height: 14),
+                      SecondaryButton(
+                        label: AppStrings.t('loginWithPhone'),
+                        onPressed: () =>
+                            Navigator.of(context).pushNamed('/phone-login'),
+                      ),
+                      const SizedBox(height: 18),
+                      Row(
+                        children: [
+                          Expanded(
+                              child: Divider(
+                                  color:
+                                      AppColors.white.withValues(alpha: 0.4))),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                            child:
+                                Text(AppStrings.t('or'), style: AppText.body),
+                          ),
+                          Expanded(
+                              child: Divider(
+                                  color:
+                                      AppColors.white.withValues(alpha: 0.4))),
                         ],
                       ),
-                    ),
-                    const SizedBox(height: 32),
-                  ],
+                      const SizedBox(height: 18),
+                      const GoogleSignInButton(),
+                      const SizedBox(height: 20),
+                      Center(
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(AppStrings.t('dontHaveAccount'),
+                                style: AppText.body),
+                            GestureDetector(
+                              onTap: () =>
+                                  Navigator.of(context).pushNamed('/signup'),
+                              child: Text(
+                                AppStrings.t('signUp'),
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.white,
+                                  decoration: TextDecoration.underline,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 32),
+                    ],
+                  ),
                 ),
               ),
             ],

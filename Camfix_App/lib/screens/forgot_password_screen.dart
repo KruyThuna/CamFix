@@ -84,9 +84,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               ),
               const SizedBox(height: 24),
               PrimaryButton(
-                label: _sending
-                    ? AppStrings.t('sending')
-                    : AppStrings.t('send'),
+                label:
+                    _sending ? AppStrings.t('sending') : AppStrings.t('send'),
                 onPressed: _sending ? null : _send,
               ),
             ],
