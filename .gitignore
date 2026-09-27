@@ -1,3 +1,7 @@
 
 *.log
 *.err
+
+# Generated Android build output and device diagnostics
+**/android/build/
+bugreport-*.zip
