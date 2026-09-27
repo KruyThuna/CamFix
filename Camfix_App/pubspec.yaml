@@ -1,7 +1,7 @@
 name: camfix_app
 description: "CAM FIX - On-demand home service booking app"
 publish_to: 'none'
-version: 1.0.0+1
+version: 1.2.8+16
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -21,6 +21,8 @@ dependencies:
   google_maps_flutter: ^2.9.0
   image_picker: ^1.1.2
   geolocator: ^13.0.1
+  cached_network_image: ^3.4.1
+  qr_flutter: ^4.1.0
 
 dev_dependencies:
   flutter_test:

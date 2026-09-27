@@ -34,6 +34,16 @@ public class ServicePrice {
     @Column(length = 255)
     private String description;
 
+    /** Self Drop diagnostic fee, paid at drop-off. Admin-set; null = not offered.
+     *  Snapshotted onto the job and honoured as the quote's inspection fee. */
+    @Column(name = "bench_fee")
+    private Double benchFee;
+
+    /** Standard home-visit travel fee. Admin-set; null = not configured. A Self
+     *  Drop job never charges travel (enforced when the technician quotes). */
+    @Column(name = "travel_fee")
+    private Double travelFee;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
@@ -72,6 +82,22 @@ public class ServicePrice {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public Double getBenchFee() {
+        return benchFee;
+    }
+
+    public void setBenchFee(Double benchFee) {
+        this.benchFee = benchFee;
+    }
+
+    public Double getTravelFee() {
+        return travelFee;
+    }
+
+    public void setTravelFee(Double travelFee) {
+        this.travelFee = travelFee;
     }
 
     public LocalDateTime getCreatedAt() {

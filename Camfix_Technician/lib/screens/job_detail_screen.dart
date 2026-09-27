@@ -7,6 +7,7 @@ import '../l10n/app_strings.dart';
 import '../lang_aware.dart';
 import '../models/service_quote.dart';
 import '../models/tech_job.dart';
+import '../services/chat_api.dart';
 import '../services/technician_api.dart';
 import '../theme/app_theme.dart';
 import '../widgets/ui.dart';
@@ -26,6 +27,24 @@ class _JobDetailScreenState extends State<JobDetailScreen>
   bool _busy = false;
   int? _id;
   List<ServiceQuote> _quotes = const [];
+  int _unreadChat = 0;
+
+  Future<void> _loadUnread() async {
+    try {
+      final threads = await ChatApi.instance.threads();
+      final t = threads.where((t) => t.jobId == _id).toList();
+      if (mounted) {
+        setState(() => _unreadChat = t.isEmpty ? 0 : t.first.unreadCount);
+      }
+    } catch (_) {
+      // Badge is best-effort.
+    }
+  }
+
+  Future<void> _openChat(TechJob j) async {
+    await Navigator.of(context).pushNamed('/job-chat', arguments: j);
+    _loadUnread();
+  }
 
   @override
   void didChangeDependencies() {
@@ -39,7 +58,13 @@ class _JobDetailScreenState extends State<JobDetailScreen>
     try {
       final job = await TechnicianApi.instance.job(_id!);
       if (mounted) setState(() => _job = job);
-      if (job.status == 'QUOTE_PENDING' || job.status == 'ARRIVED') {
+      _loadUnread();
+      if (const {
+        'QUOTE_PENDING',
+        'ARRIVED',
+        'IN_PROGRESS',
+        'COMPLETED',
+      }.contains(job.status)) {
         final quotes = await TechnicianApi.instance.jobQuotes(_id!);
         if (mounted) setState(() => _quotes = quotes);
       }
@@ -50,11 +75,18 @@ class _JobDetailScreenState extends State<JobDetailScreen>
     }
   }
 
-  Future<void> _openQuoteForm({required bool isRevision}) async {
-    final sent = await showQuoteFormSheet(context, jobId: _id!, isRevision: isRevision);
+  Future<void> _openQuoteForm(TechJob j, {required bool isRevision}) async {
+    final sent = await showQuoteFormSheet(
+      context,
+      jobId: _id!,
+      isRevision: isRevision,
+      selfDrop: j.isSelfDrop,
+      benchFee: j.benchFee,
+    );
     if (sent && mounted) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(AppStrings.t('quoteSentSuccess'))));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(AppStrings.t('quoteSentSuccess'))));
       _load();
     }
   }
@@ -68,11 +100,13 @@ class _JobDetailScreenState extends State<JobDetailScreen>
           content: Text(AppStrings.t('declineJobBody')),
           actions: [
             TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: Text(AppStrings.t('cancel'))),
+              onPressed: () => Navigator.pop(context, false),
+              child: Text(AppStrings.t('cancel')),
+            ),
             FilledButton(
-                onPressed: () => Navigator.pop(context, true),
-                child: Text(AppStrings.t('decline'))),
+              onPressed: () => Navigator.pop(context, true),
+              child: Text(AppStrings.t('decline')),
+            ),
           ],
         ),
       );
@@ -101,47 +135,110 @@ class _JobDetailScreenState extends State<JobDetailScreen>
     final j = _job;
     return Scaffold(
       appBar: AppBar(
-          title: Text(j == null
-              ? AppStrings.t('job')
-              : '${AppStrings.t('jobHash')}${j.id}')),
+        title: Text(
+          j == null ? AppStrings.t('job') : '${AppStrings.t('jobHash')}${j.id}',
+        ),
+      ),
       body: _loading || j == null
           ? const Center(child: CircularProgressIndicator())
           : ListView(
               padding: const EdgeInsets.all(20),
               children: [
-                Row(children: [
-                  _StatusPill(status: j.status),
-                  const Spacer(),
-                  Text(AppStrings.category(j.category),
-                      style: TextStyle(color: p.textSecondary)),
-                ]),
+                Row(
+                  children: [
+                    _StatusPill(status: j.status, selfDrop: j.isSelfDrop),
+                    const Spacer(),
+                    Text(
+                      AppStrings.category(j.category),
+                      style: TextStyle(color: p.textSecondary),
+                    ),
+                  ],
+                ),
+                if (j.isSelfDrop) ...[
+                  const SizedBox(height: 14),
+                  _selfDropBanner(j),
+                ],
                 const SizedBox(height: 18),
-                _row(context, Icons.person_outline, AppStrings.t('customer'),
-                    j.customerName),
+                _row(
+                  context,
+                  Icons.person_outline,
+                  AppStrings.t('customer'),
+                  j.customerName,
+                ),
                 InkWell(
                   onTap: j.customerPhone.isEmpty
                       ? null
                       : () => _launch(Uri.parse('tel:${j.customerPhone}')),
-                  child: _row(context, Icons.call_outlined,
-                      AppStrings.t('phone'),
-                      j.customerPhone.isEmpty ? '—' : j.customerPhone,
-                      link: j.customerPhone.isNotEmpty),
+                  child: _row(
+                    context,
+                    Icons.call_outlined,
+                    AppStrings.t('phone'),
+                    j.customerPhone.isEmpty ? '—' : j.customerPhone,
+                    link: j.customerPhone.isNotEmpty,
+                  ),
                 ),
-                if ((j.address ?? '').isNotEmpty)
+                InkWell(
+                  onTap: () => _openChat(j),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: _row(
+                          context,
+                          Icons.chat_bubble_outline_rounded,
+                          AppStrings.t('chat'),
+                          AppStrings.t('messageCustomer'),
+                          link: true,
+                        ),
+                      ),
+                      if (_unreadChat > 0)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 7,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.primaryBlue,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Text(
+                            '$_unreadChat',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                // Self Drop's address is this technician's own shop.
+                if ((j.address ?? '').isNotEmpty && !j.isSelfDrop)
                   InkWell(
-                    onTap: () => _launch(Uri.parse(
-                        'https://www.openstreetmap.org/search?query=${Uri.encodeComponent(j.address!)}')),
-                    child: _row(context, Icons.place_outlined,
-                        AppStrings.t('address'), j.address!,
-                        link: true),
+                    onTap: () => _launch(
+                      Uri.parse(
+                        'https://www.openstreetmap.org/search?query=${Uri.encodeComponent(j.address!)}',
+                      ),
+                    ),
+                    child: _row(
+                      context,
+                      Icons.place_outlined,
+                      AppStrings.t('address'),
+                      j.address!,
+                      link: true,
+                    ),
                   ),
                 const SizedBox(height: 8),
-                Text(AppStrings.t('description'),
-                    style: TextStyle(
-                        fontWeight: FontWeight.w700, color: p.textPrimary)),
+                Text(
+                  AppStrings.t('description'),
+                  style: TextStyle(
+                    fontWeight: FontWeight.w700,
+                    color: p.textPrimary,
+                  ),
+                ),
                 const SizedBox(height: 4),
                 Text(j.description, style: TextStyle(color: p.textPrimary)),
-                if (j.lat != null && j.lng != null) ...[
+                if (j.lat != null && j.lng != null && !j.isSelfDrop) ...[
                   const SizedBox(height: 16),
                   ClipRRect(
                     borderRadius: BorderRadius.circular(14),
@@ -149,23 +246,31 @@ class _JobDetailScreenState extends State<JobDetailScreen>
                       height: 180,
                       child: FlutterMap(
                         options: MapOptions(
-                            initialCenter: LatLng(j.lat!, j.lng!),
-                            initialZoom: 14,
-                            interactionOptions: const InteractionOptions(
-                                flags: InteractiveFlag.none)),
+                          initialCenter: LatLng(j.lat!, j.lng!),
+                          initialZoom: 14,
+                          interactionOptions: const InteractionOptions(
+                            flags: InteractiveFlag.none,
+                          ),
+                        ),
                         children: [
                           TileLayer(
-                              urlTemplate:
-                                  'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                              userAgentPackageName: 'com.camfix.technician'),
-                          MarkerLayer(markers: [
-                            Marker(
+                            urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                            userAgentPackageName: 'com.camfix.technician',
+                          ),
+                          MarkerLayer(
+                            markers: [
+                              Marker(
                                 point: LatLng(j.lat!, j.lng!),
                                 width: 36,
                                 height: 36,
-                                child: const Icon(Icons.location_pin,
-                                    color: AppColors.primaryBlue, size: 36)),
-                          ]),
+                                child: const Icon(
+                                  Icons.location_pin,
+                                  color: AppColors.primaryBlue,
+                                  size: 36,
+                                ),
+                              ),
+                            ],
+                          ),
                         ],
                       ),
                     ),
@@ -183,107 +288,270 @@ class _JobDetailScreenState extends State<JobDetailScreen>
       case 'ASSIGNED':
         return [
           PrimaryButton(
-              label: AppStrings.t('onMyWay'),
-              busy: _busy,
-              onPressed: () => _setStatus('ON_THE_WAY')),
+            label: AppStrings.t('onMyWay'),
+            busy: _busy,
+            onPressed: () => _setStatus('ON_THE_WAY'),
+          ),
           const SizedBox(height: 10),
           _declineButton(),
         ];
       case 'ON_THE_WAY':
         return [
           PrimaryButton(
-              label: AppStrings.t('iveArrived'),
-              busy: _busy,
-              onPressed: () => _setStatus('ARRIVED')),
+            label: AppStrings.t(j.isSelfDrop ? 'itemReceived' : 'iveArrived'),
+            busy: _busy,
+            onPressed: () => _setStatus('ARRIVED'),
+          ),
           const SizedBox(height: 10),
           _declineButton(),
         ];
       case 'ARRIVED':
         final rejected = _quotes.isNotEmpty && _quotes.first.isRejected;
         return [
-          if (rejected) ...[
-            _quoteDeclinedBanner(),
-            const SizedBox(height: 14),
-          ],
+          if (rejected) ...[_quoteDeclinedBanner(), const SizedBox(height: 14)],
           PrimaryButton(
-              label: AppStrings.t(rejected ? 'sendRevisedQuote' : 'sendQuote'),
-              busy: _busy,
-              onPressed: () => _openQuoteForm(isRevision: rejected)),
+            label: AppStrings.t(rejected ? 'sendRevisedQuote' : 'sendQuote'),
+            busy: _busy,
+            onPressed: () => _openQuoteForm(j, isRevision: rejected),
+          ),
         ];
       case 'QUOTE_PENDING':
         return _quotePendingActions();
       case 'IN_PROGRESS':
         return [
+          ..._approvedWork(),
           PrimaryButton(
-              label: AppStrings.t('markComplete'),
-              busy: _busy,
-              onPressed: () => _setStatus('COMPLETED')),
+            label: AppStrings.t('markComplete'),
+            busy: _busy,
+            onPressed: () => _setStatus('COMPLETED'),
+          ),
         ];
       default:
         return [
           Center(
-            child: Text(AppStrings.t('noActionsForJob'),
-                style: TextStyle(color: context.pal.textSecondary)),
+            child: Text(
+              AppStrings.t('noActionsForJob'),
+              style: TextStyle(color: context.pal.textSecondary),
+            ),
           ),
         ];
     }
   }
 
   List<Widget> _quotePendingActions() => [
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-          decoration: BoxDecoration(
-            color: AppColors.primaryBlue.withValues(alpha: 0.08),
-            borderRadius: BorderRadius.circular(12),
+    Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: AppColors.primaryBlue.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          const Icon(
+            Icons.hourglass_top_rounded,
+            size: 18,
+            color: AppColors.primaryBlue,
           ),
-          child: Row(
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              AppStrings.t('waitingForCustomerDecision'),
+              style: const TextStyle(
+                fontWeight: FontWeight.w600,
+                color: AppColors.primaryBlue,
+              ),
+            ),
+          ),
+        ],
+      ),
+    ),
+  ];
+
+  Widget _selfDropBanner(TechJob j) {
+    final t = j.scheduledAt;
+    String? arrival;
+    if (t != null) {
+      final h = t.hour % 12 == 0 ? 12 : t.hour % 12;
+      final m = t.minute.toString().padLeft(2, '0');
+      arrival = '${t.day}/${t.month}  $h:$m ${t.hour < 12 ? 'AM' : 'PM'}';
+    }
+    const green = Color(0xFF1E9E52);
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: green.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: green.withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
             children: [
-              const Icon(Icons.hourglass_top_rounded,
-                  size: 18, color: AppColors.primaryBlue),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(AppStrings.t('waitingForCustomerDecision'),
-                    style: const TextStyle(
-                        fontWeight: FontWeight.w600, color: AppColors.primaryBlue)),
+              const Icon(Icons.storefront_rounded, size: 18, color: green),
+              const SizedBox(width: 8),
+              Text(
+                AppStrings.t('selfDropJob'),
+                style: const TextStyle(
+                  fontWeight: FontWeight.w800,
+                  color: green,
+                ),
               ),
             ],
           ),
-        ),
-      ];
+          const SizedBox(height: 4),
+          Text(
+            AppStrings.t('selfDropJobBody'),
+            style: TextStyle(color: context.pal.textPrimary),
+          ),
+          if (arrival != null) ...[
+            const SizedBox(height: 6),
+            Text(
+              '${AppStrings.t('expectedArrival')}: $arrival',
+              style: TextStyle(
+                fontSize: 12.5,
+                color: context.pal.textSecondary,
+              ),
+            ),
+          ],
+          if (j.benchFee != null) ...[
+            const SizedBox(height: 2),
+            Text(
+              '${AppStrings.t('diagnosticFee')}: \$${j.benchFee!.toStringAsFixed(2)}',
+              style: TextStyle(
+                fontSize: 12.5,
+                color: context.pal.textSecondary,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
 
-  Widget _quoteDeclinedBanner() => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+  /// The accepted quote's line items with the customer's decision -
+  /// do only the approved ones.
+  List<Widget> _approvedWork() {
+    final accepted = _quotes.where((q) => q.isAccepted).toList();
+    if (accepted.isEmpty || accepted.first.items.isEmpty) return const [];
+    final p = context.pal;
+    final q = accepted.first;
+    return [
+      Container(
+        padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: const Color(0xFFD13438).withValues(alpha: 0.08),
-          borderRadius: BorderRadius.circular(12),
+          color: p.surface,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: p.border),
         ),
-        child: Row(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Icon(Icons.info_outline, size: 18, color: Color(0xFFD13438)),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(AppStrings.t('quoteWasDeclinedInfo'),
-                  style: const TextStyle(
-                      fontWeight: FontWeight.w600, color: Color(0xFFD13438))),
+            Text(
+              AppStrings.t('approvedWorkTitle'),
+              style: TextStyle(
+                fontWeight: FontWeight.w800,
+                color: p.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 8),
+            for (final it in q.items)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: Row(
+                  children: [
+                    Icon(
+                      it.approved == true
+                          ? Icons.check_circle_rounded
+                          : Icons.cancel_outlined,
+                      size: 18,
+                      color: it.approved == true
+                          ? const Color(0xFF1E9E52)
+                          : p.textSecondary,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        it.title,
+                        style: TextStyle(
+                          color: it.approved == true
+                              ? p.textPrimary
+                              : p.textSecondary,
+                          decoration: it.approved == true
+                              ? null
+                              : TextDecoration.lineThrough,
+                        ),
+                      ),
+                    ),
+                    Text(
+                      '\$${it.price.toStringAsFixed(2)}',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        color: it.approved == true
+                            ? p.textPrimary
+                            : p.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            const SizedBox(height: 6),
+            Text(
+              '${AppStrings.t('quoteFormTotal')}: \$${q.totalAmount.toStringAsFixed(2)}',
+              style: const TextStyle(
+                fontWeight: FontWeight.w800,
+                color: AppColors.primaryBlue,
+              ),
             ),
           ],
         ),
-      );
+      ),
+      const SizedBox(height: 14),
+    ];
+  }
+
+  Widget _quoteDeclinedBanner() => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+    decoration: BoxDecoration(
+      color: const Color(0xFFD13438).withValues(alpha: 0.08),
+      borderRadius: BorderRadius.circular(12),
+    ),
+    child: Row(
+      children: [
+        const Icon(Icons.info_outline, size: 18, color: Color(0xFFD13438)),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text(
+            AppStrings.t('quoteWasDeclinedInfo'),
+            style: const TextStyle(
+              fontWeight: FontWeight.w600,
+              color: Color(0xFFD13438),
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
 
   Widget _declineButton() => SizedBox(
-        width: double.infinity,
-        child: OutlinedButton(
-          onPressed:
-              _busy ? null : () => _setStatus('REQUESTED', confirm: true),
-          style: OutlinedButton.styleFrom(
-              minimumSize: const Size.fromHeight(48),
-              foregroundColor: const Color(0xFFD13438)),
-          child: Text(AppStrings.t('decline')),
-        ),
-      );
+    width: double.infinity,
+    child: OutlinedButton(
+      onPressed: _busy ? null : () => _setStatus('REQUESTED', confirm: true),
+      style: OutlinedButton.styleFrom(
+        minimumSize: const Size.fromHeight(48),
+        foregroundColor: const Color(0xFFD13438),
+      ),
+      child: Text(AppStrings.t('decline')),
+    ),
+  );
 
-  Widget _row(BuildContext context, IconData icon, String label, String value,
-      {bool link = false}) {
+  Widget _row(
+    BuildContext context,
+    IconData icon,
+    String label,
+    String value, {
+    bool link = false,
+  }) {
     final p = context.pal;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
@@ -296,12 +564,17 @@ class _JobDetailScreenState extends State<JobDetailScreen>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(label,
-                    style: TextStyle(fontSize: 12, color: p.textSecondary)),
-                Text(value,
-                    style: TextStyle(
-                        color: link ? AppColors.primaryBlue : p.textPrimary,
-                        fontWeight: FontWeight.w500)),
+                Text(
+                  label,
+                  style: TextStyle(fontSize: 12, color: p.textSecondary),
+                ),
+                Text(
+                  value,
+                  style: TextStyle(
+                    color: link ? AppColors.primaryBlue : p.textPrimary,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
               ],
             ),
           ),
@@ -312,20 +585,25 @@ class _JobDetailScreenState extends State<JobDetailScreen>
 }
 
 class _StatusPill extends StatelessWidget {
-  const _StatusPill({required this.status});
+  const _StatusPill({required this.status, this.selfDrop = false});
   final String status;
+  final bool selfDrop;
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
       decoration: BoxDecoration(
-          color: AppColors.primaryBlue.withValues(alpha: 0.12),
-          borderRadius: BorderRadius.circular(999)),
-      child: Text(AppStrings.jobStatus(status),
-          style: const TextStyle(
-              color: AppColors.primaryBlue,
-              fontWeight: FontWeight.w700,
-              fontSize: 12)),
+        color: AppColors.primaryBlue.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        AppStrings.jobStatus(status, selfDrop: selfDrop),
+        style: const TextStyle(
+          color: AppColors.primaryBlue,
+          fontWeight: FontWeight.w700,
+          fontSize: 12,
+        ),
+      ),
     );
   }
 }

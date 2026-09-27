@@ -11,10 +11,14 @@ public class PublicTechnicianResponse {
     private double rating;
     private int ratingCount;
     private String photoUrl;
+    private String bannerUrl;
+    private String bannerTitle;
     private boolean available;
     private int experienceYear;
     private Double lat;
     private Double lng;
+    /** Real count of this technician's completed jobs - computed live, never stored. */
+    private long completedJobCount;
 
     public Long getId() {
         return id;
@@ -96,6 +100,22 @@ public class PublicTechnicianResponse {
         this.photoUrl = photoUrl;
     }
 
+    public String getBannerUrl() {
+        return bannerUrl;
+    }
+
+    public void setBannerUrl(String bannerUrl) {
+        this.bannerUrl = bannerUrl;
+    }
+
+    public String getBannerTitle() {
+        return bannerTitle;
+    }
+
+    public void setBannerTitle(String bannerTitle) {
+        this.bannerTitle = bannerTitle;
+    }
+
     public boolean isAvailable() {
         return available;
     }
@@ -126,5 +146,13 @@ public class PublicTechnicianResponse {
 
     public void setLng(Double lng) {
         this.lng = lng;
+    }
+
+    public long getCompletedJobCount() {
+        return completedJobCount;
+    }
+
+    public void setCompletedJobCount(long completedJobCount) {
+        this.completedJobCount = completedJobCount;
     }
 }

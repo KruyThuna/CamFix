@@ -70,7 +70,7 @@ public class UserAddressServiceImpl implements UserAddressService {
         address.setCity(request.getCity());
         address.setProvince(request.getProvince());
         address.setUserId(request.getUserId());
-        address.setIsDefault(request.getIsDefault());
+        address.setIsDefault(Boolean.TRUE.equals(request.getIsDefault()));
         address.setLatitude(request.getLatitude());
         address.setLongitude(request.getLongitude());
         return address;
@@ -80,6 +80,7 @@ public class UserAddressServiceImpl implements UserAddressService {
         return UserAddressResponse.builder()
                 .id(address.getId())
                 .address_Name(address.getAddress_Name())
+                .address_Line(address.getAddress_Line())
                 .city(address.getCity())
                 .province(address.getProvince())
                 .userId(address.getUserId())

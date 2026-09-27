@@ -1,0 +1,36 @@
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v4.1.0)
+
+2026-09-27T13:14:37.995+07:00  INFO 5656 --- [api] [           main] com.api.ApiApplication                   : Starting ApiApplication v0.0.1-SNAPSHOT using Java 21.0.12 with PID 5656 (C:\CamV4\CamFix\Backend\build\libs\api.jar started by Oxy in C:\CamV4\CamFix\Backend)
+2026-09-27T13:14:38.051+07:00  INFO 5656 --- [api] [           main] com.api.ApiApplication                   : No active profile set, falling back to 1 default profile: "default"
+2026-09-27T13:14:49.588+07:00  INFO 5656 --- [api] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-09-27T13:14:50.336+07:00  INFO 5656 --- [api] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 636 ms. Found 16 JPA repository interfaces.
+2026-09-27T13:14:56.187+07:00  INFO 5656 --- [api] [           main] o.s.boot.tomcat.TomcatWebServer          : Tomcat initialized with port 8081 (http)
+2026-09-27T13:14:56.280+07:00  INFO 5656 --- [api] [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-09-27T13:14:56.284+07:00  INFO 5656 --- [api] [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/11.0.22]
+2026-09-27T13:14:56.681+07:00  INFO 5656 --- [api] [           main] b.w.c.s.WebApplicationContextInitializer : Root WebApplicationContext: initialization completed in 18001 ms
+2026-09-27T13:14:58.700+07:00  INFO 5656 --- [api] [           main] org.hibernate.orm.jpa                    : HHH008540: Processing PersistenceUnitInfo [name: default]
+2026-09-27T13:14:59.526+07:00  INFO 5656 --- [api] [           main] org.hibernate.orm.core                   : HHH000001: Hibernate ORM core version 7.4.1.Final
+2026-09-27T13:15:05.152+07:00  INFO 5656 --- [api] [           main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-09-27T13:15:05.464+07:00  INFO 5656 --- [api] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-09-27T13:15:06.839+07:00  INFO 5656 --- [api] [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@31c5304f
+2026-09-27T13:15:06.873+07:00  INFO 5656 --- [api] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-09-27T13:15:08.064+07:00  INFO 5656 --- [api] [           main] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
+	Database JDBC URL [jdbc:mysql://localhost:3306/CamFix?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC]
+	Database driver: MySQL Connector/J
+	Database dialect: MySQLDialect
+	Database version: 8.0.46
+	Default catalog/schema: CamFix/undefined
+	Autocommit mode: undefined/unknown
+	Isolation level: REPEATABLE_READ [default REPEATABLE_READ]
+	JDBC fetch size: none
+	Pool: DataSourceConnectionProvider
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown

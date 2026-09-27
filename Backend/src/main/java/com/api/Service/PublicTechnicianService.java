@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.api.Entity.Technician;
+import com.api.Repo.JobRepository;
 import com.api.Repo.TechnicianLiveLocationRepository;
 import com.api.Repo.TechnicianRepository;
 import com.api.dto.Response.PublicTechnicianResponse;
@@ -31,13 +32,18 @@ public class PublicTechnicianService {
     private static final String STATUS_SUSPENDED = "SUSPENDED";
     private static final Set<String> AVAILABLE_TOKENS = Set.of("AVAILABLE", "ONLINE", "TRUE", "YES", "1");
 
+    private static final String STATUS_COMPLETED = "COMPLETED";
+
     private final TechnicianRepository technicianRepository;
     private final TechnicianLiveLocationRepository liveLocationRepository;
+    private final JobRepository jobRepository;
 
     public PublicTechnicianService(TechnicianRepository technicianRepository,
-            TechnicianLiveLocationRepository liveLocationRepository) {
+            TechnicianLiveLocationRepository liveLocationRepository,
+            JobRepository jobRepository) {
         this.technicianRepository = technicianRepository;
         this.liveLocationRepository = liveLocationRepository;
+        this.jobRepository = jobRepository;
     }
 
     public List<PublicTechnicianResponse> list(String category) {
@@ -83,8 +89,14 @@ public class PublicTechnicianService {
         r.setPhotoUrl(t.getPhoto() != null && t.getPhoto().length > 0
                 ? "/api/technician/" + t.getTechnicianId() + "/photo"
                 : null);
+        r.setBannerUrl(t.getBanner() != null && t.getBanner().length > 0
+                ? "/api/technician/" + t.getTechnicianId() + "/banner"
+                : null);
+        r.setBannerTitle(t.getBannerTitle());
         r.setAvailable(AVAILABLE_TOKENS.contains(nz(t.getAvailabilityStatus()).toUpperCase(Locale.ROOT)));
         r.setExperienceYear(t.getExperienceYear());
+        r.setCompletedJobCount(
+                jobRepository.countByTechnicianIdAndStatus(t.getTechnicianId(), STATUS_COMPLETED));
         liveLocationRepository.findByTechnicianId(t.getTechnicianId()).ifPresent(loc -> {
             r.setLat(loc.getLatitude());
             r.setLng(loc.getLongitude());

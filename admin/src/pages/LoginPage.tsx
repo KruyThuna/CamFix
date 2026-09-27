@@ -35,7 +35,7 @@ export function LoginPage() {
     <div className="login-wrap">
       <div className="card pad login-card">
         <h1>CamFix Admin</h1>
-        <p className="sub">Sign in with an administrator account.</p>
+        <p className="sub">Sign in with a Main Admin or Admin account.</p>
         <form onSubmit={submit} className="stack">
           <div>
             <label>Email</label>

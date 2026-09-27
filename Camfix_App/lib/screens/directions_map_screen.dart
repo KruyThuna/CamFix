@@ -302,8 +302,7 @@ class _DirectionsMapScreenState extends State<DirectionsMapScreen> {
                       '${categoryLabel(_provider.category)} · ${_provider.location}',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style:
-                          TextStyle(fontSize: 12, color: p.textSecondary),
+                      style: TextStyle(fontSize: 12, color: p.textSecondary),
                     ),
                   ],
                 ),

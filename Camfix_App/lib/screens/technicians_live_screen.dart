@@ -207,9 +207,8 @@ class _TechniciansLiveScreenState extends State<TechniciansLiveScreen> {
             bottom: 0,
             child: SafeArea(
               top: false,
-              child: _selected != null
-                  ? _selectedCard(p, _selected!)
-                  : _list(p),
+              child:
+                  _selected != null ? _selectedCard(p, _selected!) : _list(p),
             ),
           ),
         ],
@@ -320,9 +319,7 @@ class _TechniciansLiveScreenState extends State<TechniciansLiveScreen> {
                 Icon(
                   t.available ? Icons.verified : Icons.schedule,
                   size: 13,
-                  color: t.available
-                      ? AppColors.primaryBlue
-                      : p.textSecondary,
+                  color: t.available ? AppColors.primaryBlue : p.textSecondary,
                 ),
                 const SizedBox(width: 3),
                 Text(
@@ -330,9 +327,8 @@ class _TechniciansLiveScreenState extends State<TechniciansLiveScreen> {
                   style: TextStyle(
                     fontSize: 11.5,
                     fontWeight: FontWeight.w600,
-                    color: t.available
-                        ? AppColors.primaryBlue
-                        : p.textSecondary,
+                    color:
+                        t.available ? AppColors.primaryBlue : p.textSecondary,
                   ),
                 ),
               ],

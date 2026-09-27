@@ -8,6 +8,8 @@ import { TechnicianDetailPage } from './pages/TechnicianDetailPage';
 import { JobsPage } from './pages/JobsPage';
 import { JobDetailPage } from './pages/JobDetailPage';
 import { MapPage } from './pages/MapPage';
+import { UsersPage } from './pages/UsersPage';
+import { PricingPage } from './pages/PricingPage';
 
 export default function App() {
   return (
@@ -26,6 +28,8 @@ export default function App() {
         <Route path="/jobs" element={<JobsPage />} />
         <Route path="/jobs/:id" element={<JobDetailPage />} />
         <Route path="/map" element={<MapPage />} />
+        <Route path="/users" element={<UsersPage />} />
+        <Route path="/pricing" element={<PricingPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

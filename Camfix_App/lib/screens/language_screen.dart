@@ -58,8 +58,8 @@ class _LanguageScreenState extends State<LanguageScreen> {
                 padding: const EdgeInsets.fromLTRB(24, 32, 24, 32),
                 decoration: BoxDecoration(
                   color: p.background,
-                  borderRadius: const BorderRadius.vertical(
-                      top: Radius.circular(32)),
+                  borderRadius:
+                      const BorderRadius.vertical(top: Radius.circular(32)),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -115,9 +115,7 @@ class _LanguageTile extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         decoration: BoxDecoration(
-          color: selected
-              ? AppColors.cyan.withValues(alpha: 0.15)
-              : p.surface,
+          color: selected ? AppColors.cyan.withValues(alpha: 0.15) : p.surface,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: selected ? AppColors.cyan : Colors.transparent,

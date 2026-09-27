@@ -11,8 +11,16 @@ import com.api.Entity.Job;
 public interface JobRepository extends JpaRepository<Job, Long> {
 
     List<Job> findByTechnicianId(Long technicianId);
+    boolean existsByCustomerUserId(Long customerUserId);
+    boolean existsByTechnicianId(Long technicianId);
 
     long countByStatus(String status);
 
     long countByStatusIn(List<String> statuses);
+
+    /** Real completed-job count for one of a technician's named listings. */
+    long countByTechnicianServiceIdAndStatus(Long technicianServiceId, String status);
+
+    /** Real total completed-job count for a technician across every category/listing. */
+    long countByTechnicianIdAndStatus(Long technicianId, String status);
 }

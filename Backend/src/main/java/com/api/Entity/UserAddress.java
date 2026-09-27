@@ -16,6 +16,7 @@ public class UserAddress {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "AddressID")
     private Long id;
 
     private String address_Name;
@@ -23,7 +24,9 @@ public class UserAddress {
     private String city;
     private String province;
     private Long userId;
-    private Boolean isDefault;
+    @Column(name = "Is_Default")
+    @Builder.Default
+    private Boolean isDefault = false;
     private Double latitude;
     private Double longitude;
 }   

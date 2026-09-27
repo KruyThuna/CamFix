@@ -19,7 +19,7 @@ public class CallHistory {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "call_id")
+    @Column(name = "CallID")
     private Long callId;
 
     @ManyToOne(fetch = FetchType.LAZY)

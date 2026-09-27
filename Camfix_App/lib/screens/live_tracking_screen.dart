@@ -320,8 +320,8 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
                   point: alt.labelAnchor,
                   width: 104,
                   height: 28,
-                  child: _routeBubble(
-                      _routeLabel(alt.minutes, alt.km), faint: true),
+                  child: _routeBubble(_routeLabel(alt.minutes, alt.km),
+                      faint: true),
                 ),
               Marker(
                 point: _route.mainLabelAnchor,
@@ -448,9 +448,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
           decoration: BoxDecoration(
             color: faint ? AppColors.white : const Color(0xFF1A63D8),
             borderRadius: BorderRadius.circular(13),
-            border: faint
-                ? Border.all(color: const Color(0xFFB0BBD4))
-                : null,
+            border: faint ? Border.all(color: const Color(0xFFB0BBD4)) : null,
             boxShadow: [
               BoxShadow(
                   color: Colors.black.withValues(alpha: 0.18),
@@ -559,8 +557,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
             ),
             const SizedBox(height: 10),
             Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
               decoration: BoxDecoration(
                 color: _statusColor().withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(10),
@@ -588,12 +585,12 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
             Row(
               children: [
                 Expanded(
-                    child: _leg(
-                        p, AppStrings.t('fromLabel'), _info.originName)),
+                    child:
+                        _leg(p, AppStrings.t('fromLabel'), _info.originName)),
                 Icon(Icons.arrow_forward, size: 16, color: p.textSecondary),
                 Expanded(
-                    child: _leg(p, AppStrings.t('destination'),
-                        _info.destinationName,
+                    child: _leg(
+                        p, AppStrings.t('destination'), _info.destinationName,
                         alignEnd: true)),
               ],
             ),
@@ -625,8 +622,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
                         Text(AppStrings.t('technicianLabel'),
                             style: TextStyle(
                                 fontSize: 12,
-                                color: AppColors.white
-                                    .withValues(alpha: 0.7))),
+                                color: AppColors.white.withValues(alpha: 0.7))),
                       ],
                     ),
                   ),

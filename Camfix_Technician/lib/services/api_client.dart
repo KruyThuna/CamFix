@@ -101,6 +101,7 @@ class ApiClient {
     required List<int> bytes,
     required String filename,
     String? contentType,
+    Map<String, String>? fields,
   }) async {
     final uri = Uri.parse('$baseUrl$path');
     final token = await TokenStore.instance.read();
@@ -108,6 +109,7 @@ class ApiClient {
     if (token != null && token.isNotEmpty) {
       request.headers['Authorization'] = 'Bearer $token';
     }
+    if (fields != null) request.fields.addAll(fields);
     request.files.add(http.MultipartFile.fromBytes(
       fieldName,
       bytes,

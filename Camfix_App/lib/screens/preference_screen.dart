@@ -116,7 +116,8 @@ class _PreferenceScreenState extends State<PreferenceScreen> {
                           width: 36,
                           height: 36,
                           decoration: BoxDecoration(
-                            color: AppColors.primaryBlue.withValues(alpha: 0.12),
+                            color:
+                                AppColors.primaryBlue.withValues(alpha: 0.12),
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: const Icon(Icons.location_on_outlined,
@@ -223,7 +224,8 @@ class _PreferenceScreenState extends State<PreferenceScreen> {
           color: p.surface,
           shape: BoxShape.circle,
           boxShadow: [
-            BoxShadow(color: p.shadow, blurRadius: 10, offset: const Offset(0, 4)),
+            BoxShadow(
+                color: p.shadow, blurRadius: 10, offset: const Offset(0, 4)),
           ],
         ),
         child: Icon(Icons.arrow_back, color: p.textPrimary, size: 20),

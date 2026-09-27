@@ -88,12 +88,22 @@ class _MainShellState extends State<MainShell> implements MainShellController {
               ),
             ),
           Positioned(
-            left: 20,
-            right: 20,
+            left: 0,
+            right: 0,
             bottom: 16 + bottomInset,
-            child: CamFixBottomNavBar(
-              currentIndex: _index,
-              onTap: goToTab,
+            child: Center(
+              child: ConstrainedBox(
+                constraints:
+                    const BoxConstraints(maxWidth: AppLayout.maxPhoneWidth),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: AppLayout.pageGutter),
+                  child: CamFixBottomNavBar(
+                    currentIndex: _index,
+                    onTap: goToTab,
+                  ),
+                ),
+              ),
             ),
           ),
         ],

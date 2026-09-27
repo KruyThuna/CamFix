@@ -6,6 +6,8 @@ const links = [
   { to: '/technicians', label: 'Technicians' },
   { to: '/jobs', label: 'Jobs' },
   { to: '/map', label: 'Live map' },
+  { to: '/pricing', label: 'Pricing' },
+  { to: '/users', label: 'Users' },
 ];
 
 export function Layout() {

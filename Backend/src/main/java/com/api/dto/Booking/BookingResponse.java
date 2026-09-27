@@ -13,6 +13,8 @@ public class BookingResponse {
     /** Snapshot "starting from" price shown when the booking was made - NOT
      *  the final repair cost. See {@code ServiceQuote} for the real total. */
     private Double startingPrice;
+    /** Self Drop diagnostic fee snapshotted at booking time; null otherwise. */
+    private Double benchFee;
     private String address;
     private Double lat;
     private Double lng;
@@ -37,6 +39,7 @@ public class BookingResponse {
         r.status = job.getStatus();
         r.bookingType = job.getBookingType();
         r.startingPrice = job.getStartingPrice();
+        r.benchFee = job.getBenchFee();
         r.address = job.getAddress();
         r.lat = job.getLat();
         r.lng = job.getLng();
@@ -75,6 +78,10 @@ public class BookingResponse {
 
     public Double getStartingPrice() {
         return startingPrice;
+    }
+
+    public Double getBenchFee() {
+        return benchFee;
     }
 
     public String getAddress() {

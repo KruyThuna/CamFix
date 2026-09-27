@@ -1,9 +1,11 @@
 package com.api.Service;
 
+import java.security.SecureRandom;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.NoSuchElementException;
@@ -14,16 +16,23 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.api.Entity.Job;
+import com.api.Entity.Payment;
 import com.api.Entity.ServiceQuote;
 import com.api.Entity.Technician;
+import com.api.Entity.TechnicianServiceListing;
 import com.api.Entity.Users;
 import com.api.Repo.JobRepository;
+import com.api.Repo.PaymentRepository;
 import com.api.Repo.ServiceQuoteRepository;
 import com.api.Repo.TechnicianLiveLocationRepository;
 import com.api.Repo.TechnicianRepository;
+import com.api.Repo.TechnicianServiceRepository;
 import com.api.Security.AuthSupport;
 import com.api.dto.Booking.BookingRequest;
 import com.api.dto.Booking.BookingResponse;
+import com.api.dto.Booking.MySpendResponse;
+import com.api.dto.Booking.PayQuoteRequest;
+import com.api.dto.Booking.PaymentResponse;
 import com.api.dto.Booking.ServiceQuoteResponse;
 
 /**
@@ -45,6 +54,7 @@ public class BookingService {
 
     private static final String TYPE_IMMEDIATE = "IMMEDIATE";
     private static final String TYPE_SCHEDULED = "SCHEDULED";
+    private static final String TYPE_SELF_DROP = "SELF_DROP";
 
     private static final String QUOTE_PENDING = "PENDING";
     private static final String QUOTE_ACCEPTED = "ACCEPTED";
@@ -59,24 +69,40 @@ public class BookingService {
     private final TechnicianRepository technicianRepository;
     private final TechnicianLiveLocationRepository liveLocationRepository;
     private final ServiceQuoteRepository serviceQuoteRepository;
+    private final PaymentRepository paymentRepository;
     private final ServicePriceService servicePriceService;
     private final NotificationDispatcher notifications;
+    private final TechnicianServiceRepository technicianServiceRepository;
+
+    private static final SecureRandom RNG = new SecureRandom();
 
     public BookingService(AuthSupport authSupport,
             JobRepository jobRepository,
             TechnicianRepository technicianRepository,
             TechnicianLiveLocationRepository liveLocationRepository,
             ServiceQuoteRepository serviceQuoteRepository,
+            PaymentRepository paymentRepository,
             ServicePriceService servicePriceService,
-            NotificationDispatcher notifications) {
+            NotificationDispatcher notifications,
+            TechnicianServiceRepository technicianServiceRepository,
+            QuoteItemService quoteItems,
+            KhqrService khqr) {
         this.authSupport = authSupport;
         this.jobRepository = jobRepository;
         this.technicianRepository = technicianRepository;
         this.liveLocationRepository = liveLocationRepository;
         this.serviceQuoteRepository = serviceQuoteRepository;
+        this.paymentRepository = paymentRepository;
         this.servicePriceService = servicePriceService;
         this.notifications = notifications;
+        this.technicianServiceRepository = technicianServiceRepository;
+        this.quoteItems = quoteItems;
+        this.khqr = khqr;
     }
+
+    private final KhqrService khqr;
+
+    private final QuoteItemService quoteItems;
 
     public BookingResponse create(String authorization, BookingRequest req) {
         Users me = authSupport.currentUser(authorization);
@@ -84,21 +110,38 @@ public class BookingService {
             throw new IllegalArgumentException("category is required");
         }
 
+        // A real listing the technician set up themselves, when the customer
+        // booked one directly (Achievements tab) rather than a generic category
+        // request - its own real price overrides the category's catalog price.
+        TechnicianServiceListing listing = req.getTechnicianServiceId() == null
+                ? null
+                : technicianServiceRepository.findById(req.getTechnicianServiceId()).orElse(null);
+
         Job job = new Job();
         job.setCustomerUserId(me.getUserId());
         job.setCustomerName(displayName(me));
         job.setCustomerPhone(nz(me.getPhoneNumber()));
         job.setCategory(req.getCategory().trim());
-        job.setDescription(buildDescription(req));
+        job.setDescription(buildDescription(req, listing));
         job.setAddress(blankToNull(req.getAddress()));
         job.setLat(req.getLat());
         job.setLng(req.getLng());
         job.setScheduledAt(parseInstant(req.getScheduledAt()));
         job.setNotes(blankToNull(req.getNote()));
         job.setBookingType(normalizeBookingType(req.getBookingType()));
-        job.setStartingPrice(servicePriceService.startingPriceForCategoryName(job.getCategory()));
+        job.setTechnicianServiceId(listing == null ? null : listing.getId());
+        job.setStartingPrice(listing != null && listing.getPrice() != null
+                ? listing.getPrice()
+                : servicePriceService.startingPriceForCategoryName(job.getCategory()));
 
         Technician assignee = resolveAssignee(req.getTechnicianId());
+        if (TYPE_SELF_DROP.equals(job.getBookingType())) {
+            // The drop-off point is the technician's own shop, so there has to be one.
+            if (assignee == null) {
+                throw new IllegalArgumentException("Self Drop needs an approved technician to drop off with");
+            }
+            job.setBenchFee(servicePriceService.benchFeeForCategoryName(job.getCategory()));
+        }
         if (assignee != null) {
             job.setStatus(STATUS_ASSIGNED);
             job.setTechnicianId(assignee.getTechnicianId());
@@ -135,6 +178,30 @@ public class BookingService {
         return toResponse(ownedJob(authorization, id));
     }
 
+    /** Real sum across every payment the signed-in customer has made, for the
+     *  profile screen's "Total Spend" stat - never an invented figure. */
+    @Transactional(readOnly = true)
+    public MySpendResponse myTotalSpend(String authorization) {
+        Users me = authSupport.currentUser(authorization);
+        List<Long> myJobIds = jobRepository.findAll().stream()
+                .filter(j -> me.getUserId().equals(j.getCustomerUserId()))
+                .map(Job::getId)
+                .collect(Collectors.toList());
+        List<Payment> payments = myJobIds.isEmpty()
+                ? List.of()
+                : paymentRepository.findByJobIdIn(myJobIds);
+        double total = payments.stream()
+                .mapToDouble(pmt -> pmt.getTotalAmount() == null ? 0 : pmt.getTotalAmount())
+                .sum();
+        MySpendResponse r = new MySpendResponse();
+        r.setTotalSpend(round2(total));
+        r.setPayments(payments.stream()
+                .sorted(Comparator.comparing(Payment::getId).reversed())
+                .map(BookingService::toPaymentDto)
+                .collect(Collectors.toList()));
+        return r;
+    }
+
     /** Customer-initiated cancel. Notifies the assigned technician, if any. */
     public BookingResponse cancel(String authorization, Long id) {
         Job job = ownedJob(authorization, id);
@@ -162,17 +229,25 @@ public class BookingService {
     public List<ServiceQuoteResponse> listQuotes(String authorization, Long jobId) {
         ownedJob(authorization, jobId); // 404s if not this customer's booking
         return serviceQuoteRepository.findByJobIdOrderByVersionDesc(jobId).stream()
-                .map(BookingService::toQuoteDto)
+                .map(quoteItems::toDto)
                 .collect(Collectors.toList());
     }
 
     /** Customer accepts the current PENDING quote - the job can now proceed. */
     public BookingResponse acceptQuote(String authorization, Long jobId, Long quoteId) {
+        return acceptQuote(authorization, jobId, quoteId, null);
+    }
+
+    /** Accept with a per-item decision: only [approvedItemIds] are done and
+     *  paid for (null = approve every item). */
+    public BookingResponse acceptQuote(String authorization, Long jobId, Long quoteId,
+            List<Long> approvedItemIds) {
         Job job = ownedJob(authorization, jobId);
         ServiceQuote quote = ownedQuote(job, quoteId);
         if (!QUOTE_PENDING.equals(quote.getStatus())) {
             throw new IllegalArgumentException("Only a pending quote can be accepted");
         }
+        quote.setTotalAmount(quoteItems.applyDecision(quote, approvedItemIds));
         quote.setStatus(QUOTE_ACCEPTED);
         serviceQuoteRepository.save(quote);
 
@@ -207,6 +282,130 @@ public class BookingService {
                     techUser == null ? null : techUser.getUserId(), saved);
         });
         return toResponse(saved);
+    }
+
+    private static final Set<String> PAYMENT_METHODS = Set.of("APPLE_PAY", "CARD", "PAYPAL");
+
+    /** Mock payment for an accepted quote - no real card processor is wired
+     *  up, this just records the charge. Paying again for an already-paid
+     *  quote returns the original payment rather than charging twice. */
+    public PaymentResponse payQuote(String authorization, Long jobId, Long quoteId, PayQuoteRequest req) {
+        Job job = ownedJob(authorization, jobId);
+        ServiceQuote quote = ownedQuote(job, quoteId);
+        if (!QUOTE_ACCEPTED.equals(quote.getStatus())) {
+            throw new IllegalArgumentException("Only an accepted quote can be paid");
+        }
+        String method = req == null ? null : req.getPaymentMethod();
+        if (method == null || !PAYMENT_METHODS.contains(method.toUpperCase(Locale.ROOT))) {
+            throw new IllegalArgumentException("paymentMethod must be one of " + PAYMENT_METHODS);
+        }
+        method = method.toUpperCase(Locale.ROOT);
+        String cardLast4 = req.getCardLast4();
+        if ("CARD".equals(method)) {
+            if (cardLast4 == null || !cardLast4.matches("\\d{4}")) {
+                throw new IllegalArgumentException("cardLast4 must be exactly 4 digits for a CARD payment");
+            }
+        } else {
+            cardLast4 = null;
+        }
+
+        Payment existing = paymentRepository.findByQuoteId(quoteId).orElse(null);
+        if (existing != null) {
+            return toPaymentDto(existing);
+        }
+        return toPaymentDto(recordPayment(job, quote, method, cardLast4));
+    }
+
+    /** [base, platformFee, tax, total] for an accepted quote - the single
+     *  formula every payment method (incl. KHQR) charges. */
+    static double[] charge(ServiceQuote quote) {
+        double base = quote.getTotalAmount() == null ? 0 : quote.getTotalAmount();
+        // Platform processing fee and tax are flat percentages set by CamFix.
+        double platformFee = round2(Math.max(0.99, base * 0.018));
+        double tax = round2((base + platformFee) * 0.085);
+        double total = round2(base + platformFee + tax);
+        return new double[] {base, platformFee, tax, total};
+    }
+
+    Payment recordPayment(Job job, ServiceQuote quote, String method, String cardLast4) {
+        double[] c = charge(quote);
+        Payment payment = new Payment();
+        payment.setJobId(job.getId());
+        payment.setQuoteId(quote.getId());
+        payment.setBaseAmount(c[0]);
+        payment.setPlatformFee(c[1]);
+        payment.setTaxAmount(c[2]);
+        payment.setTotalAmount(c[3]);
+        payment.setPaymentMethod(method);
+        payment.setCardLast4(cardLast4);
+        payment.setServiceRef(generateServiceRef());
+        return paymentRepository.save(payment);
+    }
+
+    // --- KHQR (Bakong) -------------------------------------------------------
+
+    /** Create a dynamic KHQR for this accepted quote's total. */
+    public KhqrService.KhqrResponse startKhqr(String authorization, Long jobId, Long quoteId) {
+        Job job = ownedJob(authorization, jobId);
+        ServiceQuote quote = ownedQuote(job, quoteId);
+        if (!QUOTE_ACCEPTED.equals(quote.getStatus())) {
+            throw new IllegalArgumentException("Only an accepted quote can be paid");
+        }
+        if (paymentRepository.findByQuoteId(quoteId).isPresent()) {
+            throw new IllegalArgumentException("This quote is already paid");
+        }
+        return khqr.create(job.getId(), quote.getId(), charge(quote)[3]);
+    }
+
+    /**
+     * Poll a KHQR: asks Bakong whether the transfer landed and, once it has
+     * (right amount + currency), records the real payment. Returns the
+     * status plus the payment when paid.
+     */
+    public KhqrService.KhqrStatusResponse khqrStatus(String authorization, Long jobId, String md5) {
+        Job job = ownedJob(authorization, jobId);
+        KhqrService.Check check = khqr.check(job.getId(), md5);
+        PaymentResponse paid = null;
+        if (check.paid()) {
+            ServiceQuote quote = ownedQuote(job, check.quoteId());
+            Payment p = paymentRepository.findByQuoteId(quote.getId())
+                    .orElseGet(() -> recordPayment(job, quote, "KHQR", null));
+            paid = toPaymentDto(p);
+        }
+        return new KhqrService.KhqrStatusResponse(check.status(), paid);
+    }
+
+    /** Latest payment recorded for one of the caller's own jobs, or null if unpaid. */
+    public PaymentResponse paymentFor(String authorization, Long jobId) {
+        Job job = ownedJob(authorization, jobId);
+        return paymentRepository.findFirstByJobIdOrderByIdDesc(job.getId())
+                .map(BookingService::toPaymentDto)
+                .orElse(null);
+    }
+
+    private static double round2(double v) {
+        return Math.round(v * 100.0) / 100.0;
+    }
+
+    private static String generateServiceRef() {
+        String digits = String.format(Locale.ROOT, "%05d", RNG.nextInt(100_000));
+        String letters = "" + (char) ('A' + RNG.nextInt(26)) + (char) ('A' + RNG.nextInt(26));
+        return "SP-" + digits + "-" + letters;
+    }
+
+    private static PaymentResponse toPaymentDto(Payment p) {
+        PaymentResponse r = new PaymentResponse();
+        r.setJobId(p.getJobId());
+        r.setQuoteId(p.getQuoteId());
+        r.setBaseAmount(p.getBaseAmount());
+        r.setPlatformFee(p.getPlatformFee());
+        r.setTaxAmount(p.getTaxAmount());
+        r.setTotalAmount(p.getTotalAmount());
+        r.setPaymentMethod(p.getPaymentMethod());
+        r.setCardLast4(p.getCardLast4());
+        r.setServiceRef(p.getServiceRef());
+        r.setCreatedAt(p.getCreatedAt() == null ? null : p.getCreatedAt().toString());
+        return r;
     }
 
     private ServiceQuote ownedQuote(Job job, Long quoteId) {
@@ -292,9 +491,13 @@ public class BookingService {
         return n.isEmpty() ? t.getBusinessName() : n;
     }
 
-    private static String buildDescription(BookingRequest req) {
+    private static String buildDescription(BookingRequest req, TechnicianServiceListing listing) {
         StringBuilder sb = new StringBuilder();
-        sb.append(isBlank(req.getService()) ? req.getCategory().trim() : req.getService().trim());
+        if (listing != null && !isBlank(listing.getTitle())) {
+            sb.append(listing.getTitle().trim());
+        } else {
+            sb.append(isBlank(req.getService()) ? req.getCategory().trim() : req.getService().trim());
+        }
         sb.append(" - booked via app");
         if (!isBlank(req.getProviderName())) {
             sb.append(" (customer picked ").append(req.getProviderName().trim()).append(")");
@@ -314,7 +517,11 @@ public class BookingService {
     }
 
     private static String normalizeBookingType(String raw) {
-        return TYPE_SCHEDULED.equalsIgnoreCase(nz(raw).trim()) ? TYPE_SCHEDULED : TYPE_IMMEDIATE;
+        String v = nz(raw).trim();
+        if (TYPE_SELF_DROP.equalsIgnoreCase(v)) {
+            return TYPE_SELF_DROP;
+        }
+        return TYPE_SCHEDULED.equalsIgnoreCase(v) ? TYPE_SCHEDULED : TYPE_IMMEDIATE;
     }
 
     private static LocalDateTime parseInstant(String raw) {

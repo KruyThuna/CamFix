@@ -1,6 +1,7 @@
 package com.api.Service;
 
 import java.math.BigDecimal;
+import java.security.SecureRandom;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
@@ -28,6 +29,7 @@ import com.api.Repo.UserRepository;
 import com.api.Security.JwtService;
 import com.api.dto.Admin.AdminJobRequest;
 import com.api.dto.Admin.AdminJobResponse;
+import com.api.dto.Admin.AdminPasswordResetResponse;
 import com.api.dto.Admin.AdminTechnicianRequest;
 import com.api.dto.Admin.AdminTechnicianResponse;
 import com.api.dto.Admin.DashboardStatsResponse;
@@ -113,7 +115,9 @@ public class AdminService {
         }
         Users user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new InvalidCredentialsException("User not found"));
-        if (!ROLE_ADMIN.equalsIgnoreCase(nullToEmpty(user.getRole()))) {
+        if (!STATUS_ACTIVE.equalsIgnoreCase(user.getStatus()) ||
+                !(ROLE_ADMIN.equalsIgnoreCase(nullToEmpty(user.getRole())) ||
+                "MAIN_ADMIN".equalsIgnoreCase(user.getRole()))) {
             throw new ForbiddenException("Admin access required");
         }
         return user;
@@ -159,6 +163,16 @@ public class AdminService {
                 .filter(t -> isBlank(category) || category.equalsIgnoreCase(t.getCategory()))
                 .filter(t -> needle.isEmpty() || matches(t, needle))
                 .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public byte[] getTechnicianFacePhoto(Long id) {
+        return loadTechnician(id).getFacePhoto();
+    }
+
+    @Transactional(readOnly = true)
+    public byte[] getTechnicianIdCard(Long id) {
+        return loadTechnician(id).getIdCard();
     }
 
     @Transactional(readOnly = true)
@@ -311,6 +325,34 @@ public class AdminService {
         return toDto(tech);
     }
 
+    private static final SecureRandom RNG = new SecureRandom();
+    private static final String TEMP_PASSWORD_ALPHABET =
+            "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
+
+    /** Sets a new random temporary password for a technician's account and
+     *  returns it in plaintext, once, for the admin to relay - there's no
+     *  email/SMS delivery for this in the project, and the technician isn't
+     *  otherwise locked out (approval/suspension already cover that), so this
+     *  only exists for "I forgot my password" support requests. */
+    public AdminPasswordResetResponse resetTechnicianPassword(Long id) {
+        Technician tech = loadTechnician(id);
+        Users user = tech.getUsers();
+        String temporaryPassword = generateTemporaryPassword();
+        user.setPassword(passwordEncoder.encode(temporaryPassword));
+        userRepository.save(user);
+        AdminPasswordResetResponse r = new AdminPasswordResetResponse();
+        r.setTemporaryPassword(temporaryPassword);
+        return r;
+    }
+
+    private static String generateTemporaryPassword() {
+        StringBuilder sb = new StringBuilder(10);
+        for (int i = 0; i < 10; i++) {
+            sb.append(TEMP_PASSWORD_ALPHABET.charAt(RNG.nextInt(TEMP_PASSWORD_ALPHABET.length())));
+        }
+        return sb.toString();
+    }
+
     // --- Jobs --------------------------------------------------------------
 
     @Transactional(readOnly = true)
@@ -452,6 +494,7 @@ public class AdminService {
         r.setCreatedAt(str(t.getCreatedAt()));
         r.setApprovedAt(str(t.getApprovedAt()));
         r.setRejectionReason(t.getRejectionReason());
+        r.setIdentityEmailVerified(t.isIdentityEmailVerified());
 
         liveLocationRepository.findByTechnicianId(t.getTechnicianId()).ifPresent(loc -> {
             r.setLastLat(loc.getLatitude());

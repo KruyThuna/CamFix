@@ -57,8 +57,16 @@ class _LoginScreenState extends State<LoginScreen> with LangAware<LoginScreen> {
                   alignment: Alignment.centerRight,
                   child: const LanguageToggle()),
               const SizedBox(height: 4),
-              const Icon(Icons.handyman_rounded,
-                  size: 44, color: AppColors.primaryBlue),
+              Container(
+                width: 64,
+                height: 64,
+                decoration: BoxDecoration(
+                  color: AppColors.primaryBlue,
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                child: const Icon(Icons.handyman_rounded,
+                    size: 32, color: AppColors.white),
+              ),
               const SizedBox(height: 16),
               Text(AppStrings.t('loginTitle'),
                   style: TextStyle(

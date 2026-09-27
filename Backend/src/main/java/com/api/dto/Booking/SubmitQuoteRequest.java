@@ -3,6 +3,17 @@ package com.api.dto.Booking;
 /** Body for {@code POST /api/technician/me/jobs/{id}/quotes}. */
 public class SubmitQuoteRequest {
 
+    /** Optional named line items the customer approves one by one. */
+    private java.util.List<QuoteItemDtos.QuoteItemInput> items;
+
+    public java.util.List<QuoteItemDtos.QuoteItemInput> getItems() {
+        return items;
+    }
+
+    public void setItems(java.util.List<QuoteItemDtos.QuoteItemInput> items) {
+        this.items = items;
+    }
+
     private Double inspectionFee;
     private Double laborCost;
     private Double partsCost;

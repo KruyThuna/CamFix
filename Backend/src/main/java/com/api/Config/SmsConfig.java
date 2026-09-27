@@ -18,7 +18,11 @@ import com.api.Service.sms.TwilioSmsSender;
  *       from-number} are all set.</li>
  *   <li>TextBelt - when {@code app.sms.textbelt.key} is set (no signup;
  *       use {@code textbelt} for the free 1/day tier).</li>
- *   <li>Log-only - dev fallback, writes the code to the console.</li>
+ *   <li>No provider - log-only (dev), same fallback {@link
+ *       com.api.Config.MailConfig} uses for email when SMTP isn't set. The
+ *       code is still returned in the response while {@code
+ *       app.otp.expose-code=true}, so registration/login is testable without
+ *       a real SMS provider.</li>
  * </ol>
  */
 @Configuration
@@ -41,7 +45,7 @@ public class SmsConfig {
             log.info("SMS: using TextBelt");
             return new TextBeltSmsSender(textbeltKey.trim());
         }
-        log.warn("SMS: no provider configured - OTP messages will only be logged. "
+        log.warn("SMS: no provider configured - OTP codes will only be logged. "
                 + "Set app.sms.twilio.* (env TWILIO_*) or app.sms.textbelt.key (env TEXTBELT_KEY).");
         return new LogSmsSender();
     }

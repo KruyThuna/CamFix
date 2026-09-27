@@ -37,6 +37,7 @@ export interface Technician {
   createdAt: string;
   approvedAt: string | null;
   rejectionReason: string | null;
+  identityEmailVerified: boolean;
 }
 
 export interface TechnicianLocation {

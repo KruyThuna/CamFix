@@ -95,7 +95,8 @@ public class TechnicianSelfService {
             OtpService otpService,
             PasswordEncoder passwordEncoder,
             NotificationDispatcher notifications,
-            CallService callService) {
+            CallService callService,
+            QuoteItemService quoteItems) {
         this.userRepository = userRepository;
         this.technicianRepository = technicianRepository;
         this.categoryRepository = categoryRepository;
@@ -107,7 +108,10 @@ public class TechnicianSelfService {
         this.passwordEncoder = passwordEncoder;
         this.notifications = notifications;
         this.callService = callService;
+        this.quoteItems = quoteItems;
     }
+
+    private final QuoteItemService quoteItems;
 
     // --- Registration / auth ------------------------------------------------
 
@@ -138,7 +142,18 @@ public class TechnicianSelfService {
         requireText(req.getPhoneNumber(), "phoneNumber is required");
         requireText(req.getCategory(), "category is required");
         requireText(req.getServiceArea(), "serviceArea is required");
-        requireText(req.getOtpCode(), "otpCode is required - request one via /phone/request-otp first");
+        requireText(req.getOtpCode(), "Phone verification code is required");
+        if (!req.getOtpCode().trim().matches("[0-9]{6}")) {
+            throw new IllegalArgumentException("Phone verification code must contain six digits");
+        }
+        byte[] idCard = IdentityCardImage.decode(req.getIdCardBase64());
+        boolean hasFacePhoto = req.getFacePhotoBase64() != null && !req.getFacePhotoBase64().isBlank();
+        boolean hasEmailOtp = req.getEmailOtpCode() != null && !req.getEmailOtpCode().isBlank();
+        if (!hasFacePhoto && !hasEmailOtp) {
+            throw new IllegalArgumentException(
+                    "Provide a face photo or verify your email to confirm identity");
+        }
+        byte[] facePhoto = hasFacePhoto ? IdentityCardImage.decode(req.getFacePhotoBase64(), "Face") : null;
         if (req.getPassword().trim().length() < 6) {
             throw new IllegalArgumentException("password must be at least 6 characters");
         }
@@ -151,8 +166,12 @@ public class TechnicianSelfService {
         if (userRepository.existsByPhoneNumber(phone)) {
             throw new IllegalArgumentException("Phone number already in use: " + phone);
         }
+
         if (!otpService.verify(phone, req.getOtpCode().trim())) {
             throw new InvalidCredentialsException("Invalid or expired phone verification code");
+        }
+        if (hasEmailOtp && !otpService.verify(email, req.getEmailOtpCode().trim())) {
+            throw new InvalidCredentialsException("Invalid or expired email verification code");
         }
 
         Users user = new Users();
@@ -167,6 +186,9 @@ public class TechnicianSelfService {
 
         Technician tech = new Technician();
         tech.setUsers(user);
+        tech.setIdCard(idCard);
+        tech.setFacePhoto(facePhoto);
+        tech.setIdentityEmailVerified(hasEmailOtp);
         tech.setCategory(findOrCreateCategory(req.getCategory()));
         tech.setBusinessName((user.getFirstName() + " " + user.getLastName()).trim());
         tech.setExperienceYear(0);
@@ -272,6 +294,55 @@ public class TechnicianSelfService {
         return tech;
     }
 
+    private static final long MAX_BANNER_BYTES = 5L * 1024 * 1024;
+    private static final int MAX_BANNER_TITLE_LENGTH = 120;
+
+    /** Promotional banner shown to customers in the app's home carousel -
+     *  optional, separate from {@link #uploadPhoto}. */
+    public TechnicianProfileResponse uploadBanner(String authorization, MultipartFile file, String title) {
+        if (file == null || file.isEmpty()) {
+            throw new IllegalArgumentException("banner file is required");
+        }
+        if (file.getSize() > MAX_BANNER_BYTES) {
+            throw new IllegalArgumentException("banner must be 5MB or smaller");
+        }
+        String contentType = file.getContentType();
+        if (contentType == null || !contentType.toLowerCase(Locale.ROOT).startsWith("image/")) {
+            throw new IllegalArgumentException("banner must be an image file");
+        }
+        String trimmedTitle = title == null ? null : title.trim();
+        if (trimmedTitle != null && trimmedTitle.length() > MAX_BANNER_TITLE_LENGTH) {
+            throw new IllegalArgumentException("banner title must be " + MAX_BANNER_TITLE_LENGTH + " characters or fewer");
+        }
+        Technician tech = requireTechnician(authorization);
+        try {
+            tech.setBanner(file.getBytes());
+        } catch (java.io.IOException e) {
+            throw new IllegalArgumentException("Could not read the uploaded banner");
+        }
+        tech.setBannerContentType(contentType);
+        tech.setBannerTitle(trimmedTitle == null || trimmedTitle.isEmpty() ? null : trimmedTitle);
+        return toDto(technicianRepository.save(tech));
+    }
+
+    public TechnicianProfileResponse deleteBanner(String authorization) {
+        Technician tech = requireTechnician(authorization);
+        tech.setBanner(null);
+        tech.setBannerContentType(null);
+        tech.setBannerTitle(null);
+        return toDto(technicianRepository.save(tech));
+    }
+
+    @Transactional(readOnly = true)
+    public Technician bannerOwner(Long technicianId) {
+        Technician tech = technicianRepository.findById(technicianId)
+                .orElseThrow(() -> new NoSuchElementException("Technician not found: " + technicianId));
+        if (tech.getBanner() == null || tech.getBanner().length == 0) {
+            throw new NoSuchElementException("No banner for technician " + technicianId);
+        }
+        return tech;
+    }
+
     public void pushLocation(String authorization, Double lat, Double lng) {
         if (lat == null || lng == null) {
             throw new IllegalArgumentException("lat and lng are required");
@@ -362,6 +433,14 @@ public class TechnicianSelfService {
         if (inspectionFee < 0 || laborCost < 0 || partsCost < 0 || travelFee < 0) {
             throw new IllegalArgumentException("Quote amounts must be zero or more");
         }
+        if ("SELF_DROP".equalsIgnoreCase(job.getBookingType())) {
+            // The customer brought the item in: no travel, and the bench fee they
+            // were shown when booking is the inspection fee - no surprises.
+            travelFee = 0;
+            if (job.getBenchFee() != null) {
+                inspectionFee = job.getBenchFee();
+            }
+        }
 
         // A still-pending quote gets superseded, not left dangling.
         serviceQuoteRepository.findByJobIdAndStatus(jobId, QUOTE_STATUS_PENDING).ifPresent(prev -> {
@@ -385,12 +464,19 @@ public class TechnicianSelfService {
         quote.setReason(req == null ? null : req.getReason());
         quote.setStatus(QUOTE_STATUS_PENDING);
         ServiceQuote saved = serviceQuoteRepository.save(quote);
+        // Named line items: until the customer decides, the quote shows the
+        // total as if every item were approved.
+        double itemsSum = quoteItems.saveItems(saved.getId(), req == null ? null : req.getItems());
+        if (itemsSum > 0) {
+            saved.setTotalAmount(saved.getTotalAmount() + itemsSum);
+            saved = serviceQuoteRepository.save(saved);
+        }
 
         job.setStatus(JOB_QUOTE_PENDING);
         Job savedJob = jobRepository.save(job);
         notifications.quoteSubmittedForCustomer(savedJob, saved.getTotalAmount(), isRevision);
 
-        return BookingService.toQuoteDto(saved);
+        return quoteItems.toDto(saved);
     }
 
     @Transactional(readOnly = true)
@@ -398,7 +484,7 @@ public class TechnicianSelfService {
         Technician tech = requireTechnician(authorization);
         ownedJob(tech, jobId);
         return serviceQuoteRepository.findByJobIdOrderByVersionDesc(jobId).stream()
-                .map(BookingService::toQuoteDto)
+                .map(quoteItems::toDto)
                 .collect(Collectors.toList());
     }
 
@@ -454,6 +540,10 @@ public class TechnicianSelfService {
         r.setPhotoUrl(t.getPhoto() != null && t.getPhoto().length > 0
                 ? "/api/technician/" + t.getTechnicianId() + "/photo"
                 : null);
+        r.setBannerUrl(t.getBanner() != null && t.getBanner().length > 0
+                ? "/api/technician/" + t.getTechnicianId() + "/banner"
+                : null);
+        r.setBannerTitle(t.getBannerTitle());
         liveLocationRepository.findByTechnicianId(t.getTechnicianId()).ifPresent(loc -> {
             r.setLastLat(loc.getLatitude());
             r.setLastLng(loc.getLongitude());
@@ -472,6 +562,8 @@ public class TechnicianSelfService {
         r.setLat(j.getLat());
         r.setLng(j.getLng());
         r.setStatus(j.getStatus());
+        r.setBookingType(j.getBookingType());
+        r.setBenchFee(j.getBenchFee());
         r.setCreatedAt(str(j.getCreatedAt()));
         r.setScheduledAt(str(j.getScheduledAt()));
         r.setAssignedAt(str(j.getAssignedAt()));

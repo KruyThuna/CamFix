@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.api.Service.AdminService;
 import com.api.dto.Admin.AdminJobRequest;
 import com.api.dto.Admin.AdminJobResponse;
+import com.api.dto.Admin.AdminPasswordResetResponse;
 import com.api.dto.Admin.AdminTechnicianRequest;
 import com.api.dto.Admin.AdminTechnicianResponse;
 import com.api.dto.Admin.DashboardStatsResponse;
@@ -74,6 +75,34 @@ public class AdminController {
             @PathVariable Long id) {
         adminService.requireAdmin(auth);
         return adminService.getTechnician(id);
+    }
+
+    @GetMapping("/technicians/{id}/face-photo")
+    public ResponseEntity<byte[]> getFacePhoto(
+            @RequestHeader(value = AUTH, required = false) String auth,
+            @PathVariable Long id) {
+        adminService.requireAdmin(auth);
+        byte[] image = adminService.getTechnicianFacePhoto(id);
+        if (image == null) return ResponseEntity.notFound().build();
+        return ResponseEntity.ok()
+                .header("Cache-Control", "no-store")
+                .header("X-Content-Type-Options", "nosniff")
+                .header("Content-Type", com.api.Service.IdentityCardImage.contentType(image))
+                .body(image);
+    }
+
+    @GetMapping("/technicians/{id}/id-card")
+    public ResponseEntity<byte[]> getIdCard(
+            @RequestHeader(value = AUTH, required = false) String auth,
+            @PathVariable Long id) {
+        adminService.requireAdmin(auth);
+        byte[] image = adminService.getTechnicianIdCard(id);
+        if (image == null) return ResponseEntity.notFound().build();
+        return ResponseEntity.ok()
+                .header("Cache-Control", "no-store")
+                .header("X-Content-Type-Options", "nosniff")
+                .header("Content-Type", com.api.Service.IdentityCardImage.contentType(image))
+                .body(image);
     }
 
     @PostMapping("/technicians")
@@ -133,6 +162,17 @@ public class AdminController {
             @PathVariable Long id) {
         adminService.requireAdmin(auth);
         return adminService.reactivateTechnician(id);
+    }
+
+    /** Sets a new random temporary password for this technician and returns
+     *  it in plaintext, once, for the admin to relay - see
+     *  {@link AdminService#resetTechnicianPassword}. */
+    @PostMapping("/technicians/{id}/reset-password")
+    public AdminPasswordResetResponse resetPassword(
+            @RequestHeader(value = AUTH, required = false) String auth,
+            @PathVariable Long id) {
+        adminService.requireAdmin(auth);
+        return adminService.resetTechnicianPassword(id);
     }
 
     // --- Jobs ------------------------------------------------------------------

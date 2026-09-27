@@ -49,11 +49,19 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   IconData _icon(String type) => switch (type) {
         'JOB_ASSIGNED' => Icons.assignment_ind_rounded,
         'JOB_IN_PROGRESS' => Icons.handyman_rounded,
-        'JOB_COMPLETED' => Icons.check_circle_rounded,
+        'JOB_COMPLETED' || 'QUOTE_ACCEPTED' => Icons.check_circle_rounded,
+        'REVIEW_SUBMITTED' => Icons.star_rounded,
         'JOB_CANCELLED' || 'JOB_CANCELLED_BY_CUSTOMER' => Icons.cancel_rounded,
         'JOB_DECLINED' => Icons.autorenew_rounded,
         'BOOKING_REQUESTED' => Icons.event_available_rounded,
         _ => Icons.notifications_rounded,
+      };
+
+  Color _iconColor(String type) => switch (type) {
+        'JOB_COMPLETED' || 'QUOTE_ACCEPTED' => const Color(0xFF1F9D55),
+        'REVIEW_SUBMITTED' => const Color(0xFFFFB300),
+        'JOB_CANCELLED' || 'JOB_CANCELLED_BY_CUSTOMER' => const Color(0xFFE5484D),
+        _ => AppColors.primaryBlue,
       };
 
   @override
@@ -64,7 +72,28 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     return Scaffold(
       backgroundColor: p.background,
       appBar: AppBar(
-        title: Text(AppStrings.t('notifications')),
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(AppStrings.t('notifications')),
+            if (_store.unread > 0) ...[
+              const SizedBox(width: 8),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: AppColors.primaryBlue,
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Text('${_store.unread}',
+                    style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white)),
+              ),
+            ],
+          ],
+        ),
         actions: [
           if (_store.unread > 0)
             TextButton(
@@ -118,9 +147,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           children: [
             CircleAvatar(
               radius: 18,
-              backgroundColor: AppColors.primaryBlue.withValues(alpha: 0.12),
-              child:
-                  Icon(_icon(n.type), size: 18, color: AppColors.primaryBlue),
+              backgroundColor: _iconColor(n.type).withValues(alpha: 0.12),
+              child: Icon(_icon(n.type), size: 18, color: _iconColor(n.type)),
             ),
             const SizedBox(width: 12),
             Expanded(

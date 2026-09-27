@@ -51,7 +51,13 @@ public class Job {
     @Column(nullable = false, length = 20)
     private String status;
 
-    /** IMMEDIATE | SCHEDULED - drives the cancellation-fee schedule shown to the customer. */
+    /** Self Drop only: {@code ServicePrice.benchFee} at booking time, so the fee
+     *  the customer was shown is the one the technician's quote must use. */
+    @Column(name = "bench_fee")
+    private Double benchFee;
+
+    /** IMMEDIATE | SCHEDULED | SELF_DROP. SELF_DROP = the customer brings the
+     *  item to the technician's shop (no travel fee). */
     @Column(name = "booking_type", length = 20)
     private String bookingType;
 
@@ -64,6 +70,12 @@ public class Job {
     /** {@code technician.technician_id} once dispatched. */
     @Column(name = "technician_id")
     private Long technicianId;
+
+    /** {@code technician_service.id} when the customer booked one of the
+     *  technician's own named/priced listings rather than a generic category
+     *  request. Null for ordinary bookings. */
+    @Column(name = "technician_service_id")
+    private Long technicianServiceId;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
@@ -226,5 +238,21 @@ public class Job {
 
     public void setStartingPrice(Double startingPrice) {
         this.startingPrice = startingPrice;
+    }
+
+    public Double getBenchFee() {
+        return benchFee;
+    }
+
+    public void setBenchFee(Double benchFee) {
+        this.benchFee = benchFee;
+    }
+
+    public Long getTechnicianServiceId() {
+        return technicianServiceId;
+    }
+
+    public void setTechnicianServiceId(Long technicianServiceId) {
+        this.technicianServiceId = technicianServiceId;
     }
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../theme/app_theme.dart';
 
 /// White, rounded, pill-shaped text field with a leading icon, matching the
@@ -12,6 +13,8 @@ class AppTextField extends StatelessWidget {
     this.controller,
     this.keyboardType,
     this.suffix,
+    this.inputFormatters,
+    this.maxLength,
   });
 
   final String hint;
@@ -20,6 +23,8 @@ class AppTextField extends StatelessWidget {
   final TextEditingController? controller;
   final TextInputType? keyboardType;
   final Widget? suffix;
+  final List<TextInputFormatter>? inputFormatters;
+  final int? maxLength;
 
   @override
   Widget build(BuildContext context) {
@@ -39,6 +44,8 @@ class AppTextField extends StatelessWidget {
         controller: controller,
         obscureText: obscureText,
         keyboardType: keyboardType,
+        inputFormatters: inputFormatters,
+        maxLength: maxLength,
         style: AppText.bodyDark.copyWith(fontSize: 15),
         decoration: InputDecoration(
           hintText: hint,
@@ -47,6 +54,7 @@ class AppTextField extends StatelessWidget {
               ? null
               : Icon(icon, color: AppColors.hintGrey, size: 20),
           suffixIcon: suffix,
+          counterText: maxLength == null ? null : '',
           border: InputBorder.none,
           contentPadding:
               const EdgeInsets.symmetric(vertical: 18, horizontal: 16),

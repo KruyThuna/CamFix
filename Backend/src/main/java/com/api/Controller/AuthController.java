@@ -27,9 +27,11 @@ import com.api.dto.Auth.UserResponse;
 public class AuthController {
 
     private final AuthService authService;
+    private final com.api.Service.UserManagementService userManagement;
 
-    public AuthController(AuthService authService) {
+    public AuthController(AuthService authService, com.api.Service.UserManagementService userManagement) {
         this.authService = authService;
+        this.userManagement = userManagement;
     }
 
     // --- Email + password ---------------------------------------------------
@@ -111,7 +113,8 @@ public class AuthController {
     // --- Debug --------------------------------------------------------------
 
     @GetMapping("/users")
-    public ResponseEntity<List<Users>> getAllUsers() {
-        return ResponseEntity.ok(authService.findAllUsers());
+    public ResponseEntity<List<com.api.Service.UserManagementService.UserView>> getAllUsers(
+            @RequestHeader(value = "Authorization", required = false) String authorization) {
+        return ResponseEntity.ok(userManagement.list(authorization));
     }
 }

@@ -21,6 +21,8 @@ class AuthApi {
 
   final _client = ApiClient.instance;
 
+  /// Exactly one of [facePhotoBase64] / [emailOtpCode] must be set - the
+  /// backend accepts either as proof of identity (see [IdentityPhotos]).
   Future<String> register({
     required String firstName,
     required String lastName,
@@ -29,6 +31,9 @@ class AuthApi {
     required String phoneNumber,
     required String category,
     required String serviceArea,
+    required String idCardBase64,
+    String? facePhotoBase64,
+    String? emailOtpCode,
     required String otpCode,
   }) async {
     final json = await _client.postJson('/api/technician/auth/register', {
@@ -39,6 +44,9 @@ class AuthApi {
       'phoneNumber': phoneNumber,
       'category': category,
       'serviceArea': serviceArea,
+      'idCardBase64': idCardBase64,
+      'facePhotoBase64': ?facePhotoBase64,
+      'emailOtpCode': ?emailOtpCode,
       'otpCode': otpCode,
     });
     return _storeToken(json);
@@ -50,6 +58,19 @@ class AuthApi {
   Future<OtpRequestResult> requestRegistrationOtp(String phoneNumber) async {
     final json = await _client.postJson(
         '/api/technician/auth/phone/request-otp', {'phoneNumber': phoneNumber});
+    return OtpRequestResult(
+      message: (json['message'] ?? 'Code sent').toString(),
+      devCode: json['devCode']?.toString(),
+    );
+  }
+
+  /// Sends a 6-digit code to [email] - used as an alternative to a face
+  /// photo during identity verification (see [IdentityPhotos]). The code
+  /// itself is only checked later, inside [register], so requesting it here
+  /// twice in a row is harmless (the newest code wins).
+  Future<OtpRequestResult> requestEmailOtp(String email) async {
+    final json = await _client
+        .postJson('/api/auth/email/request-otp', {'email': email});
     return OtpRequestResult(
       message: (json['message'] ?? 'Code sent').toString(),
       devCode: json['devCode']?.toString(),

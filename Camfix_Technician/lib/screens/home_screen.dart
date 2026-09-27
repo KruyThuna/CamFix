@@ -5,7 +5,6 @@ import '../lang_aware.dart';
 import '../models/tech_job.dart';
 import '../services/auth_api.dart';
 import '../services/current_technician.dart';
-import '../services/device_location.dart';
 import '../services/location_reporter.dart';
 import '../services/notifications_store.dart';
 import '../services/technician_api.dart';
@@ -22,7 +21,6 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> with LangAware<HomeScreen> {
   List<TechJob>? _jobs;
   bool _loading = true;
-  bool _togglingAvailability = false;
 
   @override
   void initState() {
@@ -58,29 +56,6 @@ class _HomeScreenState extends State<HomeScreen> with LangAware<HomeScreen> {
     }
   }
 
-  Future<void> _setAvailable(bool value) async {
-    setState(() => _togglingAvailability = true);
-    try {
-      final updated = await TechnicianApi.instance.setAvailability(value);
-      CurrentTechnician.instance.set(updated);
-      if (value) {
-        LocationReporter.instance.start();
-        // Surface a GPS / permission problem right away (the background
-        // reporter just retries silently otherwise).
-        final loc = await getCurrentLocation();
-        if (!loc.ok && mounted) {
-          showError(context, AppStrings.t(loc.errorKey!));
-        }
-      } else {
-        LocationReporter.instance.stop();
-      }
-    } catch (e) {
-      if (mounted) showError(context, e);
-    } finally {
-      if (mounted) setState(() => _togglingAvailability = false);
-    }
-  }
-
   Future<void> _signOut() async {
     LocationReporter.instance.stop();
     await AuthApi.instance.signOut();
@@ -91,9 +66,7 @@ class _HomeScreenState extends State<HomeScreen> with LangAware<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final p = context.pal;
     final profile = CurrentTechnician.instance.value;
-    final available = profile?.available ?? false;
     final jobs = _jobs ?? const <TechJob>[];
     final active = jobs.where((j) => j.isActive).toList();
     final history = jobs.where((j) => !j.isActive).toList();
@@ -104,6 +77,11 @@ class _HomeScreenState extends State<HomeScreen> with LangAware<HomeScreen> {
         appBar: AppBar(
           title: Text(profile?.displayName ?? AppStrings.t('camfixTechnician')),
           actions: [
+            IconButton(
+              tooltip: AppStrings.t('refresh'),
+              onPressed: _loading ? null : _load,
+              icon: const Icon(Icons.refresh_rounded),
+            ),
             _NotificationsBell(
               unread: NotificationsStore.instance.unread,
               onTap: () async {
@@ -129,42 +107,14 @@ class _HomeScreenState extends State<HomeScreen> with LangAware<HomeScreen> {
         ),
         body: Column(
           children: [
-            Container(
-              width: double.infinity,
-              color: available
-                  ? AppColors.success.withValues(alpha: 0.12)
-                  : p.surfaceAlt,
-              padding: const EdgeInsets.fromLTRB(16, 10, 12, 10),
-              child: Row(
-                children: [
-                  Icon(available ? Icons.podcasts : Icons.pause_circle_outline,
-                      color: available ? AppColors.success : p.textSecondary),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      available
-                          ? AppStrings.t('onlineSharingLocation')
-                          : AppStrings.t('offline'),
-                      style: TextStyle(
-                          fontWeight: FontWeight.w600, color: p.textPrimary),
-                    ),
-                  ),
-                  if (_togglingAvailability)
-                    const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2))
-                  else
-                    Switch(
-                      value: available,
-                      activeThumbColor: AppColors.success,
-                      onChanged: (profile?.isOperational ?? false)
-                          ? _setAvailable
-                          : null,
-                    ),
-                ],
+            if ((profile?.isOperational ?? false) && profile?.bannerUrl == null)
+              _GetStartedBannerPrompt(
+                onTap: () async {
+                  final posted = await Navigator.pushNamed(
+                      context, '/get-started-banner');
+                  if (posted == true) CurrentTechnician.instance.refresh();
+                },
               ),
-            ),
             Expanded(
               child: _loading
                   ? const Center(child: CircularProgressIndicator())
@@ -173,6 +123,7 @@ class _HomeScreenState extends State<HomeScreen> with LangAware<HomeScreen> {
                         _JobList(
                             jobs: active,
                             empty: AppStrings.t('noActiveJobs'),
+                            emptySubtitle: AppStrings.t('noActiveJobsSubtitle'),
                             onRefresh: _load,
                             onTap: _openJob),
                         _JobList(
@@ -195,16 +146,63 @@ class _HomeScreenState extends State<HomeScreen> with LangAware<HomeScreen> {
   }
 }
 
+/// Prompt shown on the home screen until the technician posts a banner -
+/// stays visible (not dismissible) so it's easy to find again, since it's
+/// also the entry point for editing/removing the banner later.
+class _GetStartedBannerPrompt extends StatelessWidget {
+  const _GetStartedBannerPrompt({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.pal;
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.fromLTRB(16, 12, 12, 12),
+        decoration: BoxDecoration(
+          color: AppColors.primaryBlue.withValues(alpha: 0.08),
+          border: Border(bottom: BorderSide(color: p.border)),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.campaign_outlined, color: AppColors.primaryBlue),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(AppStrings.t('getStartedBannerPromptTitle'),
+                      style: TextStyle(
+                          fontWeight: FontWeight.w700, color: p.textPrimary)),
+                  const SizedBox(height: 2),
+                  Text(AppStrings.t('getStartedBannerPromptBody'),
+                      style: TextStyle(fontSize: 12.5, color: p.textSecondary)),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right, color: p.textSecondary),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _JobList extends StatelessWidget {
   const _JobList({
     required this.jobs,
     required this.empty,
+    this.emptySubtitle,
     required this.onRefresh,
     required this.onTap,
   });
 
   final List<TechJob> jobs;
   final String empty;
+  final String? emptySubtitle;
   final Future<void> Function() onRefresh;
   final void Function(TechJob) onTap;
 
@@ -215,9 +213,38 @@ class _JobList extends StatelessWidget {
       onRefresh: onRefresh,
       child: jobs.isEmpty
           ? ListView(children: [
-              const SizedBox(height: 120),
+              const SizedBox(height: 100),
               Center(
-                  child: Text(empty, style: TextStyle(color: p.textSecondary))),
+                child: Container(
+                  width: 68,
+                  height: 68,
+                  decoration: BoxDecoration(
+                    color: p.surfaceAlt,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(Icons.work_outline,
+                      size: 30, color: p.textSecondary),
+                ),
+              ),
+              const SizedBox(height: 14),
+              Center(
+                  child: Text(empty,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                          color: p.textPrimary,
+                          fontWeight: FontWeight.w600))),
+              if (emptySubtitle != null) ...[
+                const SizedBox(height: 4),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 32),
+                  child: Center(
+                    child: Text(emptySubtitle!,
+                        textAlign: TextAlign.center,
+                        style:
+                            TextStyle(fontSize: 12.5, color: p.textSecondary)),
+                  ),
+                ),
+              ],
             ])
           : ListView.separated(
               padding: const EdgeInsets.all(16),
@@ -251,7 +278,7 @@ class _JobList extends StatelessWidget {
                                       fontWeight: FontWeight.w700,
                                       color: p.textPrimary)),
                             ),
-                            _StatusChip(status: j.status),
+                            _StatusChip(status: j.status, selfDrop: j.isSelfDrop),
                           ],
                         ),
                         const SizedBox(height: 4),
@@ -289,7 +316,8 @@ class _JobList extends StatelessWidget {
 }
 
 class _StatusChip extends StatelessWidget {
-  const _StatusChip({required this.status});
+  const _StatusChip({required this.status, this.selfDrop = false});
+  final bool selfDrop;
   final String status;
 
   @override
@@ -309,7 +337,7 @@ class _StatusChip extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
       decoration:
           BoxDecoration(color: bg, borderRadius: BorderRadius.circular(999)),
-      child: Text(AppStrings.jobStatus(status),
+      child: Text(AppStrings.jobStatus(status, selfDrop: selfDrop),
           style: TextStyle(
               color: fg, fontSize: 11, fontWeight: FontWeight.w700)),
     );

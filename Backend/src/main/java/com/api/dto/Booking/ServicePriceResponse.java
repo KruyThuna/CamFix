@@ -8,6 +8,24 @@ public class ServicePriceResponse {
     private String categoryName;
     private Double startingPrice;
     private String description;
+    private Double benchFee;
+    private Double travelFee;
+
+    public Double getBenchFee() {
+        return benchFee;
+    }
+
+    public void setBenchFee(Double benchFee) {
+        this.benchFee = benchFee;
+    }
+
+    public Double getTravelFee() {
+        return travelFee;
+    }
+
+    public void setTravelFee(Double travelFee) {
+        this.travelFee = travelFee;
+    }
 
     public Long getCategoryId() {
         return categoryId;

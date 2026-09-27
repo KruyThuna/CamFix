@@ -65,8 +65,8 @@ class _TrackingSheet extends StatelessWidget {
                         color: p.surfaceAlt,
                         shape: BoxShape.circle,
                       ),
-                      child: Icon(Icons.close,
-                          size: 17, color: p.textSecondary),
+                      child:
+                          Icon(Icons.close, size: 17, color: p.textSecondary),
                     ),
                   ),
                 ],
@@ -148,8 +148,8 @@ class _TrackingSheet extends StatelessWidget {
                     Row(
                       children: [
                         Expanded(
-                          child: _field(p, AppStrings.t('fromLabel'),
-                              info.originName),
+                          child: _field(
+                              p, AppStrings.t('fromLabel'), info.originName),
                         ),
                         Expanded(
                           child: _field(p, AppStrings.t('destination'),
@@ -165,8 +165,8 @@ class _TrackingSheet extends StatelessWidget {
                               info.technicianName),
                         ),
                         Expanded(
-                          child: _field(p, AppStrings.t('rateLabel'),
-                              '${info.rating}/5'),
+                          child: _field(
+                              p, AppStrings.t('rateLabel'), '${info.rating}/5'),
                         ),
                       ],
                     ),
@@ -213,9 +213,8 @@ class _TrackingSheet extends StatelessWidget {
                 _stepRow(
                   p,
                   title: AppStrings.t(_steps[i].$1),
-                  subtitle: _steps[i].$2 == null
-                      ? null
-                      : AppStrings.t(_steps[i].$2!),
+                  subtitle:
+                      _steps[i].$2 == null ? null : AppStrings.t(_steps[i].$2!),
                   icon: _steps[i].$3,
                   reached: i <= info.currentStep,
                   connectorDone: i < info.currentStep,
@@ -268,8 +267,9 @@ class _TrackingSheet extends StatelessWidget {
     final circleColor = reached
         ? AppColors.primaryBlue
         : AppColors.primaryBlue.withValues(alpha: 0.16);
-    final iconColor =
-        reached ? AppColors.white : AppColors.primaryBlue.withValues(alpha: 0.6);
+    final iconColor = reached
+        ? AppColors.white
+        : AppColors.primaryBlue.withValues(alpha: 0.6);
     return IntrinsicHeight(
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -306,9 +306,7 @@ class _TrackingSheet extends StatelessWidget {
                     style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
-                        color: reached
-                            ? p.textPrimary
-                            : p.textSecondary)),
+                        color: reached ? p.textPrimary : p.textSecondary)),
                 if (subtitle != null) ...[
                   const SizedBox(height: 2),
                   Text(subtitle,

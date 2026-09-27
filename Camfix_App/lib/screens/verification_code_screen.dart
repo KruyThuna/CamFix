@@ -5,6 +5,7 @@ import '../services/auth_api.dart';
 import '../theme/app_theme.dart';
 import '../widgets/app_buttons.dart';
 import '../widgets/otp_boxes.dart';
+import 'login_success_screen.dart';
 
 /// Confirms the OTP the backend issued for the user's phone number
 /// (`/api/auth/phone/*`) — a plain SMS code, no bot / reCAPTCHA check.
@@ -55,8 +56,7 @@ class _VerificationCodeScreenState extends State<VerificationCodeScreen> {
     try {
       await AuthApi.instance.verifyPhoneOtp(_phone, _code);
       if (!mounted) return;
-      Navigator.of(context)
-          .pushNamedAndRemoveUntil('/dashboard', (route) => false);
+      goToDashboardAfterLogin(context);
     } catch (e) {
       if (!mounted) return;
       _snack(_readable(e)); // wrong code / expired / network

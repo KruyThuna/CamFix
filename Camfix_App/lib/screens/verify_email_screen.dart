@@ -5,6 +5,7 @@ import '../services/auth_api.dart';
 import '../theme/app_theme.dart';
 import '../widgets/app_buttons.dart';
 import '../widgets/otp_boxes.dart';
+import 'login_success_screen.dart';
 
 /// Email OTP verification. Reached from Sign Up (`mode: 'signup'` → dashboard on
 /// success) and Forgot Password (`mode: 'reset'` → set a new password).
@@ -61,8 +62,7 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
       if (_mode == 'reset') {
         Navigator.of(context).pushNamed('/new-password');
       } else {
-        Navigator.of(context)
-            .pushNamedAndRemoveUntil('/dashboard', (route) => false);
+        goToDashboardAfterLogin(context);
       }
     } on ApiException catch (e) {
       _snack(e.message);

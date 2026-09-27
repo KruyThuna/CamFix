@@ -31,7 +31,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const loadMe = useCallback(async () => {
     const { data } = await api.get<UserInfo>('/api/auth/me');
-    if (data.role?.toUpperCase() !== 'ADMIN') {
+    if (!['MAIN_ADMIN', 'ADMIN'].includes(data.role?.toUpperCase()) || data.status !== 'ACTIVE') {
       throw new NotAdminError();
     }
     return data;

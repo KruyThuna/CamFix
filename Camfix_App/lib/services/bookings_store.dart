@@ -22,6 +22,7 @@ class Booking {
     required this.status,
     this.bookingType = 'IMMEDIATE',
     this.startingPrice,
+    this.benchFee,
     this.address,
     this.lat,
     this.lng,
@@ -41,11 +42,19 @@ class Booking {
   final String category;
   final String description;
   final String status; // REQUESTED | ASSIGNED | ON_THE_WAY | ARRIVED | IN_PROGRESS | COMPLETED | CANCELLED
-  final String bookingType; // IMMEDIATE | SCHEDULED
+  final String bookingType; // IMMEDIATE | SCHEDULED | SELF_DROP
   /// "Starting from" price snapshotted when this booking was made — NOT the
   /// final repair cost. Null if no catalog price was configured for the
   /// category at booking time.
   final double? startingPrice;
+
+  /// Self Drop only: the diagnostic bench fee locked in at booking time,
+  /// paid at drop-off. Null for home visits or when none was configured.
+  final double? benchFee;
+
+  /// The customer brings the item to the technician's shop - so [address] /
+  /// [lat] / [lng] are the shop, not the customer's home.
+  bool get isSelfDrop => bookingType == 'SELF_DROP';
   final String? address;
   final double? lat;
   final double? lng;
@@ -98,6 +107,7 @@ class Booking {
         status: (j['status'] ?? 'REQUESTED').toString(),
         bookingType: (j['bookingType'] ?? 'IMMEDIATE').toString(),
         startingPrice: (j['startingPrice'] as num?)?.toDouble(),
+        benchFee: (j['benchFee'] as num?)?.toDouble(),
         address: j['address']?.toString(),
         lat: (j['lat'] as num?)?.toDouble(),
         lng: (j['lng'] as num?)?.toDouble(),
@@ -131,7 +141,10 @@ class BookingsStore extends ChangeNotifier {
 
   Future<void> refresh() async {
     _loading = true;
-    notifyListeners();
+    // Deferred: refresh() is often called from a widget's initState, i.e.
+    // mid-build - notifying synchronously there makes other listening
+    // screens call setState() during build.
+    scheduleMicrotask(notifyListeners);
     try {
       _all = await BookingsApi.instance.listMine();
     } catch (_) {

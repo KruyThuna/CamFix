@@ -15,6 +15,11 @@ import org.springframework.web.servlet.resource.NoResourceFoundException;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    @ExceptionHandler(SmsDeliveryException.class)
+    public ResponseEntity<Map<String, Object>> handleSmsDelivery(SmsDeliveryException ex) {
+        return build(HttpStatus.SERVICE_UNAVAILABLE, ex.getMessage());
+    }
+
     @ExceptionHandler(EmailAlreadyExistsException.class)
     public ResponseEntity<Map<String, Object>> handleEmailExists(EmailAlreadyExistsException ex) {
         return build(HttpStatus.CONFLICT, ex.getMessage());

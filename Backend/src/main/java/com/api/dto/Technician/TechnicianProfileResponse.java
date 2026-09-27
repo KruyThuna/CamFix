@@ -28,4 +28,7 @@ public class TechnicianProfileResponse {
     private String rejectionReason;
     /** Relative path (e.g. {@code /api/technician/7/photo}) or null if no photo is set. */
     private String photoUrl;
+    /** Relative path (e.g. {@code /api/technician/7/banner}) or null if no banner is set. */
+    private String bannerUrl;
+    private String bannerTitle;
 }

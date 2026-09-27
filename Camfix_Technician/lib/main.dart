@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'app_settings.dart';
 import 'services/profile_image.dart';
+import 'screens/get_started_banner_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/job_detail_screen.dart';
 import 'screens/language_screen.dart';
@@ -13,7 +14,9 @@ import 'screens/pending_screen.dart';
 import 'screens/phone_login_screen.dart';
 import 'screens/profile_screen.dart';
 import 'screens/register_screen.dart';
+import 'screens/service_listings_screen.dart';
 import 'screens/splash_screen.dart';
+import 'screens/job_chat_screen.dart';
 import 'theme/app_theme.dart';
 
 Future<void> main() async {
@@ -48,8 +51,11 @@ class CamFixTechApp extends StatelessWidget {
           '/otp': (_) => const OtpScreen(),
           '/pending': (_) => const PendingScreen(),
           '/home': (_) => const HomeScreen(),
+          '/get-started-banner': (_) => const GetStartedBannerScreen(),
           '/job': (_) => const JobDetailScreen(),
+          '/job-chat': (_) => const JobChatScreen(),
           '/profile': (_) => const ProfileScreen(),
+          '/service-listings': (_) => const ServiceListingsScreen(),
           '/notifications': (_) => const NotificationsScreen(),
           '/location-picker': (_) => const LocationPickerScreen(),
         },

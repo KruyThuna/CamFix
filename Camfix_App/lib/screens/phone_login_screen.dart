@@ -15,7 +15,7 @@ class PhoneLoginScreen extends StatefulWidget {
 
 class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
   static const String _dialCode = '+855';
-  final _phone = TextEditingController(text: '97 8068 525');
+  final _phone = TextEditingController();
   bool _sending = false;
 
   @override
@@ -40,9 +40,7 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
   /// A Cambodian mobile number is 8–9 subscriber digits and not all the same.
   bool get _phoneLooksValid {
     final n = _nsn;
-    return n.length >= 8 &&
-        n.length <= 9 &&
-        !RegExp(r'^(\d)\1+$').hasMatch(n);
+    return n.length >= 8 && n.length <= 9 && !RegExp(r'^(\d)\1+$').hasMatch(n);
   }
 
   void _snack(String msg) {
@@ -134,9 +132,12 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
                         onSubmitted: (_) => _sending ? null : _sendOtp(),
                         style: const TextStyle(
                             color: AppColors.textDark, fontSize: 16),
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
+                          hintText: AppStrings.t('phoneNumberHint'),
+                          hintStyle: const TextStyle(color: AppColors.hintGrey),
                           border: InputBorder.none,
-                          contentPadding: EdgeInsets.symmetric(vertical: 18),
+                          contentPadding:
+                              const EdgeInsets.symmetric(vertical: 18),
                         ),
                       ),
                     ),

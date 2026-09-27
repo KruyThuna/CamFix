@@ -69,6 +69,53 @@ public class Technician {
     @Column(name = "photo_content_type", length = 100)
     private String photoContentType;
 
+    /** Promotional banner shown to customers in the app's home carousel -
+     *  separate from {@link #photo} (the technician's own profile picture).
+     *  Optional; a technician without one just doesn't appear in the
+     *  carousel. */
+    @Lob
+    @Column(name = "banner", columnDefinition = "LONGBLOB")
+    private byte[] banner;
+
+    @Column(name = "banner_content_type", length = 100)
+    private String bannerContentType;
+
+    @Column(name = "banner_title", length = 120)
+    private String bannerTitle;
+
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    @Lob
+    @Column(name = "id_card", columnDefinition = "LONGBLOB")
+    private byte[] idCard;
+
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    public byte[] getIdCard() { return idCard; }
+
+    public void setIdCard(byte[] idCard) { this.idCard = idCard; }
+
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    @Lob
+    @Column(name = "face_photo", columnDefinition = "LONGBLOB")
+    private byte[] facePhoto;
+
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    public byte[] getFacePhoto() { return facePhoto; }
+
+    public void setFacePhoto(byte[] facePhoto) { this.facePhoto = facePhoto; }
+
+    /** True when this technician verified their identity via an emailed OTP
+     *  code instead of a face photo (see {@code TechnicianSelfService#register}).
+     *  Lets the admin review screen show *why* {@link #facePhoto} is empty
+     *  instead of it looking like a missing upload. */
+    @Column(name = "identity_email_verified", nullable = false)
+    private boolean identityEmailVerified = false;
+
+    public boolean isIdentityEmailVerified() { return identityEmailVerified; }
+
+    public void setIdentityEmailVerified(boolean identityEmailVerified) {
+        this.identityEmailVerified = identityEmailVerified;
+    }
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -224,6 +271,30 @@ public class Technician {
 
     public void setPhotoContentType(String photoContentType) {
         this.photoContentType = photoContentType;
+    }
+
+    public byte[] getBanner() {
+        return banner;
+    }
+
+    public void setBanner(byte[] banner) {
+        this.banner = banner;
+    }
+
+    public String getBannerContentType() {
+        return bannerContentType;
+    }
+
+    public void setBannerContentType(String bannerContentType) {
+        this.bannerContentType = bannerContentType;
+    }
+
+    public String getBannerTitle() {
+        return bannerTitle;
+    }
+
+    public void setBannerTitle(String bannerTitle) {
+        this.bannerTitle = bannerTitle;
     }
 
     public LocalDateTime getCreatedAt() {

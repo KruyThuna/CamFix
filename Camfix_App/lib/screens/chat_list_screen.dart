@@ -1,8 +1,15 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import '../app_settings.dart';
 import '../l10n/app_strings.dart';
 import '../models/chat.dart';
+import '../services/api_client.dart';
+import '../services/chat_api.dart';
+import '../services/notifications_store.dart';
 import '../theme/app_theme.dart';
 import 'main_shell.dart';
+import 'services_screen.dart' show categoryLabel;
 
 /// Chat list (mockup page 20): search, All / Unread filter and a list of
 /// conversations. Tapping one opens the thread at `/chat-thread`.
@@ -18,38 +25,67 @@ class _ChatListScreenState extends State<ChatListScreen> {
   String _query = '';
   bool _unreadOnly = false;
 
-  static const List<ChatContact> _contacts = [
-    ChatContact(
-        name: 'Vanna Sok',
-        lastMessage: "Hey, What's up",
-        time: '12:17 PM',
-        online: true),
-    ChatContact(name: 'Reak Smey', lastMessage: 'Hello', time: '12:00 PM'),
-    ChatContact(
-        name: 'Vanna Doung',
-        lastMessage: 'Hello',
-        time: '12:00 PM',
-        unreadCount: 1),
-    ChatContact(
-        name: 'Mean Dara',
-        lastMessage: 'Hey',
-        time: '12:00 PM',
-        unreadCount: 1),
-  ];
+  /// Real conversations - one per booking that has a technician
+  /// (`GET /api/chats`), refreshed every few seconds while visible.
+  List<ChatThread> _threads = const [];
+  bool _loading = true;
+  Timer? _poll;
 
-  int get _unreadTotal => _contacts.where((c) => c.unreadCount > 0).length;
+  @override
+  void initState() {
+    super.initState();
+    _load();
+    _poll = Timer.periodic(const Duration(seconds: 8), (_) => _load());
+  }
 
-  List<ChatContact> get _visible {
+  Future<void> _load() async {
+    try {
+      final list = await ChatApi.instance.threads();
+      if (mounted) {
+        setState(() {
+          _threads = list;
+          _loading = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  int get _unreadTotal => _threads.where((c) => c.unreadCount > 0).length;
+
+  List<ChatThread> get _visible {
     final q = _query.trim().toLowerCase();
-    return _contacts.where((c) {
+    return _threads.where((c) {
       if (_unreadOnly && c.unreadCount == 0) return false;
-      if (q.isNotEmpty && !c.name.toLowerCase().contains(q)) return false;
+      if (q.isNotEmpty &&
+          !c.otherName.toLowerCase().contains(q) &&
+          !categoryLabel(c.category).toLowerCase().contains(q)) {
+        return false;
+      }
       return true;
     }).toList();
   }
 
+  Future<void> _open(ChatThread t) async {
+    await Navigator.of(context)
+        .pushNamed('/chat-thread', arguments: ChatThreadArgs.fromThread(t));
+    _load(); // unread counts changed
+  }
+
+  static String _timeLabel(DateTime? d) {
+    if (d == null) return '';
+    final now = DateTime.now();
+    if (d.year == now.year && d.month == now.month && d.day == now.day) {
+      final h = d.hour % 12 == 0 ? 12 : d.hour % 12;
+      return '$h:${d.minute.toString().padLeft(2, '0')} ${d.hour < 12 ? 'AM' : 'PM'}';
+    }
+    return '${d.day}/${d.month}/${d.year % 100}';
+  }
+
   @override
   void dispose() {
+    _poll?.cancel();
     _searchController.dispose();
     super.dispose();
   }
@@ -68,26 +104,35 @@ class _ChatListScreenState extends State<ChatListScreen> {
           children: [
             _buildHeader(),
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 4, 20, 0),
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
               child: _buildSearchField(),
             ),
             const SizedBox(height: 14),
             _buildFilters(),
             const SizedBox(height: 6),
             Expanded(
-              child: items.isEmpty
-                  ? Center(
-                      child: Text(AppStrings.t('noConversations'),
-                          style: TextStyle(color: p.textSecondary)),
-                    )
-                  : ListView.separated(
-                      padding: EdgeInsets.fromLTRB(
-                          20, 8, 20, 110 + bottomInset),
-                      itemCount: items.length,
-                      separatorBuilder: (_, __) =>
-                          const SizedBox(height: 4),
-                      itemBuilder: (context, i) => _contactTile(items[i]),
-                    ),
+              child: _loading
+                  ? const Center(child: CircularProgressIndicator())
+                  : items.isEmpty
+                      ? Center(
+                          child: Padding(
+                            padding: const EdgeInsets.all(32),
+                            child: Text(
+                                AppStrings.t(_threads.isEmpty
+                                    ? 'noConversationsYet'
+                                    : 'noConversations'),
+                                textAlign: TextAlign.center,
+                                style: TextStyle(color: p.textSecondary)),
+                          ),
+                        )
+                      : ListView.separated(
+                          padding:
+                              EdgeInsets.fromLTRB(20, 8, 20, 110 + bottomInset),
+                          itemCount: items.length,
+                          separatorBuilder: (_, __) =>
+                              const SizedBox(height: 4),
+                          itemBuilder: (context, i) => _contactTile(items[i]),
+                        ),
             ),
           ],
         ),
@@ -95,26 +140,116 @@ class _ChatListScreenState extends State<ChatListScreen> {
     );
   }
 
+  /// Same app top bar as the Dashboard tab (logo, favorites, notifications,
+  /// profile) plus the location row - this is a top-level tab, not a pushed
+  /// subpage, so it keeps the shell's chrome instead of a back-arrow title.
   Widget _buildHeader() {
     final p = context.pal;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(4, 8, 4, 16),
-      child: Row(
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          IconButton(
-            onPressed: () => MainShell.of(context)?.goToTab(0),
-            icon: Icon(Icons.arrow_back, color: p.textPrimary),
-          ),
-          Expanded(
-            child: Center(
-              child: Text(AppStrings.t('navChat'),
-                  style:
-                      AppText.h2.copyWith(fontSize: 20, color: p.textPrimary)),
+          Row(children: [
+            IconButton.filled(
+              tooltip: 'Menu',
+              style:
+                  IconButton.styleFrom(backgroundColor: AppColors.primaryBlue),
+              onPressed: () => MainShell.of(context)?.goToTab(0),
+              icon: const Icon(Icons.home_repair_service_rounded,
+                  color: Colors.white),
+            ),
+            const SizedBox(width: 8),
+            const Expanded(
+              child: Text('CAMFIX',
+                  style: TextStyle(
+                      color: AppColors.primaryBlue,
+                      fontSize: 18,
+                      letterSpacing: 2.5,
+                      fontWeight: FontWeight.w900)),
+            ),
+            IconButton(
+              tooltip: 'Favorites',
+              onPressed: () => Navigator.of(context).pushNamed('/favorites'),
+              icon: const Icon(Icons.favorite_border_rounded,
+                  color: Colors.redAccent),
+            ),
+            _bellIcon(),
+          ]),
+          InkWell(
+            onTap: () => MainShell.of(context)?.goToTab(3),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              child: Row(children: [
+                const Icon(Icons.location_on_outlined, size: 16),
+                const SizedBox(width: 5),
+                Expanded(
+                  child: Text(
+                    AppSettings.instance.defaultAddress ??
+                        AppStrings.t('pickLocation'),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(fontSize: 11, color: p.textPrimary),
+                  ),
+                ),
+                const Icon(Icons.keyboard_arrow_down_rounded, size: 16),
+              ]),
             ),
           ),
-          const SizedBox(width: 48),
         ],
       ),
+    );
+  }
+
+  Widget _iconCircle(IconData icon, {required VoidCallback onTap}) {
+    return InkWell(
+      customBorder: const CircleBorder(),
+      onTap: onTap,
+      child: CircleAvatar(
+        radius: 20,
+        backgroundColor: AppColors.white,
+        child: Icon(icon, color: AppColors.textDark, size: 20),
+      ),
+    );
+  }
+
+  Widget _bellIcon() {
+    final unread = NotificationsStore.instance.unread;
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        _iconCircle(
+          Icons.notifications_none_rounded,
+          onTap: () async {
+            await Navigator.of(context).pushNamed('/notifications');
+            NotificationsStore.instance.refresh();
+          },
+        ),
+        if (unread > 0)
+          Positioned(
+            right: -2,
+            top: -2,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+              constraints: const BoxConstraints(minWidth: 18),
+              decoration: BoxDecoration(
+                color: const Color(0xFFE23D3D),
+                borderRadius: BorderRadius.circular(9),
+                border: Border.all(color: AppColors.white, width: 1.5),
+              ),
+              child: Text(
+                unread > 9 ? '9+' : '$unread',
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: AppColors.white,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                  height: 1.3,
+                ),
+              ),
+            ),
+          ),
+      ],
     );
   }
 
@@ -125,7 +260,8 @@ class _ChatListScreenState extends State<ChatListScreen> {
         color: p.surface,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
-          BoxShadow(color: p.shadow, blurRadius: 12, offset: const Offset(0, 4)),
+          BoxShadow(
+              color: p.shadow, blurRadius: 12, offset: const Offset(0, 4)),
         ],
       ),
       child: TextField(
@@ -191,56 +327,58 @@ class _ChatListScreenState extends State<ChatListScreen> {
     );
   }
 
-  Widget _contactTile(ChatContact c) {
+  Widget _contactTile(ChatThread c) {
     final p = context.pal;
+    final photo = c.otherTechnicianId == null
+        ? null
+        : '${ApiClient.instance.baseUrl}/api/technician/${c.otherTechnicianId}/photo';
+    final unread = c.unreadCount > 0;
+    final preview = c.lastMessage == null
+        ? AppStrings.t('chatStartPrompt')
+        : '${c.lastMine ? '${AppStrings.t('youPrefix')} ' : ''}${c.lastMessage}';
     return InkWell(
       borderRadius: BorderRadius.circular(12),
-      onTap: () =>
-          Navigator.of(context).pushNamed('/chat-thread', arguments: c),
+      onTap: () => _open(c),
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 10),
         child: Row(
           children: [
-            Stack(
-              children: [
-                CircleAvatar(
-                  radius: 24,
-                  backgroundColor: p.surfaceAlt,
-                  child: const Icon(Icons.person,
-                      color: AppColors.primaryBlue, size: 26),
-                ),
-                if (c.online)
-                  Positioned(
-                    right: 0,
-                    bottom: 0,
-                    child: Container(
-                      width: 13,
-                      height: 13,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF2ECC71),
-                        shape: BoxShape.circle,
-                        border: Border.all(color: p.background, width: 2),
-                      ),
-                    ),
-                  ),
-              ],
+            CircleAvatar(
+              radius: 24,
+              backgroundColor: p.surfaceAlt,
+              foregroundImage: photo == null ? null : NetworkImage(photo),
+              onForegroundImageError: photo == null ? null : (_, __) {},
+              child: const Icon(Icons.person,
+                  color: AppColors.primaryBlue, size: 26),
             ),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(c.name,
+                  Text(c.otherName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w700,
                           color: p.textPrimary)),
-                  const SizedBox(height: 2),
                   Text(
-                    c.lastMessage,
+                    '${categoryLabel(c.category)} • ${AppStrings.t('bookingHash')}${c.jobId}',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(fontSize: 13, color: p.textSecondary),
+                    style: const TextStyle(
+                        fontSize: 11, color: AppColors.primaryBlue),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    preview,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: unread ? FontWeight.w700 : FontWeight.w400,
+                        color: unread ? p.textPrimary : p.textSecondary),
                   ),
                 ],
               ),
@@ -249,29 +387,29 @@ class _ChatListScreenState extends State<ChatListScreen> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Text(c.time,
+                Text(_timeLabel(c.lastAt),
                     style: TextStyle(fontSize: 11.5, color: p.textSecondary)),
                 const SizedBox(height: 6),
-                if (c.unreadCount > 0)
+                if (unread)
                   Container(
-                    width: 18,
-                    height: 18,
-                    alignment: Alignment.center,
-                    decoration: const BoxDecoration(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                    constraints: const BoxConstraints(minWidth: 18),
+                    decoration: BoxDecoration(
                       color: AppColors.primaryBlue,
-                      shape: BoxShape.circle,
+                      borderRadius: BorderRadius.circular(9),
                     ),
                     child: Text(
-                      '${c.unreadCount}',
+                      c.unreadCount > 9 ? '9+' : '${c.unreadCount}',
+                      textAlign: TextAlign.center,
                       style: const TextStyle(
-                        color: AppColors.white,
-                        fontSize: 10.5,
-                        fontWeight: FontWeight.w700,
-                      ),
+                          color: AppColors.white,
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w700),
                     ),
                   )
                 else
-                  const SizedBox(height: 18),
+                  const SizedBox(height: 16),
               ],
             ),
           ],

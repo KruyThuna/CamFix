@@ -28,6 +28,16 @@ class AppColors {
   );
 }
 
+/// Shared layout limits for the customer app. The product is designed as a
+/// phone-first experience, so wide windows keep a comfortable handset-sized
+/// reading column instead of stretching dense dashboard cards edge to edge.
+class AppLayout {
+  AppLayout._();
+
+  static const double maxPhoneWidth = 430;
+  static const double pageGutter = 20;
+}
+
 /// Theme-dependent surface / text / border colors. Read with `context.pal`.
 class AppPalette extends ThemeExtension<AppPalette> {
   const AppPalette({

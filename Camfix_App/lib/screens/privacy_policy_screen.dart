@@ -29,7 +29,9 @@ class PrivacyPolicyScreen extends StatelessWidget {
                   children: [
                     Text(AppStrings.t('privacyIntro'),
                         style: TextStyle(
-                            fontSize: 13.5, color: p.textSecondary, height: 1.5)),
+                            fontSize: 13.5,
+                            color: p.textSecondary,
+                            height: 1.5)),
                     const SizedBox(height: 20),
                     _section(context, AppStrings.t('privacyCollectTitle'),
                         AppStrings.t('privacyCollectBody')),
@@ -60,10 +62,13 @@ class PrivacyPolicyScreen extends StatelessWidget {
         children: [
           Text(title,
               style: TextStyle(
-                  fontSize: 15, fontWeight: FontWeight.w700, color: p.textPrimary)),
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: p.textPrimary)),
           const SizedBox(height: 6),
           Text(body,
-              style: TextStyle(fontSize: 13.5, color: p.textSecondary, height: 1.5)),
+              style: TextStyle(
+                  fontSize: 13.5, color: p.textSecondary, height: 1.5)),
         ],
       ),
     );
@@ -101,7 +106,8 @@ class PrivacyPolicyScreen extends StatelessWidget {
           color: p.surface,
           shape: BoxShape.circle,
           boxShadow: [
-            BoxShadow(color: p.shadow, blurRadius: 10, offset: const Offset(0, 4)),
+            BoxShadow(
+                color: p.shadow, blurRadius: 10, offset: const Offset(0, 4)),
           ],
         ),
         child: Icon(Icons.arrow_back, color: p.textPrimary, size: 20),

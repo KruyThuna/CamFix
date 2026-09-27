@@ -108,6 +108,26 @@ public class NotificationDispatcher {
         String catKm = kmCategory(cat);
         String who = technicianName == null || technicianName.isBlank() ? "A technician" : technicianName;
         String whoKm = technicianName == null || technicianName.isBlank() ? "ជាងម្នាក់" : technicianName;
+        // Self Drop: nobody travels - ON_THE_WAY means "accepted, bring it in"
+        // and ARRIVED means the technician has received the item.
+        if ("SELF_DROP".equals(job.getBookingType())) {
+            if ("ON_THE_WAY".equals(status)) {
+                push(uid, JOB_ON_THE_WAY, job.getId(),
+                        "Ready for your drop-off",
+                        who + " accepted your " + cat + " Self Drop. Bring your item to the shop.",
+                        "រួចរាល់សម្រាប់ការយកមកដាក់",
+                        whoKm + " បានទទួលយកការកក់ " + catKm + " របស់អ្នក។ សូមយករបស់របស់អ្នកទៅហាង។");
+                return;
+            }
+            if ("ARRIVED".equals(status)) {
+                push(uid, JOB_ARRIVED, job.getId(),
+                        "Item received",
+                        who + " has received your item and will send a quote after inspection.",
+                        "បានទទួលរបស់",
+                        whoKm + " បានទទួលរបស់របស់អ្នក ហើយនឹងផ្ញើសម្រង់ថ្លៃបន្ទាប់ពីពិនិត្យ។");
+                return;
+            }
+        }
         switch (status) {
             case "ASSIGNED" -> push(uid, JOB_ASSIGNED, job.getId(),
                     "Technician assigned",

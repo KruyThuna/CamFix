@@ -11,7 +11,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.api.Service.mail.EmailSender;
+import com.api.Service.sms.LogSmsSender;
 import com.api.Service.sms.SmsSender;
+import com.api.exception.SmsDeliveryException;
 
 /**
  * In-memory one-time-password store shared by phone- and email-based login.
@@ -75,12 +77,25 @@ public class OtpService {
         return code;
     }
 
-    /** Generate + store a code for {@code phone}, then send it by SMS. Returns
-     *  the code only when {@code app.otp.expose-code} is true. */
+    /** Accept a phone code only after the provider accepts the SMS. Once a real
+     *  provider (Twilio / TextBelt) is configured and delivering, the code is
+     *  never returned to the client - only the {@link LogSmsSender} dev
+     *  fallback (no provider configured, message only written to the log)
+     *  returns it, and only while {@code app.otp.expose-code=true}, so a real
+     *  deployment never leaks an SMS code through the API. */
     public String issuePhone(String phone) {
-        String code = store(phone);
-        deliver(() -> smsSender.send(toE164(phone), message(code)), "SMS", phone);
-        return exposeCode ? code : null;
+        String recipient = toE164(phone);
+        String code = String.format("%06d", RNG.nextInt(1_000_000));
+        try {
+            smsSender.send(recipient, message(code));
+        } catch (SmsDeliveryException e) {
+            throw e;
+        } catch (RuntimeException e) {
+            log.warn("SMS provider did not accept an OTP request ({})", e.getClass().getSimpleName());
+            throw new SmsDeliveryException("SMS could not be sent. Check your phone number and try again.");
+        }
+        store.put(phone, new Entry(code, Instant.now().getEpochSecond() + ttlSeconds));
+        return exposeCode && smsSender instanceof LogSmsSender ? code : null;
     }
 
     /** Generate + store a code for {@code email}, then send it by email. Returns
@@ -125,10 +140,16 @@ public class OtpService {
         }
     }
 
-    /** Best-effort E.164: keep a leading '+' and digits only. */
+    /** Cambodian local numbers are sent internationally; existing OTP/account
+     *  lookup keys remain unchanged. Other countries must include '+'. */
     private static String toE164(String phone) {
-        String digits = phone.replaceAll("[^\\d]", "");
-        return phone.trim().startsWith("+") ? "+" + digits : digits;
+        if (phone == null) throw new IllegalArgumentException("Phone number is required");
+        String number = phone.trim().replaceAll("[\\s()\\-]", "");
+        if (number.matches("0[1-9][0-9]{7,8}")) number = "+855" + number.substring(1);
+        if (!number.matches("\\+[1-9][0-9]{7,14}")) {
+            throw new IllegalArgumentException("Use a Cambodian phone number or an international number starting with +");
+        }
+        return number;
     }
 
     public boolean isExposeCode() {

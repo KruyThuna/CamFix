@@ -25,11 +25,12 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen>
   }
 
   Future<void> _requestCode() async {
-    final phone = _phone.text.trim();
-    if (phone.isEmpty) {
+    final raw = _phone.text.trim();
+    if (raw.isEmpty) {
       showError(context, AppStrings.t('enterYourPhone'));
       return;
     }
+    final phone = raw.startsWith('+') ? raw : '+855$raw';
     setState(() => _busy = true);
     try {
       final res = await AuthApi.instance.requestPhoneOtp(phone);
@@ -67,12 +68,27 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen>
               LabeledField(
                   label: AppStrings.t('phoneNumber'),
                   controller: _phone,
-                  keyboardType: TextInputType.phone),
+                  keyboardType: TextInputType.phone,
+                  prefixText: '+855 '),
               const SizedBox(height: 4),
               PrimaryButton(
                   label: AppStrings.t('sendCode'),
                   busy: _busy,
                   onPressed: _requestCode),
+              const SizedBox(height: 16),
+              Center(
+                child: Column(
+                  children: [
+                    Icon(Icons.lock_outline, size: 16, color: p.textSecondary),
+                    const SizedBox(height: 4),
+                    Text(
+                      AppStrings.t('phoneSignInFooter'),
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 11.5, color: p.textSecondary),
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
         ),

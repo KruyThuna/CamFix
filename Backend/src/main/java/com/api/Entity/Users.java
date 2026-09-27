@@ -38,7 +38,7 @@ public class Users {
     @Column(name = "Profile_image", length = 500)
     private String profileImage;
 
-    // DB column is enum('ADMIN','TECHNICIAN','CUSTOMER')
+    // Roles: MAIN_ADMIN, ADMIN, TECHNICIAN, CUSTOMER. Stored as VARCHAR(20).
     @Column(name = "ROLE", nullable = false, length = 20)
     private String role;
 

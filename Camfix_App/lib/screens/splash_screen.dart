@@ -5,6 +5,7 @@ import '../services/connectivity_service.dart';
 import '../services/current_user.dart';
 import '../services/token_store.dart';
 import '../theme/app_theme.dart';
+import '../widgets/animated_camfix_logo.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -80,33 +81,21 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.primaryBlue,
+      backgroundColor: AnimatedCamFixLogo.backgroundColor,
       body: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              width: 88,
-              height: 88,
-              decoration: const BoxDecoration(
-                color: AppColors.white,
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.location_on,
-                color: AppColors.primaryBlue,
-                size: 44,
-              ),
-            ),
+            const AnimatedCamFixLogo(),
             if (_blocked) ...[
               const SizedBox(height: 28),
               const Icon(Icons.wifi_off_rounded,
-                  color: AppColors.white, size: 26),
+                  color: AppColors.primaryBlue, size: 26),
               const SizedBox(height: 10),
               Text(
                 AppStrings.t('netOffline'),
                 style: const TextStyle(
-                  color: AppColors.white,
+                  color: AppColors.textDark,
                   fontSize: 15,
                   fontWeight: FontWeight.w700,
                 ),
@@ -114,8 +103,8 @@ class _SplashScreenState extends State<SplashScreen> {
               const SizedBox(height: 4),
               Text(
                 AppStrings.t('netCheckConnection'),
-                style: TextStyle(
-                  color: AppColors.white.withValues(alpha: 0.85),
+                style: const TextStyle(
+                  color: AppColors.hintGrey,
                   fontSize: 12.5,
                 ),
               ),
@@ -123,8 +112,8 @@ class _SplashScreenState extends State<SplashScreen> {
               OutlinedButton(
                 onPressed: _net.checking ? null : _retry,
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: AppColors.white,
-                  side: const BorderSide(color: AppColors.white),
+                  foregroundColor: AppColors.primaryBlue,
+                  side: const BorderSide(color: AppColors.primaryBlue),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(24),
                   ),
@@ -135,15 +124,16 @@ class _SplashScreenState extends State<SplashScreen> {
                         height: 16,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          valueColor:
-                              AlwaysStoppedAnimation<Color>(AppColors.white),
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                              AppColors.primaryBlue),
                         ),
                       )
                     : Text(AppStrings.t('retry')),
               ),
               TextButton(
                 onPressed: _go,
-                style: TextButton.styleFrom(foregroundColor: AppColors.white),
+                style: TextButton.styleFrom(
+                    foregroundColor: AppColors.primaryBlue),
                 child: Text(AppStrings.t('continueAnyway')),
               ),
             ],

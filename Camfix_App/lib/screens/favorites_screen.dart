@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -89,7 +90,9 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                 : _favorites.isEmpty
                     ? ListView(
                         children: [
-                          SizedBox(height: MediaQuery.of(context).size.height * 0.22),
+                          SizedBox(
+                              height:
+                                  MediaQuery.of(context).size.height * 0.22),
                           Icon(Icons.favorite_border_rounded,
                               size: 48, color: p.textSecondary),
                           const SizedBox(height: 12),
@@ -134,7 +137,8 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
             backgroundColor: p.surfaceAlt,
             backgroundImage: f.photoUrl == null
                 ? null
-                : NetworkImage('${ApiClient.instance.baseUrl}${f.photoUrl}'),
+                : CachedNetworkImageProvider(
+                    '${ApiClient.instance.baseUrl}${f.photoUrl}'),
             child: f.photoUrl == null
                 ? const Icon(Icons.person, color: AppColors.primaryBlue)
                 : null,
@@ -163,8 +167,8 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                           size: 15, color: Color(0xFFFFB300)),
                       const SizedBox(width: 3),
                       Text('${f.rating.toStringAsFixed(1)} (${f.ratingCount})',
-                          style: TextStyle(
-                              fontSize: 12, color: p.textSecondary)),
+                          style:
+                              TextStyle(fontSize: 12, color: p.textSecondary)),
                     ],
                   ),
                 ],
@@ -179,8 +183,8 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
           if (f.technicianPhone != null)
             IconButton(
               onPressed: () => _call(f.technicianPhone),
-              icon: const Icon(Icons.call_outlined,
-                  color: AppColors.primaryBlue),
+              icon:
+                  const Icon(Icons.call_outlined, color: AppColors.primaryBlue),
             ),
         ],
       ),
