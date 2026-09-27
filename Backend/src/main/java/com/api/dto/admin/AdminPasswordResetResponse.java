@@ -1,34 +1,19 @@
 package com.api.dto.admin;
 
-/**
- * Returned once, right after an admin resets a user's password. The plaintext
- * temporary password is only ever present in this response - it is not
- * retrievable afterwards, so the admin must relay it to the user out of band.
- */
+/** Payload for {@code POST /api/admin/technicians/{id}/reset-password}. The
+ *  plaintext temporary password is only ever returned here, to the admin who
+ *  triggered the reset - it isn't stored anywhere and there's no email/SMS
+ *  delivery wired up in this project, so the admin relays it to the
+ *  technician directly. */
 public class AdminPasswordResetResponse {
 
-    private Long userId;
-    private String email;
     private String temporaryPassword;
-
-    public AdminPasswordResetResponse() {
-    }
-
-    public AdminPasswordResetResponse(Long userId, String email, String temporaryPassword) {
-        this.userId = userId;
-        this.email = email;
-        this.temporaryPassword = temporaryPassword;
-    }
-
-    public Long getUserId() {
-        return userId;
-    }
-
-    public String getEmail() {
-        return email;
-    }
 
     public String getTemporaryPassword() {
         return temporaryPassword;
+    }
+
+    public void setTemporaryPassword(String temporaryPassword) {
+        this.temporaryPassword = temporaryPassword;
     }
 }

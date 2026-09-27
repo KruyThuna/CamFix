@@ -1,11 +1,13 @@
 package com.api.controller;
 
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import com.api.entity.Users;
 import com.api.service.AuthService;
 import com.api.dto.auth.AuthResponse;
 import com.api.dto.auth.EmailOtpRequest;
@@ -25,9 +27,11 @@ import com.api.dto.auth.UserResponse;
 public class AuthController {
 
     private final AuthService authService;
+    private final com.api.service.UserManagementService userManagement;
 
-    public AuthController(AuthService authService) {
+    public AuthController(AuthService authService, com.api.service.UserManagementService userManagement) {
         this.authService = authService;
+        this.userManagement = userManagement;
     }
 
     // --- Email + password ---------------------------------------------------
@@ -104,5 +108,13 @@ public class AuthController {
         return header.regionMatches(true, 0, "Bearer ", 0, 7)
                 ? header.substring(7).trim()
                 : header.trim();
+    }
+
+    // --- Debug --------------------------------------------------------------
+
+    @GetMapping("/users")
+    public ResponseEntity<List<com.api.service.UserManagementService.UserView>> getAllUsers(
+            @RequestHeader(value = "Authorization", required = false) String authorization) {
+        return ResponseEntity.ok(userManagement.list(authorization));
     }
 }

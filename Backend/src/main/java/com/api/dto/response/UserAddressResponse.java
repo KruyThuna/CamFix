@@ -12,6 +12,7 @@ import lombok.NoArgsConstructor;
 public class UserAddressResponse {
     private Long id;
     private String address_Name;
+    private String address_Line;
     private String city;
     private String province;
     private Long userId;

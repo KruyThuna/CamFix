@@ -22,6 +22,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.api.entity.Technician;
 import com.api.service.TechnicianSelfService;
+import com.api.service.TechnicianServiceManager;
 import com.api.dto.auth.AuthResponse;
 import com.api.dto.auth.PhoneOtpRequest;
 import com.api.dto.booking.ServiceQuoteResponse;
@@ -30,6 +31,8 @@ import com.api.dto.response.CallHistoryResponse;
 import com.api.dto.technician.TechJobResponse;
 import com.api.dto.technician.TechnicianProfileResponse;
 import com.api.dto.technician.TechnicianRegisterRequest;
+import com.api.dto.technician.TechnicianServiceRequest;
+import com.api.dto.technician.TechnicianServiceResponse;
 
 /**
  * The technician app's self-service API. Registration is open; everything under
@@ -44,9 +47,11 @@ public class TechnicianSelfController {
     private static final String AUTH = "Authorization";
 
     private final TechnicianSelfService service;
+    private final TechnicianServiceManager services;
 
-    public TechnicianSelfController(TechnicianSelfService service) {
+    public TechnicianSelfController(TechnicianSelfService service, TechnicianServiceManager services) {
         this.service = service;
+        this.services = services;
     }
 
     // --- Registration / auth ------------------------------------------------
@@ -119,6 +124,36 @@ public class TechnicianSelfController {
                 .body(t.getPhoto());
     }
 
+    @PostMapping("/me/banner")
+    public TechnicianProfileResponse uploadBanner(
+            @RequestHeader(value = AUTH, required = false) String auth,
+            @RequestParam("file") MultipartFile file,
+            @RequestParam(value = "title", required = false) String title) {
+        return service.uploadBanner(auth, file, title);
+    }
+
+    @DeleteMapping("/me/banner")
+    public TechnicianProfileResponse deleteBanner(
+            @RequestHeader(value = AUTH, required = false) String auth) {
+        return service.deleteBanner(auth);
+    }
+
+    /** Public (no auth) - shown in the customer app's home carousel. */
+    @GetMapping("/{id}/banner")
+    public ResponseEntity<byte[]> banner(@PathVariable Long id) {
+        Technician t = service.bannerOwner(id);
+        MediaType type;
+        try {
+            type = MediaType.parseMediaType(t.getBannerContentType());
+        } catch (Exception e) {
+            type = MediaType.IMAGE_JPEG;
+        }
+        return ResponseEntity.ok()
+                .contentType(type)
+                .header(HttpHeaders.CACHE_CONTROL, "public, max-age=300")
+                .body(t.getBanner());
+    }
+
     @PatchMapping("/me/location")
     public ResponseEntity<Void> pushLocation(
             @RequestHeader(value = AUTH, required = false) String auth,
@@ -170,6 +205,52 @@ public class TechnicianSelfController {
     public List<CallHistoryResponse> myCalls(
             @RequestHeader(value = AUTH, required = false) String auth) {
         return service.myCalls(auth);
+    }
+
+    // --- Own named/priced service listings ------------------------------------
+
+    @GetMapping("/me/services")
+    public List<TechnicianServiceResponse> myServices(
+            @RequestHeader(value = AUTH, required = false) String auth) {
+        return services.listMine(auth);
+    }
+
+    @PostMapping("/me/services")
+    public TechnicianServiceResponse createService(
+            @RequestHeader(value = AUTH, required = false) String auth,
+            @RequestBody TechnicianServiceRequest body) {
+        return services.create(auth, body);
+    }
+
+    @PutMapping("/me/services/{id}")
+    public TechnicianServiceResponse updateService(
+            @RequestHeader(value = AUTH, required = false) String auth,
+            @PathVariable Long id,
+            @RequestBody TechnicianServiceRequest body) {
+        return services.update(auth, id, body);
+    }
+
+    @DeleteMapping("/me/services/{id}")
+    public void deleteService(
+            @RequestHeader(value = AUTH, required = false) String auth,
+            @PathVariable Long id) {
+        services.delete(auth, id);
+    }
+
+    /** Attach / replace the photo on one of the technician's own listings. */
+    @PostMapping("/me/services/{id}/photo")
+    public TechnicianServiceResponse uploadServicePhoto(
+            @RequestHeader(value = AUTH, required = false) String auth,
+            @PathVariable Long id,
+            @RequestParam("file") MultipartFile file) {
+        return services.uploadPhoto(auth, id, file);
+    }
+
+    @DeleteMapping("/me/services/{id}/photo")
+    public TechnicianServiceResponse deleteServicePhoto(
+            @RequestHeader(value = AUTH, required = false) String auth,
+            @PathVariable Long id) {
+        return services.deletePhoto(auth, id);
     }
 
     // --- Small request bodies ------------------------------------------------

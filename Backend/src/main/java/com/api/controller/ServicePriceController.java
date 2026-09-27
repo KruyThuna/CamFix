@@ -39,9 +39,20 @@ public class ServicePriceController {
      *  unauthenticated {@code CategoryController} create/update endpoints. */
     @PutMapping("/category/{categoryId}")
     public ServicePriceResponse upsert(@PathVariable Long categoryId, @RequestBody Map<String, Object> body) {
-        Object priceRaw = body == null ? null : body.get("startingPrice");
-        Double price = priceRaw == null ? null : Double.valueOf(priceRaw.toString());
+        Double price = toDouble(body == null ? null : body.get("startingPrice"));
         String description = body == null ? null : (String) body.get("description");
-        return servicePriceService.upsert(categoryId, price, description);
+        Map<String, Double> fees = new java.util.HashMap<>();
+        if (body != null) {
+            for (String key : List.of("benchFee", "travelFee")) {
+                if (body.containsKey(key)) {
+                    fees.put(key, toDouble(body.get(key)));
+                }
+            }
+        }
+        return servicePriceService.upsert(categoryId, price, description, fees);
+    }
+
+    private static Double toDouble(Object raw) {
+        return raw == null || raw.toString().isBlank() ? null : Double.valueOf(raw.toString());
     }
 }

@@ -3,15 +3,9 @@ package com.api.entity;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 @Entity
 @Table(name = "technician")
-@Getter
-@Setter
-@NoArgsConstructor
 public class Technician {
 
     @Id
@@ -75,11 +69,61 @@ public class Technician {
     @Column(name = "photo_content_type", length = 100)
     private String photoContentType;
 
+    /** Promotional banner shown to customers in the app's home carousel -
+     *  separate from {@link #photo} (the technician's own profile picture).
+     *  Optional; a technician without one just doesn't appear in the
+     *  carousel. */
+    @Lob
+    @Column(name = "banner", columnDefinition = "LONGBLOB")
+    private byte[] banner;
+
+    @Column(name = "banner_content_type", length = 100)
+    private String bannerContentType;
+
+    @Column(name = "banner_title", length = 120)
+    private String bannerTitle;
+
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    @Lob
+    @Column(name = "id_card", columnDefinition = "LONGBLOB")
+    private byte[] idCard;
+
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    public byte[] getIdCard() { return idCard; }
+
+    public void setIdCard(byte[] idCard) { this.idCard = idCard; }
+
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    @Lob
+    @Column(name = "face_photo", columnDefinition = "LONGBLOB")
+    private byte[] facePhoto;
+
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    public byte[] getFacePhoto() { return facePhoto; }
+
+    public void setFacePhoto(byte[] facePhoto) { this.facePhoto = facePhoto; }
+
+    /** True when this technician verified their identity via an emailed OTP
+     *  code instead of a face photo (see {@code TechnicianSelfService#register}).
+     *  Lets the admin review screen show *why* {@link #facePhoto} is empty
+     *  instead of it looking like a missing upload. */
+    @Column(name = "identity_email_verified", nullable = false)
+    private boolean identityEmailVerified = false;
+
+    public boolean isIdentityEmailVerified() { return identityEmailVerified; }
+
+    public void setIdentityEmailVerified(boolean identityEmailVerified) {
+        this.identityEmailVerified = identityEmailVerified;
+    }
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
+
+    public Technician() {
+    }
 
     @PrePersist
     protected void onCreate() {
@@ -90,5 +134,174 @@ public class Technician {
     @PreUpdate
     protected void onUpdate() {
         this.updatedAt = LocalDateTime.now();
+    }
+
+    // Getters and Setters
+    public Long getTechnicianId() {
+        return technicianId;
+    }
+
+    public void setTechnicianId(Long technicianId) {
+        this.technicianId = technicianId;
+    }
+
+    public Users getUsers() {
+        return users;
+    }
+
+    public void setUsers(Users users) {
+        this.users = users;
+    }
+
+    public Category getCategory() {
+        return category;
+    }
+
+    public void setCategory(Category category) {
+        this.category = category;
+    }
+
+    public String getBusinessName() {
+        return businessName;
+    }
+
+    public void setBusinessName(String businessName) {
+        this.businessName = businessName;
+    }
+
+    public int getExperienceYear() {
+        return experienceYear;
+    }
+
+    public void setExperienceYear(int experienceYear) {
+        this.experienceYear = experienceYear;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public BigDecimal getAverageRating() {
+        return averageRating;
+    }
+
+    public void setAverageRating(BigDecimal averageRating) {
+        this.averageRating = averageRating;
+    }
+
+    public boolean isVerified() {
+        return verified;
+    }
+
+    public void setVerified(boolean verified) {
+        this.verified = verified;
+    }
+
+    public String getAvailabilityStatus() {
+        return availabilityStatus;
+    }
+
+    public void setAvailabilityStatus(String availabilityStatus) {
+        this.availabilityStatus = availabilityStatus;
+    }
+
+    public String getApprovalStatus() {
+        return approvalStatus;
+    }
+
+    public void setApprovalStatus(String approvalStatus) {
+        this.approvalStatus = approvalStatus;
+    }
+
+    public LocalDateTime getApprovedAt() {
+        return approvedAt;
+    }
+
+    public void setApprovedAt(LocalDateTime approvedAt) {
+        this.approvedAt = approvedAt;
+    }
+
+    public String getRejectionReason() {
+        return rejectionReason;
+    }
+
+    public void setRejectionReason(String rejectionReason) {
+        this.rejectionReason = rejectionReason;
+    }
+
+    public String getServiceArea() {
+        return serviceArea;
+    }
+
+    public void setServiceArea(String serviceArea) {
+        this.serviceArea = serviceArea;
+    }
+
+    public String getOpeningHours() {
+        return openingHours;
+    }
+
+    public void setOpeningHours(String openingHours) {
+        this.openingHours = openingHours;
+    }
+
+    public Integer getRatingCount() {
+        return ratingCount;
+    }
+
+    public void setRatingCount(Integer ratingCount) {
+        this.ratingCount = ratingCount;
+    }
+
+    public byte[] getPhoto() {
+        return photo;
+    }
+
+    public void setPhoto(byte[] photo) {
+        this.photo = photo;
+    }
+
+    public String getPhotoContentType() {
+        return photoContentType;
+    }
+
+    public void setPhotoContentType(String photoContentType) {
+        this.photoContentType = photoContentType;
+    }
+
+    public byte[] getBanner() {
+        return banner;
+    }
+
+    public void setBanner(byte[] banner) {
+        this.banner = banner;
+    }
+
+    public String getBannerContentType() {
+        return bannerContentType;
+    }
+
+    public void setBannerContentType(String bannerContentType) {
+        this.bannerContentType = bannerContentType;
+    }
+
+    public String getBannerTitle() {
+        return bannerTitle;
+    }
+
+    public void setBannerTitle(String bannerTitle) {
+        this.bannerTitle = bannerTitle;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
     }
 }

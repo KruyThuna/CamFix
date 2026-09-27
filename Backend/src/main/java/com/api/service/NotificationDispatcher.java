@@ -35,7 +35,6 @@ public class NotificationDispatcher {
     public static final String QUOTE_ACCEPTED = "QUOTE_ACCEPTED";
     public static final String QUOTE_REJECTED = "QUOTE_REJECTED";
     public static final String REVIEW_SUBMITTED = "REVIEW_SUBMITTED";
-    public static final String NEW_CHAT_MESSAGE = "NEW_CHAT_MESSAGE";
 
     private final NotificationRepository notificationRepository;
     private final UserRepository userRepository;
@@ -109,6 +108,26 @@ public class NotificationDispatcher {
         String catKm = kmCategory(cat);
         String who = technicianName == null || technicianName.isBlank() ? "A technician" : technicianName;
         String whoKm = technicianName == null || technicianName.isBlank() ? "ជាងម្នាក់" : technicianName;
+        // Self Drop: nobody travels - ON_THE_WAY means "accepted, bring it in"
+        // and ARRIVED means the technician has received the item.
+        if ("SELF_DROP".equals(job.getBookingType())) {
+            if ("ON_THE_WAY".equals(status)) {
+                push(uid, JOB_ON_THE_WAY, job.getId(),
+                        "Ready for your drop-off",
+                        who + " accepted your " + cat + " Self Drop. Bring your item to the shop.",
+                        "រួចរាល់សម្រាប់ការយកមកដាក់",
+                        whoKm + " បានទទួលយកការកក់ " + catKm + " របស់អ្នក។ សូមយករបស់របស់អ្នកទៅហាង។");
+                return;
+            }
+            if ("ARRIVED".equals(status)) {
+                push(uid, JOB_ARRIVED, job.getId(),
+                        "Item received",
+                        who + " has received your item and will send a quote after inspection.",
+                        "បានទទួលរបស់",
+                        whoKm + " បានទទួលរបស់របស់អ្នក ហើយនឹងផ្ញើសម្រង់ថ្លៃបន្ទាប់ពីពិនិត្យ។");
+                return;
+            }
+        }
         switch (status) {
             case "ASSIGNED" -> push(uid, JOB_ASSIGNED, job.getId(),
                     "Technician assigned",
@@ -225,20 +244,6 @@ public class NotificationDispatcher {
                 nz(job.getCustomerName()) + " rated your " + cat + " job " + stars + ".",
                 "ការវាយតម្លៃថ្មី",
                 nz(job.getCustomerName()) + " បានវាយតម្លៃការងារ " + kmCategory(cat) + " របស់អ្នក " + stars + "។");
-    }
-
-    /** [senderName] sent a chat message about [job] - tell [recipientUserId]. */
-    public void newChatMessage(Long recipientUserId, Job job, String senderName, String text) {
-        if (recipientUserId == null) {
-            return;
-        }
-        String cat = nz(job.getCategory());
-        String preview = text == null ? "" : (text.length() > 80 ? text.substring(0, 80) + "…" : text);
-        push(recipientUserId, NEW_CHAT_MESSAGE, job.getId(),
-                "New message from " + senderName,
-                preview,
-                "សារថ្មីពី " + senderName,
-                preview);
     }
 
     /** English category name -> Khmer, for the {@code *Km} notification copy.

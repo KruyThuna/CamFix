@@ -28,4 +28,9 @@ public class AdminTechnicianResponse {
     private String createdAt;
     private String approvedAt;
     private String rejectionReason;
+
+    /** True when this technician verified their identity via an emailed OTP
+     *  instead of a face photo - the review screen should show that instead
+     *  of treating a missing photo as an incomplete submission. */
+    private boolean identityEmailVerified;
 }

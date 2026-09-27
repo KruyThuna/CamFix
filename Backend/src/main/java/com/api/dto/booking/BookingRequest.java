@@ -23,4 +23,6 @@ public class BookingRequest {
     private Long technicianId;
     /** IMMEDIATE | SCHEDULED. Blank/unrecognised defaults to IMMEDIATE. */
     private String bookingType;
+    /** Optional - one of the technician's own named/priced service listings. */
+    private Long technicianServiceId;
 }

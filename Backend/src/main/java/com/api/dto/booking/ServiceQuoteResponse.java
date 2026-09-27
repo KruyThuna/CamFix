@@ -4,6 +4,17 @@ package com.api.dto.booking;
  *  itemized repair quote for a booking. */
 public class ServiceQuoteResponse {
 
+    /** Named line items (empty for fee-only quotes). */
+    private java.util.List<QuoteItemDtos.QuoteItemResponse> items = new java.util.ArrayList<>();
+
+    public java.util.List<QuoteItemDtos.QuoteItemResponse> getItems() {
+        return items;
+    }
+
+    public void setItems(java.util.List<QuoteItemDtos.QuoteItemResponse> items) {
+        this.items = items;
+    }
+
     private Long id;
     private Long jobId;
     private Long technicianId;

@@ -23,7 +23,6 @@ import com.api.dto.admin.AdminTechnicianRequest;
 import com.api.dto.admin.AdminTechnicianResponse;
 import com.api.dto.admin.DashboardStatsResponse;
 import com.api.dto.admin.TechnicianLocationResponse;
-import com.api.dto.auth.UserResponse;
 
 /**
  * Console API consumed by {@code /admin} (the Vite app on :5173). Every handler
@@ -76,6 +75,34 @@ public class AdminController {
             @PathVariable Long id) {
         adminService.requireAdmin(auth);
         return adminService.getTechnician(id);
+    }
+
+    @GetMapping("/technicians/{id}/face-photo")
+    public ResponseEntity<byte[]> getFacePhoto(
+            @RequestHeader(value = AUTH, required = false) String auth,
+            @PathVariable Long id) {
+        adminService.requireAdmin(auth);
+        byte[] image = adminService.getTechnicianFacePhoto(id);
+        if (image == null) return ResponseEntity.notFound().build();
+        return ResponseEntity.ok()
+                .header("Cache-Control", "no-store")
+                .header("X-Content-Type-Options", "nosniff")
+                .header("Content-Type", com.api.service.IdentityCardImage.contentType(image))
+                .body(image);
+    }
+
+    @GetMapping("/technicians/{id}/id-card")
+    public ResponseEntity<byte[]> getIdCard(
+            @RequestHeader(value = AUTH, required = false) String auth,
+            @PathVariable Long id) {
+        adminService.requireAdmin(auth);
+        byte[] image = adminService.getTechnicianIdCard(id);
+        if (image == null) return ResponseEntity.notFound().build();
+        return ResponseEntity.ok()
+                .header("Cache-Control", "no-store")
+                .header("X-Content-Type-Options", "nosniff")
+                .header("Content-Type", com.api.service.IdentityCardImage.contentType(image))
+                .body(image);
     }
 
     @PostMapping("/technicians")
@@ -137,23 +164,15 @@ public class AdminController {
         return adminService.reactivateTechnician(id);
     }
 
-    // --- Users -----------------------------------------------------------------
-
-    @GetMapping("/users")
-    public List<UserResponse> listUsers(
-            @RequestHeader(value = AUTH, required = false) String auth,
-            @RequestParam(required = false) String role,
-            @RequestParam(required = false) String q) {
-        adminService.requireAdmin(auth);
-        return adminService.listUsers(role, q);
-    }
-
-    @PostMapping("/users/{id}/reset-password")
-    public AdminPasswordResetResponse resetUserPassword(
+    /** Sets a new random temporary password for this technician and returns
+     *  it in plaintext, once, for the admin to relay - see
+     *  {@link AdminService#resetTechnicianPassword}. */
+    @PostMapping("/technicians/{id}/reset-password")
+    public AdminPasswordResetResponse resetPassword(
             @RequestHeader(value = AUTH, required = false) String auth,
             @PathVariable Long id) {
         adminService.requireAdmin(auth);
-        return adminService.resetUserPassword(id);
+        return adminService.resetTechnicianPassword(id);
     }
 
     // --- Jobs ------------------------------------------------------------------

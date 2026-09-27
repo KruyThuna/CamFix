@@ -74,8 +74,21 @@ flutter run --dart-define=GOOGLE_MAPS_API_KEY=YOUR_KEY
 actual key used at runtime comes from the platform config above. On Android/iOS
 the same value is also used for the Directions API call.)
 
-For a persistent setup, add it to `.vscode/launch.json` `args` or a
-`--dart-define-from-file`.
+For a persistent setup, put it in `dart_defines.json` (git-ignored) and pass
+that file instead:
+
+```bash
+flutter run --dart-define-from-file=dart_defines.json
+flutter build apk --release --dart-define-from-file=dart_defines.json
+```
+
+```json
+{ "GOOGLE_MAPS_API_KEY": "YOUR_KEY" }
+```
+
+The same switch also turns the booking-tracking map
+(`lib/screens/booking_tracking_screen.dart`) into Google Maps with the live
+traffic layer; without it that map stays on OpenStreetMap.
 
 ---
 

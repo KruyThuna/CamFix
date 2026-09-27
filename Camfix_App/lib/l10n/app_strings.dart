@@ -971,6 +971,7 @@ class AppStrings {
       AppLang.km: 'សម្គាល់ថាបានអានទាំងអស់',
     },
     'justNow': {AppLang.en: 'just now', AppLang.km: 'អម្បាញ់មិញ'},
+    'secAgo': {AppLang.en: 's ago', AppLang.km: 'វិនាទីមុន'},
     'minAgo': {AppLang.en: 'min ago', AppLang.km: 'នាទីមុន'},
     'hrAgo': {AppLang.en: 'h ago', AppLang.km: 'ម៉ោងមុន'},
     'dayAgo': {AppLang.en: 'd ago', AppLang.km: 'ថ្ងៃមុន'},

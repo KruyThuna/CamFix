@@ -99,7 +99,7 @@ class _ProfileScreenState extends State<ProfileScreen>
         if (!loc.ok && mounted) {
           showError(context, AppStrings.t(loc.errorKey!));
         }
-      } else {
+      } else if (!LocationReporter.instance.onActiveJob) {
         LocationReporter.instance.stop();
       }
     } catch (e) {

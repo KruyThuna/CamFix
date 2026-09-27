@@ -18,6 +18,10 @@ public class TechJobResponse {
     private Double lat;
     private Double lng;
     private String status;
+    /** IMMEDIATE | SCHEDULED | SELF_DROP - SELF_DROP means the customer comes to you. */
+    private String bookingType;
+    /** Self Drop diagnostic fee the customer was shown - becomes the quote's inspection fee. */
+    private Double benchFee;
     private String createdAt;
     private String scheduledAt;
     private String assignedAt;

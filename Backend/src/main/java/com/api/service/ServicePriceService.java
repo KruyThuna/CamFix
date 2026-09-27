@@ -53,7 +53,22 @@ public class ServicePriceService {
                 .orElse(null);
     }
 
-    public ServicePriceResponse upsert(Long categoryId, Double startingPrice, String description) {
+    /** The Self Drop bench fee for a category, or null when not offered. */
+    @Transactional(readOnly = true)
+    public Double benchFeeForCategoryName(String categoryName) {
+        return categoryRepository.findByCategoryName(categoryName)
+                .flatMap(c -> servicePriceRepository.findByCategoryId(c.getCategoryId()))
+                .map(ServicePrice::getBenchFee)
+                .orElse(null);
+    }
+
+    /**
+     * Admin upsert. {@code fees} carries only the fee keys the caller actually
+     * sent - a key present with a null value clears that fee, an absent key
+     * leaves it unchanged.
+     */
+    public ServicePriceResponse upsert(Long categoryId, Double startingPrice, String description,
+            java.util.Map<String, Double> fees) {
         Category category = categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new NoSuchElementException("Category not found: " + categoryId));
         ServicePrice price = servicePriceRepository.findByCategoryId(categoryId)
@@ -70,6 +85,17 @@ public class ServicePriceService {
         }
         if (description != null) {
             price.setDescription(description);
+        }
+        if (fees != null) {
+            if (fees.containsKey("benchFee")) {
+                price.setBenchFee(nonNegative(fees.get("benchFee"), "benchFee"));
+            }
+            if (fees.containsKey("travelFee")) {
+                price.setTravelFee(nonNegative(fees.get("travelFee"), "travelFee"));
+            }
+        }
+        if (price.getStartingPrice() == null) {
+            throw new IllegalArgumentException("startingPrice is required");
         }
         ServicePrice saved = servicePriceRepository.save(price);
         return toDto(saved, category.getCategoryName());
@@ -88,6 +114,15 @@ public class ServicePriceService {
         r.setCategoryName(categoryName);
         r.setStartingPrice(p.getStartingPrice());
         r.setDescription(p.getDescription());
+        r.setBenchFee(p.getBenchFee());
+        r.setTravelFee(p.getTravelFee());
         return r;
+    }
+
+    private static Double nonNegative(Double v, String field) {
+        if (v != null && v < 0) {
+            throw new IllegalArgumentException(field + " must be >= 0");
+        }
+        return v;
     }
 }

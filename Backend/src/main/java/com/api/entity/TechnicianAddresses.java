@@ -25,7 +25,7 @@ public class TechnicianAddresses {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "address_id")
+    @Column(name = "AddressID")
     private Long addressId;
 
     // Use @Column instead of @JoinColumn when mapping a raw Long foreign key

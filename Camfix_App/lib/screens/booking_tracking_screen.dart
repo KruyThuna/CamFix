@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart' as gm;
 import 'package:latlong2/latlong.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -27,7 +28,10 @@ import 'services_screen.dart' show categoryLabel;
 /// Shows a booking's live status once a technician is involved: a map with
 /// the technician's last reported GPS fix + the job address, a status
 /// timeline, and (while still cancellable) an estimated cancellation fee.
-/// Polls `GET /api/bookings/{id}` every few seconds for real updates.
+/// Polls `GET /api/bookings/{id}` every few seconds for real updates, and
+/// every [_livePollInterval] while a technician is assigned so their marker
+/// glides along with them in near real time. Renders Google Maps (tiles +
+/// live traffic) when `GOOGLE_MAPS_API_KEY` is defined, OpenStreetMap otherwise.
 class BookingTrackingScreen extends StatefulWidget {
   const BookingTrackingScreen({super.key});
 
@@ -36,7 +40,12 @@ class BookingTrackingScreen extends StatefulWidget {
 }
 
 class _BookingTrackingScreenState extends State<BookingTrackingScreen>
-    with WidgetsBindingObserver {
+    with WidgetsBindingObserver, SingleTickerProviderStateMixin {
+  static const String _mapsKey =
+      String.fromEnvironment('GOOGLE_MAPS_API_KEY', defaultValue: '');
+  bool get _useGoogle => _mapsKey.isNotEmpty;
+  static const _livePollInterval = Duration(seconds: 4);
+
   int? _id;
   Booking? _booking;
   String? _loadError;
@@ -64,6 +73,23 @@ class _BookingTrackingScreenState extends State<BookingTrackingScreen>
   /// The recorded payment, once the customer has paid.
   Payment? _payment;
   final _map = MapController();
+  gm.GoogleMapController? _gmap;
+  Timer? _livePoll;
+
+  /// Technician marker glides from [_techFrom] to [_techTo] over [_glide]
+  /// instead of jumping between GPS fixes.
+  late final AnimationController _glide = AnimationController(
+      vsync: this, duration: const Duration(milliseconds: 1500));
+  LatLng? _techFrom;
+  LatLng? _techTo;
+
+  LatLng? get _techShown {
+    final to = _techTo, from = _techFrom;
+    if (to == null || from == null) return to;
+    final t = Curves.easeInOut.transform(_glide.value);
+    return LatLng(from.latitude + (to.latitude - from.latitude) * t,
+        from.longitude + (to.longitude - from.longitude) * t);
+  }
 
   @override
   void initState() {
@@ -78,12 +104,16 @@ class _BookingTrackingScreenState extends State<BookingTrackingScreen>
     _id = ModalRoute.of(context)!.settings.arguments as int;
     _load();
     _poll = Timer.periodic(const Duration(seconds: 12), (_) => _load());
+    _livePoll = Timer.periodic(_livePollInterval, (_) => _refreshLive());
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _poll?.cancel();
+    _livePoll?.cancel();
+    _glide.dispose();
+    _gmap?.dispose();
     _reviewComment.dispose();
     super.dispose();
   }
@@ -108,7 +138,12 @@ class _BookingTrackingScreenState extends State<BookingTrackingScreen>
         _booking = b;
         _loadError = null;
       });
-      if (!b.isOpen) _poll?.cancel(); // terminal state - stop polling
+      _moveTech(b);
+      if (!b.isOpen) {
+        // terminal state - stop polling
+        _poll?.cancel();
+        _livePoll?.cancel();
+      }
       unawaited(_maybeRefreshRoute(b));
       unawaited(_loadQuotes());
       if (b.status == 'COMPLETED') unawaited(_loadReview());
@@ -128,6 +163,64 @@ class _BookingTrackingScreenState extends State<BookingTrackingScreen>
     } catch (e) {
       if (mounted) setState(() => _loadError = e.toString());
     }
+  }
+
+  /// Light, fast poll: just the booking, for the technician's latest GPS fix.
+  /// A status change hands off to the full [_load].
+  Future<void> _refreshLive() async {
+    final prev = _booking;
+    if (prev == null || !prev.isOpen || prev.technicianId == null) return;
+    try {
+      final b = await BookingsApi.instance.getOne(_id!);
+      if (!mounted) return;
+      if (b.status != prev.status) {
+        unawaited(_load());
+        return;
+      }
+      setState(() => _booking = b);
+      _moveTech(b);
+      unawaited(_maybeRefreshRoute(b));
+    } catch (_) {
+      // transient; the next tick retries
+    }
+  }
+
+  void _moveTech(Booking b) {
+    if (!b.hasTechnicianFix || b.isSelfDrop) return;
+    final next = LatLng(b.technicianLat!, b.technicianLng!);
+    if (next == _techTo) return;
+    _techFrom = _techShown ?? next;
+    _techTo = next;
+    _glide.forward(from: 0);
+  }
+
+  /// Frame [points] on whichever map is showing.
+  void _fitPoints(List<LatLng> points) {
+    if (points.isEmpty) return;
+    if (_useGoogle) {
+      var minLat = points.first.latitude, maxLat = minLat;
+      var minLng = points.first.longitude, maxLng = minLng;
+      for (final q in points) {
+        if (q.latitude < minLat) minLat = q.latitude;
+        if (q.latitude > maxLat) maxLat = q.latitude;
+        if (q.longitude < minLng) minLng = q.longitude;
+        if (q.longitude > maxLng) maxLng = q.longitude;
+      }
+      _gmap
+          ?.animateCamera(gm.CameraUpdate.newLatLngBounds(
+              gm.LatLngBounds(
+                  southwest: gm.LatLng(minLat, minLng),
+                  northeast: gm.LatLng(maxLat, maxLng)),
+              32))
+          .catchError((_) {/* map not laid out yet */});
+      return;
+    }
+    try {
+      _map.fitCamera(CameraFit.bounds(
+        bounds: LatLngBounds.fromPoints(points),
+        padding: const EdgeInsets.all(32),
+      ));
+    } catch (_) {/* map not laid out yet */}
   }
 
   Future<void> _loadFavoriteStatus(int technicianId) async {
@@ -286,12 +379,7 @@ class _BookingTrackingScreenState extends State<BookingTrackingScreen>
       _osrm = r;
       _routedFrom = from;
     });
-    try {
-      _map.fitCamera(CameraFit.bounds(
-        bounds: LatLngBounds.fromPoints(r.routes.first.points),
-        padding: const EdgeInsets.fromLTRB(32, 32, 32, 32),
-      ));
-    } catch (_) {/* map not laid out yet */}
+    _fitPoints(r.routes.first.points);
   }
 
   Future<void> _launchCall(String phone, int? technicianId) async {
@@ -739,12 +827,7 @@ class _BookingTrackingScreenState extends State<BookingTrackingScreen>
   void _fitRoute() {
     final r = _osrm?.routes.first;
     if (r == null) return;
-    try {
-      _map.fitCamera(CameraFit.bounds(
-        bounds: LatLngBounds.fromPoints(r.points),
-        padding: const EdgeInsets.all(32),
-      ));
-    } catch (_) {/* map not laid out yet */}
+    _fitPoints(r.points);
   }
 
   /// Technician: real photo, rating, jobs done; chat + call + favorite.
@@ -1229,68 +1312,164 @@ class _BookingTrackingScreenState extends State<BookingTrackingScreen>
 
   Widget _mapCard(AppPalette p, Booking b) {
     final dest = LatLng(b.lat!, b.lng!);
-    final tech = b.hasTechnicianFix && !b.isSelfDrop
-        ? LatLng(b.technicianLat!, b.technicianLng!)
-        : null;
+    final showTech = b.hasTechnicianFix && !b.isSelfDrop;
     return ClipRRect(
       borderRadius: BorderRadius.circular(16),
       child: SizedBox(
         height: 220,
-        child: FlutterMap(
-          mapController: _map,
-          options: MapOptions(
-            initialCenter: tech ?? dest,
-            initialZoom: 14,
-          ),
-          children: [
-            TileLayer(
-              urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-              userAgentPackageName: 'com.example.camfix_app',
+        child: Stack(children: [
+          Positioned.fill(
+            child: AnimatedBuilder(
+              animation: _glide,
+              builder: (context, _) {
+                final tech = showTech ? _techShown : null;
+                return _useGoogle
+                    ? _googleMap(b, dest, tech)
+                    : _osmMap(b, dest, tech);
+              },
             ),
-            if (_osrm != null)
-              PolylineLayer(polylines: [
-                Polyline(
-                    points: _osrm!.routes.first.points,
-                    strokeWidth: 5,
-                    color: AppColors.primaryBlue),
-              ]),
-            MarkerLayer(markers: [
-              Marker(
-                point: dest,
-                width: 36,
-                height: 36,
-                alignment: Alignment.topCenter,
-                child: Icon(
-                    b.isSelfDrop ? Icons.storefront_rounded : Icons.location_on,
-                    color: const Color(0xFFEA4335),
-                    size: 36),
-              ),
-              if (tech != null)
-                Marker(
-                  point: tech,
-                  width: 34,
-                  height: 34,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: AppColors.white,
-                      shape: BoxShape.circle,
-                      border:
-                          Border.all(color: AppColors.primaryBlue, width: 3),
-                      boxShadow: [
-                        BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.3),
-                            blurRadius: 6),
-                      ],
-                    ),
-                    padding: const EdgeInsets.all(6),
-                    child: const Icon(Icons.build,
-                        color: AppColors.primaryBlue, size: 16),
-                  ),
-                ),
-            ]),
-          ],
-        ),
+          ),
+          if (showTech && b.technicianLocationAt != null)
+            Positioned(top: 10, left: 10, child: _freshnessChip(p, b)),
+        ]),
       ),
+    );
+  }
+
+  Widget _googleMap(Booking b, LatLng dest, LatLng? tech) {
+    gm.LatLng g(LatLng q) => gm.LatLng(q.latitude, q.longitude);
+    return gm.GoogleMap(
+      initialCameraPosition:
+          gm.CameraPosition(target: g(tech ?? dest), zoom: 14),
+      onMapCreated: (c) {
+        _gmap = c;
+        final r = _osrm?.routes.first;
+        if (r != null) _fitPoints(r.points);
+      },
+      trafficEnabled: true,
+      myLocationButtonEnabled: false,
+      zoomControlsEnabled: false,
+      mapToolbarEnabled: false,
+      polylines: {
+        if (_osrm != null)
+          gm.Polyline(
+            polylineId: const gm.PolylineId('route'),
+            points: _osrm!.routes.first.points.map(g).toList(),
+            width: 5,
+            color: AppColors.primaryBlue,
+          ),
+      },
+      markers: {
+        gm.Marker(
+          markerId: const gm.MarkerId('dest'),
+          position: g(dest),
+          infoWindow: gm.InfoWindow(title: b.address),
+        ),
+        if (tech != null)
+          gm.Marker(
+            markerId: const gm.MarkerId('tech'),
+            position: g(tech),
+            zIndexInt: 1,
+            icon: gm.BitmapDescriptor.defaultMarkerWithHue(
+                gm.BitmapDescriptor.hueAzure),
+            infoWindow: gm.InfoWindow(title: b.technicianName),
+          ),
+      },
+    );
+  }
+
+  Widget _osmMap(Booking b, LatLng dest, LatLng? tech) => FlutterMap(
+        mapController: _map,
+        options: MapOptions(
+          initialCenter: tech ?? dest,
+          initialZoom: 14,
+        ),
+        children: [
+          TileLayer(
+            urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+            userAgentPackageName: 'com.example.camfix_app',
+          ),
+          if (_osrm != null)
+            PolylineLayer(polylines: [
+              Polyline(
+                  points: _osrm!.routes.first.points,
+                  strokeWidth: 5,
+                  color: AppColors.primaryBlue),
+            ]),
+          MarkerLayer(markers: [
+            Marker(
+              point: dest,
+              width: 36,
+              height: 36,
+              alignment: Alignment.topCenter,
+              child: Icon(
+                  b.isSelfDrop ? Icons.storefront_rounded : Icons.location_on,
+                  color: const Color(0xFFEA4335),
+                  size: 36),
+            ),
+            if (tech != null)
+              Marker(
+                point: tech,
+                width: 34,
+                height: 34,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: AppColors.white,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: AppColors.primaryBlue, width: 3),
+                    boxShadow: [
+                      BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.3),
+                          blurRadius: 6),
+                    ],
+                  ),
+                  padding: const EdgeInsets.all(6),
+                  child: const Icon(Icons.build,
+                      color: AppColors.primaryBlue, size: 16),
+                ),
+              ),
+          ]),
+        ],
+      );
+
+  /// "● Live · 8s ago" - green while the last GPS fix is fresh, grey once
+  /// the technician's phone has gone quiet for over a minute.
+  Widget _freshnessChip(AppPalette p, Booking b) {
+    final age = DateTime.now().difference(b.technicianLocationAt!);
+    final fresh = age.inSeconds < 60;
+    final String ago;
+    if (age.inSeconds < 10) {
+      ago = AppStrings.t('justNow');
+    } else if (age.inMinutes < 1) {
+      ago = '${age.inSeconds}${AppStrings.t('secAgo')}';
+    } else if (age.inHours < 1) {
+      ago = '${age.inMinutes} ${AppStrings.t('minAgo')}';
+    } else {
+      ago = '${age.inHours}${AppStrings.t('hrAgo')}';
+    }
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+      decoration: BoxDecoration(
+        color: p.surface.withValues(alpha: 0.92),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [BoxShadow(color: p.shadow, blurRadius: 6)],
+      ),
+      child: Row(mainAxisSize: MainAxisSize.min, children: [
+        Container(
+          width: 8,
+          height: 8,
+          decoration: BoxDecoration(
+            color: fresh ? const Color(0xFF34A853) : p.textSecondary,
+            shape: BoxShape.circle,
+          ),
+        ),
+        const SizedBox(width: 6),
+        Text('${AppStrings.t('live')} · $ago',
+            style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                color: p.textPrimary)),
+      ]),
     );
   }
 
