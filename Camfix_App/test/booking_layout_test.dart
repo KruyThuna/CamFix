@@ -1,10 +1,10 @@
+import 'support/golden_fonts.dart';
 import 'dart:convert';
-import 'dart:io';
-import 'package:flutter/services.dart';
 import 'package:camfix_app/models/service_provider.dart';
 import 'package:camfix_app/screens/booking_sheet.dart';
 import 'package:camfix_app/theme/app_theme.dart';
-import 'package:camfix_app/widgets/app_buttons.dart';
+import 'package:camfix_app/l10n/app_strings.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
@@ -13,26 +13,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   Map<String, dynamic>? submitted;
-  setUpAll(() async {
-    // Load SDK fonts so local preview renders include real text and icons.
-    final sdk = Platform.environment['FLUTTER_ROOT'] ??
-        'C:/IDE Support/config_android/flutter';
-    for (final entry in {
-      'Roboto': ['roboto-regular.ttf', 'roboto-bold.ttf'],
-      'MaterialIcons': ['materialicons-regular.otf']
-    }.entries) {
-      final loader = FontLoader(entry.key);
-      for (final name in entry.value) {
-        final font = File('$sdk/bin/cache/artifacts/material_fonts/$name');
-        if (font.existsSync()) {
-          loader.addFont(
-              Future.value(ByteData.sublistView(font.readAsBytesSync())));
-        }
-      }
-      await loader.load();
-    }
-  });
-
+  setUpAll(loadGoldenFonts);
   for (final width in [320.0, 430.0, 1280.0]) {
     testWidgets('Booking modes, sticky confirm and payload at $width',
         (tester) async {
@@ -42,6 +23,7 @@ void main() {
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
       submitted = null;
+
       await http.runWithClient(() async {
         await tester.pumpWidget(MaterialApp(
           debugShowCheckedModeBanner: false,
@@ -67,8 +49,7 @@ void main() {
         await tester.tap(find.text('Book Now'));
         await tester.pumpAndSettle();
         expect(tester.takeException(), isNull);
-        expect(
-            tester.widget<PrimaryButton>(find.byType(PrimaryButton)).onPressed,
+        expect(tester.widget<FilledButton>(find.byType(FilledButton)).onPressed,
             isNull);
         await expectLater(
             find.byType(MaterialApp),
@@ -77,27 +58,38 @@ void main() {
         await tester.tap(find.text('Self Drop'));
         await tester.pumpAndSettle();
         expect(tester.takeException(), isNull);
-        expect(
-            tester.widget<PrimaryButton>(find.byType(PrimaryButton)).onPressed,
+        expect(tester.widget<FilledButton>(find.byType(FilledButton)).onPressed,
             isNotNull);
         await expectLater(
             find.byType(MaterialApp),
             matchesGoldenFile(
                 'goldens/booking_self_drop_${width.toInt()}.png'));
-        await tester.ensureVisible(find.text('Deposit & Waiver'));
+        await tester.scrollUntilVisible(
+            find.text(AppStrings.t('depositBreakdownCaps')), 250,
+            scrollable: find.byType(Scrollable).first);
         await tester.pumpAndSettle();
-        await expectLater(find.byType(MaterialApp),
+        // Compare the fee breakdown itself; arrival estimates include the
+        // current minute and are checked through the booking interaction.
+        await expectLater(
+            find
+                .ancestor(
+                  of: find.text(AppStrings.t('depositBreakdownCaps')),
+                  matching: find.byType(Column),
+                )
+                .first,
             matchesGoldenFile('goldens/booking_fees_${width.toInt()}.png'));
-        await tester.ensureVisible(find.text('Pick a time'));
-        await tester.tap(find.text('Pick a time'));
+        await tester.scrollUntilVisible(
+            find.text(AppStrings.t('customSlot')), -250,
+            scrollable: find.byType(Scrollable).first);
+        await tester.tap(find.text(AppStrings.t('customSlot')));
         await tester.pumpAndSettle();
-        expect(
-            tester.widget<PrimaryButton>(find.byType(PrimaryButton)).onPressed,
+        expect(tester.widget<FilledButton>(find.byType(FilledButton)).onPressed,
             isNull);
-        await tester.ensureVisible(find.text('Now'));
-        await tester.tap(find.text('Now'));
+        await tester
+            .ensureVisible(find.text(AppStrings.t('arriveImmediately')));
+        await tester.tap(find.text(AppStrings.t('arriveImmediately')));
         await tester.pumpAndSettle();
-        await tester.tap(find.byType(PrimaryButton));
+        await tester.tap(find.byType(FilledButton));
         await tester.pumpAndSettle();
         expect(submitted?['bookingType'], 'SELF_DROP');
         expect(submitted?['technicianId'], 7);

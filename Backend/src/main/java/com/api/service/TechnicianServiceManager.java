@@ -6,11 +6,8 @@ import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
-<<<<<<< HEAD
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
-=======
->>>>>>> origin/main
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -24,10 +21,7 @@ import com.api.repository.TechnicianServicePhotoRepository;
 import com.api.repository.TechnicianServiceRepository;
 import com.api.security.AuthSupport;
 import com.api.dto.technician.TechnicianServiceRequest;
-<<<<<<< HEAD
 import com.api.dto.response.CompletedWorkResponse;
-=======
->>>>>>> origin/main
 import com.api.dto.technician.TechnicianServiceResponse;
 import com.api.exception.InvalidCredentialsException;
 
@@ -79,7 +73,6 @@ public class TechnicianServiceManager {
     // --- Self-service (technician app) -----------------------------------------
 
     @Transactional(readOnly = true)
-<<<<<<< HEAD
     public List<CompletedWorkResponse> completedWork(Long technicianId, int page) {
         publicTechnicianService.get(technicianId);
         if (page < 0) throw new IllegalArgumentException("page must be non-negative");
@@ -91,8 +84,6 @@ public class TechnicianServiceManager {
     }
 
     @Transactional(readOnly = true)
-=======
->>>>>>> origin/main
     public List<TechnicianServiceResponse> listMine(String authorization) {
         Technician me = requireTechnician(authorization);
         return repository.findByTechnicianId(me.getTechnicianId()).stream()

@@ -1,17 +1,13 @@
 package com.api.dto.response;
 
 import com.api.entity.TechnicianLiveLocation;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
 @Data
 @Builder
-@NoArgsConstructor
-@AllArgsConstructor
 public class LocationResponse {
 
     private Long id;
@@ -20,6 +16,19 @@ public class LocationResponse {
     private Double longitude;
     private Double accuracy;
     private LocalDateTime lastUpdate;
+
+    public LocationResponse() {
+    }
+
+    public LocationResponse(Long id, Long technicianId, Double latitude, Double longitude,
+            Double accuracy, LocalDateTime lastUpdate) {
+        this.id = id;
+        this.technicianId = technicianId;
+        this.latitude = latitude;
+        this.longitude = longitude;
+        this.accuracy = accuracy;
+        this.lastUpdate = lastUpdate;
+    }
 
     public static LocationResponse fromEntity(TechnicianLiveLocation entity) {
         return LocationResponse.builder()

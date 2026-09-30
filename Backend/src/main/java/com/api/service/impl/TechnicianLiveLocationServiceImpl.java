@@ -7,15 +7,17 @@ import com.api.dto.request.LocationRequest;
 import com.api.dto.response.LocationResponse;
 
 import jakarta.persistence.EntityNotFoundException;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-@RequiredArgsConstructor
 public class TechnicianLiveLocationServiceImpl implements TechnicianLiveLocationService {
 
 	private final TechnicianLiveLocationRepository repository;
+
+	public TechnicianLiveLocationServiceImpl(TechnicianLiveLocationRepository repository) {
+		this.repository = repository;
+	}
 
 	@Transactional
 	public LocationResponse updateLocation(LocationRequest request) {

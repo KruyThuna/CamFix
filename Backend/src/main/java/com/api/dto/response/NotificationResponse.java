@@ -2,14 +2,9 @@ package com.api.dto.response;
 
 import java.time.LocalDateTime;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 @Data
-@AllArgsConstructor
-@NoArgsConstructor
-
 public class NotificationResponse {
     private Long notificationId;
     private Long userId;
@@ -17,6 +12,19 @@ public class NotificationResponse {
     private String message;
     private boolean isRead;
     private LocalDateTime createdAt;
+
+    public NotificationResponse() {
+    }
+
+    public NotificationResponse(Long notificationId, Long userId, String title, String message,
+            boolean isRead, LocalDateTime createdAt) {
+        this.notificationId = notificationId;
+        this.userId = userId;
+        this.title = title;
+        this.message = message;
+        this.isRead = isRead;
+        this.createdAt = createdAt;
+    }
 
     public Long getNotificationId() {
         return notificationId;

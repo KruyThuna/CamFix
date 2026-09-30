@@ -51,6 +51,8 @@ import com.api.exception.InvalidCredentialsException;
 @Service
 @Transactional
 public class AdminService {
+    private static final SecureRandom RNG = new SecureRandom();
+    private static final String TEMP_PASSWORD_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";
 
     private static final String ROLE_ADMIN = "ADMIN";
     private static final String ROLE_TECHNICIAN = "TECHNICIAN";
@@ -325,7 +327,6 @@ public class AdminService {
         return toDto(tech);
     }
 
-<<<<<<< HEAD
     /** Sets a new random temporary password for a technician's account and
      *  returns it in plaintext, once, for the admin to relay - there's no
      *  email/SMS delivery for this in the project, and the technician isn't
@@ -337,26 +338,13 @@ public class AdminService {
         String temporaryPassword = generateTemporaryPassword();
         user.setPassword(passwordEncoder.encode(temporaryPassword));
         userRepository.save(user);
-        AdminPasswordResetResponse r = new AdminPasswordResetResponse(user.getUserId(), user.getEmail(), temporaryPassword);
-
+        AdminPasswordResetResponse r = new AdminPasswordResetResponse();
+        r.setTemporaryPassword(temporaryPassword);
         return r;
     }
 
-    // --- Users ---------------------------------------------------------------
-=======
-    private static final SecureRandom RNG = new SecureRandom();
-    private static final String TEMP_PASSWORD_ALPHABET =
-            "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
->>>>>>> origin/main
-
-    /** Sets a new random temporary password for a technician's account and
-     *  returns it in plaintext, once, for the admin to relay - there's no
-     *  email/SMS delivery for this in the project, and the technician isn't
-     *  otherwise locked out (approval/suspension already cover that), so this
-     *  only exists for "I forgot my password" support requests. */
-    public AdminPasswordResetResponse resetTechnicianPassword(Long id) {
-        Technician tech = loadTechnician(id);
-        Users user = tech.getUsers();
+    public AdminPasswordResetResponse resetUserPassword(Long id) {
+        Users user = userRepository.findById(id).orElseThrow(() -> new NoSuchElementException("User not found"));
         String temporaryPassword = generateTemporaryPassword();
         user.setPassword(passwordEncoder.encode(temporaryPassword));
         userRepository.save(user);

@@ -12,13 +12,14 @@ import com.api.service.UserAddressService;
 import com.api.dto.request.UserAddressRequest;
 import com.api.dto.response.UserAddressResponse;
 
-import lombok.RequiredArgsConstructor;
-
 @Service
-@RequiredArgsConstructor
 public class UserAddressServiceImpl implements UserAddressService {
 
     private final UserAddressRepository userAddressRepository;
+
+    public UserAddressServiceImpl(UserAddressRepository userAddressRepository) {
+        this.userAddressRepository = userAddressRepository;
+    }
 
     @Override
     @Transactional

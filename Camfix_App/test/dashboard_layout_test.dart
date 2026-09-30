@@ -1,3 +1,4 @@
+import 'support/golden_fonts.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -7,6 +8,7 @@ import 'package:camfix_app/services/bookings_store.dart';
 import 'package:camfix_app/services/notifications_store.dart';
 
 void main() {
+  setUpAll(loadGoldenFonts);
   for (final width in [320.0, 430.0, 1280.0]) {
     testWidgets('Home layout at $width', (tester) async {
       SharedPreferences.setMockInitialValues({});

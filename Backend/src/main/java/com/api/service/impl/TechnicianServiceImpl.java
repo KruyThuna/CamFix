@@ -8,13 +8,14 @@ import com.api.entity.Technician;
 import com.api.repository.TechnicianRepository;
 import com.api.service.TechnicianService;
 
-import lombok.Data;
-
-@Data
 @Service
 public class TechnicianServiceImpl implements TechnicianService {
 
     private final TechnicianRepository technicianRepository; // ← type is the repository
+
+    public TechnicianServiceImpl(TechnicianRepository technicianRepository) {
+        this.technicianRepository = technicianRepository;
+    }
 
     @Override
     public Technician creatTechnician(Technician technician) {

@@ -1,16 +1,15 @@
 plugins {
     id("com.android.application")
-    id("org.jetbrains.kotlin.android")
-    // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
+
+    // AGP 9+ has built-in Kotlin support.
+    // Do NOT add:
+    // id("org.jetbrains.kotlin.android")
+
     id("dev.flutter.flutter-gradle-plugin")
 }
 
 // google_maps_flutter needs the Maps key in the manifest at build time.
-// Put `MAPS_API_KEY=...` in android/local.properties (git-ignored); absent =
-// the app uses the keyless OpenStreetMap map. See GOOGLE_MAPS_SETUP.md.
-//
-// Parsed by hand (no java.util.Properties) because the Kotlin DSL script
-// compiler under AGP 9 fails to resolve that import here.
+// Put MAPS_API_KEY=... in android/local.properties.
 val mapsApiKey: String = rootProject.file("local.properties")
     .takeIf { it.exists() }
     ?.readLines()
@@ -30,10 +29,8 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "com.example.camfix_app"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
+
         minSdk = maxOf(23, flutter.minSdkVersion)
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
@@ -44,8 +41,6 @@ android {
 
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
             signingConfig = signingConfigs.getByName("debug")
         }
     }

@@ -20,6 +20,8 @@ import jakarta.persistence.Table;
 @Entity
 @Table(name = "job")
 public class Job {
+    public static Builder builder(){return new Builder();}
+    public static class Builder { private final Job j=new Job(); public Builder id(Long v){j.id=v;return this;} public Builder category(String v){j.category=v;return this;} public Builder completedAt(LocalDateTime v){j.completedAt=v;return this;} public Builder customerUserId(Long v){j.customerUserId=v;return this;} public Builder customerName(String v){j.customerName=v;return this;} public Builder description(String v){j.description=v;return this;} public Job build(){return j;} }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -93,176 +95,26 @@ public class Job {
     @Column(length = 2000)
     private String notes;
 
-<<<<<<< HEAD
-    /** Snapshot of the Self Drop inspection fee at booking time. */
-    @Column(name = "bench_fee")
-    private Double benchFee;
+    public Job() {}
+    public Long getId(){return id;} public void setId(Long v){id=v;}
+    public String getCustomerName(){return customerName;} public void setCustomerName(String v){customerName=v;}
+    public String getCustomerPhone(){return customerPhone;} public void setCustomerPhone(String v){customerPhone=v;}
+    public Long getCustomerUserId(){return customerUserId;} public void setCustomerUserId(Long v){customerUserId=v;}
+    public String getCategory(){return category;} public void setCategory(String v){category=v;}
+    public String getDescription(){return description;} public void setDescription(String v){description=v;}
+    public String getAddress(){return address;} public void setAddress(String v){address=v;}
+    public Double getLat(){return lat;} public void setLat(Double v){lat=v;}
+    public Double getLng(){return lng;} public void setLng(Double v){lng=v;}
+    public String getStatus(){return status;} public void setStatus(String v){status=v;}
+    public Long getTechnicianId(){return technicianId;} public void setTechnicianId(Long v){technicianId=v;}
+    public LocalDateTime getCreatedAt(){return createdAt;} public void setCreatedAt(LocalDateTime v){createdAt=v;}
+    public LocalDateTime getScheduledAt(){return scheduledAt;} public void setScheduledAt(LocalDateTime v){scheduledAt=v;}
+    public LocalDateTime getAssignedAt(){return assignedAt;} public void setAssignedAt(LocalDateTime v){assignedAt=v;}
+    public LocalDateTime getCompletedAt(){return completedAt;} public void setCompletedAt(LocalDateTime v){completedAt=v;}
+    public String getNotes(){return notes;} public void setNotes(String v){notes=v;}
+    public String getBookingType(){return bookingType;} public void setBookingType(String v){bookingType=v;}
+    public Double getStartingPrice(){return startingPrice;} public void setStartingPrice(Double v){startingPrice=v;}
+    public Double getBenchFee(){return benchFee;} public void setBenchFee(Double v){benchFee=v;}
+    public Long getTechnicianServiceId(){return technicianServiceId;} public void setTechnicianServiceId(Long v){technicianServiceId=v;}
 
-    /** Technician's selected service listing, when present. */
-    @Column(name = "technician_service_id")
-    private Long technicianServiceId;
-=======
-    public Job() {
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getCustomerName() {
-        return customerName;
-    }
-
-    public void setCustomerName(String customerName) {
-        this.customerName = customerName;
-    }
-
-    public String getCustomerPhone() {
-        return customerPhone;
-    }
-
-    public void setCustomerPhone(String customerPhone) {
-        this.customerPhone = customerPhone;
-    }
-
-    public Long getCustomerUserId() {
-        return customerUserId;
-    }
-
-    public void setCustomerUserId(Long customerUserId) {
-        this.customerUserId = customerUserId;
-    }
-
-    public String getCategory() {
-        return category;
-    }
-
-    public void setCategory(String category) {
-        this.category = category;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public String getAddress() {
-        return address;
-    }
-
-    public void setAddress(String address) {
-        this.address = address;
-    }
-
-    public Double getLat() {
-        return lat;
-    }
-
-    public void setLat(Double lat) {
-        this.lat = lat;
-    }
-
-    public Double getLng() {
-        return lng;
-    }
-
-    public void setLng(Double lng) {
-        this.lng = lng;
-    }
-
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
-    }
-
-    public Long getTechnicianId() {
-        return technicianId;
-    }
-
-    public void setTechnicianId(Long technicianId) {
-        this.technicianId = technicianId;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public LocalDateTime getScheduledAt() {
-        return scheduledAt;
-    }
-
-    public void setScheduledAt(LocalDateTime scheduledAt) {
-        this.scheduledAt = scheduledAt;
-    }
-
-    public LocalDateTime getAssignedAt() {
-        return assignedAt;
-    }
-
-    public void setAssignedAt(LocalDateTime assignedAt) {
-        this.assignedAt = assignedAt;
-    }
-
-    public LocalDateTime getCompletedAt() {
-        return completedAt;
-    }
-
-    public void setCompletedAt(LocalDateTime completedAt) {
-        this.completedAt = completedAt;
-    }
-
-    public String getNotes() {
-        return notes;
-    }
-
-    public void setNotes(String notes) {
-        this.notes = notes;
-    }
-
-    public String getBookingType() {
-        return bookingType;
-    }
-
-    public void setBookingType(String bookingType) {
-        this.bookingType = bookingType;
-    }
-
-    public Double getStartingPrice() {
-        return startingPrice;
-    }
-
-    public void setStartingPrice(Double startingPrice) {
-        this.startingPrice = startingPrice;
-    }
-
-    public Double getBenchFee() {
-        return benchFee;
-    }
-
-    public void setBenchFee(Double benchFee) {
-        this.benchFee = benchFee;
-    }
-
-    public Long getTechnicianServiceId() {
-        return technicianServiceId;
-    }
-
-    public void setTechnicianServiceId(Long technicianServiceId) {
-        this.technicianServiceId = technicianServiceId;
-    }
->>>>>>> origin/main
 }

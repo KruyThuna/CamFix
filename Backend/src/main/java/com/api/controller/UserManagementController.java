@@ -24,7 +24,6 @@ public class UserManagementController {
         return ResponseEntity.status(201).body(service.create(auth, input));
     }
 
-<<<<<<< HEAD
     @PostMapping("/{id}/reset-password")
     public com.api.dto.admin.AdminPasswordResetResponse resetPassword(
             @RequestHeader(value = "Authorization", required = false) String auth,
@@ -32,8 +31,6 @@ public class UserManagementController {
         return service.resetPassword(auth, id);
     }
 
-=======
->>>>>>> origin/main
     @PutMapping("/{id}")
     public UserView update(@RequestHeader(value = "Authorization", required = false) String auth,
             @PathVariable Long id, @RequestBody EditUser input) {

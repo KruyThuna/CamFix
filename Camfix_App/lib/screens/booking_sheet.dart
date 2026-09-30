@@ -1208,13 +1208,20 @@ class _BookingSheetState extends State<_BookingSheet> {
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16)),
                   textStyle: const TextStyle(
-                      fontSize: 15, fontWeight: FontWeight.w800),
+                      fontFamily: AppText.fontFamily,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w800),
                 ),
                 child: Row(mainAxisSize: MainAxisSize.min, children: [
-                  Text(_submitting
-                      ? AppStrings.t('sending')
-                      : AppStrings.t(
-                          _selfDrop ? 'confirmDropOff' : 'confirmBooking')),
+                  Flexible(
+                    child: Text(
+                      _submitting
+                          ? AppStrings.t('sending')
+                          : AppStrings.t(
+                              _selfDrop ? 'confirmDropOff' : 'confirmBooking'),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
                   if (!_submitting) ...[
                     const SizedBox(width: 8),
                     const Icon(Icons.arrow_forward_rounded, size: 18),

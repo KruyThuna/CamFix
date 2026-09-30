@@ -22,7 +22,9 @@ class _SplashScreenState extends State<SplashScreen> {
   void initState() {
     super.initState();
     _net.addListener(_onNet);
-    _boot();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) unawaited(_boot());
+    });
   }
 
   Future<void> _boot() async {

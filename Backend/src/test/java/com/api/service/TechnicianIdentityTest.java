@@ -73,7 +73,7 @@ class TechnicianIdentityTest {
         assertThrows(com.api.exception.InvalidCredentialsException.class, () -> service.register(req));
         verify(users, never()).save(any());
         verify(technicians, never()).save(any());
-        when(otp.verify("012345678", "123456")).thenReturn(true);
+        when(otp.verify("+85512345678", "123456")).thenReturn(true);
         service.register(req);
         var saved = org.mockito.ArgumentCaptor.forClass(Technician.class);
         verify(technicians).save(saved.capture());
@@ -81,7 +81,7 @@ class TechnicianIdentityTest {
         assertFalse(saved.getValue().isVerified());
         assertArrayEquals(image(), saved.getValue().getIdCard());
         assertArrayEquals(image(), saved.getValue().getFacePhoto());
-        verify(otp, times(2)).verify("012345678", "123456");
+        verify(otp, times(2)).verify("+85512345678", "123456");
     }
 
     @Test

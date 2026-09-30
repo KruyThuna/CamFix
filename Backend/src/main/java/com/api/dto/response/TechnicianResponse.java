@@ -2,13 +2,9 @@ package com.api.dto.response;
 
 import java.math.BigDecimal;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 @Data
-@AllArgsConstructor
-@NoArgsConstructor
 public class TechnicianResponse {
     private Long technicialId;
 
@@ -21,4 +17,22 @@ public class TechnicianResponse {
     private BigDecimal agverageRating;
     private boolean verified;
     private String availabilityStatus;
+
+    public TechnicianResponse() {
+    }
+
+    public TechnicianResponse(Long technicialId, String fullname, String email, String phone,
+            String categoryName, int experainceYear, String description,
+            BigDecimal agverageRating, boolean verified, String availabilityStatus) {
+        this.technicialId = technicialId;
+        this.fullname = fullname;
+        this.email = email;
+        this.phone = phone;
+        this.categoryName = categoryName;
+        this.experainceYear = experainceYear;
+        this.description = description;
+        this.agverageRating = agverageRating;
+        this.verified = verified;
+        this.availabilityStatus = availabilityStatus;
+    }
 }

@@ -1,14 +1,10 @@
 package com.api.dto.request;
 
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 @Data 
 // Generates getAddress_Name(), getCity(), etc.
-@NoArgsConstructor
-@AllArgsConstructor
 @Builder
 public class UserAddressRequest {
     private String address_Name;
@@ -19,4 +15,19 @@ public class UserAddressRequest {
     private Boolean isDefault;
     private Double latitude;
     private Double longitude;
+
+    public UserAddressRequest() {
+    }
+
+    public UserAddressRequest(String address_Name, String address_Line, String city,
+            String province, Long userId, Boolean isDefault, Double latitude, Double longitude) {
+        this.address_Name = address_Name;
+        this.address_Line = address_Line;
+        this.city = city;
+        this.province = province;
+        this.userId = userId;
+        this.isDefault = isDefault;
+        this.latitude = latitude;
+        this.longitude = longitude;
+    }
 }

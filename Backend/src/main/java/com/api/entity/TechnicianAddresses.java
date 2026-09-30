@@ -10,16 +10,12 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "technician_addresses")
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 @Builder
 public class TechnicianAddresses {
 
@@ -60,4 +56,23 @@ public class TechnicianAddresses {
     @UpdateTimestamp
     @Column(name = "update_at")
     private LocalDateTime updatedAt;
+
+    public TechnicianAddresses() {
+    }
+
+    public TechnicianAddresses(Long addressId, Long technicianId, String businessName,
+            String addressLine, String city, String province, Double latitude, Double longitude,
+            Boolean isDefault, LocalDateTime createdAt, LocalDateTime updatedAt) {
+        this.addressId = addressId;
+        this.technicianId = technicianId;
+        this.businessName = businessName;
+        this.addressLine = addressLine;
+        this.city = city;
+        this.province = province;
+        this.latitude = latitude;
+        this.longitude = longitude;
+        this.isDefault = isDefault;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+    }
 }

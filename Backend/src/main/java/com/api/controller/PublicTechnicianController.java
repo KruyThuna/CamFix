@@ -15,10 +15,7 @@ import com.api.entity.TechnicianServicePhoto;
 import com.api.service.PublicTechnicianService;
 import com.api.service.TechnicianServiceManager;
 import com.api.dto.response.PublicTechnicianResponse;
-<<<<<<< HEAD
 import com.api.dto.response.CompletedWorkResponse;
-=======
->>>>>>> origin/main
 import com.api.dto.technician.TechnicianServiceResponse;
 
 /** The customer-facing technician directory - public (no auth), approved
@@ -52,7 +49,6 @@ public class PublicTechnicianController {
         return services.listPublic(id);
     }
 
-<<<<<<< HEAD
     /** Completed work, newest first, without customer details. */
     @GetMapping("/{id}/completed-work")
     public List<CompletedWorkResponse> completedWork(
@@ -60,8 +56,6 @@ public class PublicTechnicianController {
         return services.completedWork(id, page);
     }
 
-=======
->>>>>>> origin/main
     /** Public photo for one listing (approved technicians only). */
     @GetMapping("/services/{listingId}/photo")
     public ResponseEntity<byte[]> servicePhoto(@PathVariable Long listingId) {

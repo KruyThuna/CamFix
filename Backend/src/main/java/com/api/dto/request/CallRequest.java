@@ -4,12 +4,8 @@ import java.time.LocalDateTime;
 
 import jakarta.persistence.Column;
 import jakarta.validation.constraints.NotBlank;
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
-@AllArgsConstructor
-@NoArgsConstructor
 @Data
 public class CallRequest {
     @NotBlank(message = "status is reqire ")
@@ -31,4 +27,15 @@ public class CallRequest {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
+    public CallRequest() {
+    }
+
+    public CallRequest(String calStatus, LocalDateTime startedAt, LocalDateTime endedAt,
+            Integer durationSeconnds, LocalDateTime createdAt) {
+        this.calStatus = calStatus;
+        this.startedAt = startedAt;
+        this.endedAt = endedAt;
+        this.durationSeconnds = durationSeconnds;
+        this.createdAt = createdAt;
+    }
 }

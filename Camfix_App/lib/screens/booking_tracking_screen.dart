@@ -166,7 +166,6 @@ class _BookingTrackingScreenState extends State<BookingTrackingScreen>
     }
   }
 
-<<<<<<< HEAD
   Future<void> _resumePayment() async {
     if (_openingPayment) return;
     setState(() => _openingPayment = true);
@@ -200,7 +199,6 @@ class _BookingTrackingScreenState extends State<BookingTrackingScreen>
     }
   }
 
-=======
   /// Light, fast poll: just the booking, for the technician's latest GPS fix.
   /// A status change hands off to the full [_load].
   Future<void> _refreshLive() async {
@@ -259,7 +257,6 @@ class _BookingTrackingScreenState extends State<BookingTrackingScreen>
     } catch (_) {/* map not laid out yet */}
   }
 
->>>>>>> origin/main
   Future<void> _loadFavoriteStatus(int technicianId) async {
     try {
       final fav = await FavoritesApi.instance.check(technicianId);

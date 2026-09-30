@@ -1,15 +1,11 @@
 package com.api.dto.request;
 
 import jakarta.validation.constraints.NotNull;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 @Data
 @Builder
-@NoArgsConstructor
-@AllArgsConstructor
 public class LocationRequest {
 
     @NotNull(message = "Technician ID is required")
@@ -22,4 +18,14 @@ public class LocationRequest {
     private Double longitude;
 
     private Double accuracy;
+
+    public LocationRequest() {
+    }
+
+    public LocationRequest(Long technicianId, Double latitude, Double longitude, Double accuracy) {
+        this.technicianId = technicianId;
+        this.latitude = latitude;
+        this.longitude = longitude;
+        this.accuracy = accuracy;
+    }
 }

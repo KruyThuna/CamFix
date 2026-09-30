@@ -60,26 +60,19 @@ public class UserManagementService {
                 .map(UserManagementService::view).toList();
     }
 
-<<<<<<< HEAD
     public com.api.dto.admin.AdminPasswordResetResponse resetPassword(String auth, Long id) {
         Users actor = manager(auth);
         Users user = target(actor, id);
         return admin.resetUserPassword(user.getUserId());
     }
 
-=======
->>>>>>> origin/main
     public UserView create(String auth, CreateAdmin input) {
         Users actor = manager(auth);
         if (!"MAIN_ADMIN".equalsIgnoreCase(actor.getRole())) throw new ForbiddenException("Only Main Admin can create Admin accounts");
         if (input == null) throw new IllegalArgumentException("Account details are required");
         String email = text(input.email(), "Email", 100).toLowerCase(Locale.ROOT);
         if (!email.matches("[^\\s@]+@[^\\s@]+\\.[^\\s@]+")) throw new IllegalArgumentException("Invalid email");
-<<<<<<< HEAD
         String phone = text(input.phoneNumber(), "Phone number", 100);
-=======
-        String phone = com.api.util.PhoneNumbers.canonicalize(text(input.phoneNumber(), "Phone number", 100));
->>>>>>> origin/main
         if (users.existsByEmail(email) || users.existsByPhoneNumber(phone)) {
             throw new IllegalArgumentException("Email or phone number is already in use");
         }
@@ -100,11 +93,7 @@ public class UserManagementService {
         Users actor = manager(auth);
         Users user = target(actor, id);
         if (input == null) throw new IllegalArgumentException("User details are required");
-<<<<<<< HEAD
         String phone = text(input.phoneNumber(), "Phone number", 100);
-=======
-        String phone = com.api.util.PhoneNumbers.canonicalize(text(input.phoneNumber(), "Phone number", 100));
->>>>>>> origin/main
         if (!phone.equals(user.getPhoneNumber()) && users.existsByPhoneNumber(phone)) {
             throw new IllegalArgumentException("Phone number is already in use");
         }

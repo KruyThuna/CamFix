@@ -2,7 +2,6 @@ package com.api.entity;
 
 import jakarta.persistence.*;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 
@@ -14,7 +13,6 @@ import java.time.LocalDateTime;
 })
 @Getter
 @Setter
-@NoArgsConstructor
 public class Favorite {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -32,4 +30,7 @@ public class Favorite {
     @CreationTimestamp
     @Column(name = "Created_At", updatable = false)
     private LocalDateTime createdAt;
+
+    public Favorite() {
+    }
 }

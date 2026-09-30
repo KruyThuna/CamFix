@@ -17,14 +17,15 @@ import com.api.service.UserAddressService;
 import com.api.dto.request.UserAddressRequest;
 import com.api.dto.response.UserAddressResponse;
 
-import lombok.RequiredArgsConstructor;
-
 @RestController
 @RequestMapping("/api/v1/addresses")
-@RequiredArgsConstructor
 public class UserAddressController {
 
     private final UserAddressService userAddressService;
+
+    public UserAddressController(UserAddressService userAddressService) {
+        this.userAddressService = userAddressService;
+    }
 
     @PostMapping
     public ResponseEntity<UserAddressResponse> createAddress(@RequestBody UserAddressRequest request) {

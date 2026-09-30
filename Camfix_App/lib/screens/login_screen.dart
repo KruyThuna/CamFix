@@ -172,6 +172,20 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       const SizedBox(height: 18),
                       const GoogleSignInButton(),
+                      const SizedBox(height: 14),
+                      OutlinedButton.icon(
+                        onPressed: () =>
+                            Navigator.of(context).pushNamed('/technician'),
+                        icon: const Icon(Icons.handyman_outlined),
+                        label: const Text('Continue as Technician'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppColors.white,
+                          side: BorderSide(
+                            color: AppColors.white.withValues(alpha: 0.7),
+                          ),
+                          minimumSize: const Size.fromHeight(48),
+                        ),
+                      ),
                       const SizedBox(height: 20),
                       Center(
                         child: Row(

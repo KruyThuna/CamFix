@@ -1,7 +1,6 @@
-import 'dart:io';
+import 'support/golden_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -15,26 +14,7 @@ const technicians = '''[
 ]''';
 
 void main() {
-  setUpAll(() async {
-    debugDisableShadows = false;
-    // Load SDK fonts so local preview renders include real text and icons.
-    final sdk = Platform.environment['FLUTTER_ROOT'] ??
-        'C:/IDE Support/config_android/flutter';
-    for (final entry in {
-      'Roboto': ['roboto-regular.ttf', 'roboto-bold.ttf'],
-      'MaterialIcons': ['materialicons-regular.otf']
-    }.entries) {
-      final loader = FontLoader(entry.key);
-      for (final name in entry.value) {
-        final font = File('$sdk/bin/cache/artifacts/material_fonts/$name');
-        if (font.existsSync()) {
-          loader.addFont(
-              Future.value(ByteData.sublistView(font.readAsBytesSync())));
-        }
-      }
-      await loader.load();
-    }
-  });
+  setUpAll(loadGoldenFonts);
   for (final width in [320.0, 390.0, 430.0, 1280.0]) {
     testWidgets('Electrical service layout and booking at $width',
         (tester) async {
@@ -65,7 +45,11 @@ void main() {
             200)),
       );
       await tester.pumpAndSettle();
-      expect(find.text('Circuit Breaker & Safety Diagnostics'), findsOneWidget);
+      await tester.tap(find.byTooltip('Choose service category'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Electrical').last);
+      await tester.pumpAndSettle();
+      expect(find.text(categoryDescription('Electrical')), findsOneWidget);
       expect(find.text('Kruy Thuna'), findsOneWidget);
       expect(find.text('\$35'), findsWidgets);
       expect(tester.takeException(), isNull);

@@ -11,10 +11,8 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Index;
 import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
@@ -23,8 +21,6 @@ import lombok.Setter;
 })
 @Getter
 @Setter
-@NoArgsConstructor
-@AllArgsConstructor
 @Builder
 public class TechnicianLiveLocation {
 
@@ -51,6 +47,20 @@ public class TechnicianLiveLocation {
     @UpdateTimestamp
     @Column(name = "last_update")
     private LocalDateTime lastUpdate;
+
+    public TechnicianLiveLocation() {
+    }
+
+    public TechnicianLiveLocation(Long id, Long technicianId, Double latitude, Double longitude,
+            Double accuracy, LocalDateTime createdAt, LocalDateTime lastUpdate) {
+        this.id = id;
+        this.technicianId = technicianId;
+        this.latitude = latitude;
+        this.longitude = longitude;
+        this.accuracy = accuracy;
+        this.createdAt = createdAt;
+        this.lastUpdate = lastUpdate;
+    }
 
     @Override
     public boolean equals(Object o) {

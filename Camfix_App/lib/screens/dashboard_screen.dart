@@ -1196,7 +1196,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     onSeeAll: () => MainShell.of(context)?.goToTab(1))),
             const SizedBox(height: 12),
             SizedBox(
-                height: 240,
+                height: 310,
                 child: ListView.separated(
                     scrollDirection: Axis.horizontal,
                     padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -1326,8 +1326,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   _buildPopularServicesRow(),
                   const SizedBox(height: 24),
                 ],
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                Wrap(
+                  alignment: WrapAlignment.spaceBetween,
+                  spacing: 12,
+                  runSpacing: 4,
                   children: [
                     Text('Common Fixes & Fast Booking',
                         style: TextStyle(

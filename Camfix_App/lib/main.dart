@@ -37,6 +37,7 @@ import 'screens/privacy_policy_screen.dart';
 import 'screens/favorites_screen.dart';
 import 'screens/booking_receipt_screen.dart';
 import 'screens/total_spend_screen.dart';
+import 'technician/main.dart' show TechnicianPortal;
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -102,6 +103,7 @@ class CamFixApp extends StatelessWidget {
           '/preference': (context) => const PreferenceScreen(),
           '/privacy-policy': (context) => const PrivacyPolicyScreen(),
           '/favorites': (context) => const FavoritesScreen(),
+          '/technician': (context) => const TechnicianPortal(),
         },
       ),
     );
