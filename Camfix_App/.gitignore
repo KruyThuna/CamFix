@@ -49,3 +49,6 @@ app.*.map.json
 # Gradle build output (android module)
 /android/build/
 /android/.gradle/
+
+# Google Maps key for --dart-define-from-file (keep out of the public repo)
+dart_defines.json

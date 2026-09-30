@@ -6,18 +6,10 @@ import java.time.LocalDateTime;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 @Entity
 @Table(name = "users")
-@Getter
-@Setter
-@NoArgsConstructor
 public class Users {
 
     @Id
@@ -40,7 +32,6 @@ public class Users {
     @Column(name = "Phone_number", unique = true, nullable = false, length = 100)
     private String phoneNumber;
 
-    @JsonIgnore
     @Column(name = "Password_hash", nullable = false, length = 100)
     private String password;
 
@@ -62,6 +53,10 @@ public class Users {
     @UpdateTimestamp
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
+
+    // Default No-Argument Constructor required by JPA/Hibernate
+    public Users() {
+    }
 
     public Users(Long userId, String firstName, String lastName, LocalDate dateOfBirth, String email, String password,
             String role) {

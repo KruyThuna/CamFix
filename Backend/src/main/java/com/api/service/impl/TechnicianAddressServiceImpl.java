@@ -3,17 +3,17 @@ package com.api.service.impl;
 import com.api.entity.TechnicianAddresses;
 import com.api.repository.TechnicianAddressRepository;
 import com.api.service.TechnicianAddressService;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Service
-@RequiredArgsConstructor
 public class TechnicianAddressServiceImpl implements TechnicianAddressService {
 
-    private final TechnicianAddressRepository repository;
+    @Autowired
+    private TechnicianAddressRepository repository;
 
     @Override
     @Transactional

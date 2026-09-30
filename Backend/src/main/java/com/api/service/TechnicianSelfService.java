@@ -231,11 +231,10 @@ public class TechnicianSelfService {
             str(fields.get("firstName")).ifPresent(v -> user.setFirstName(v));
             str(fields.get("lastName")).ifPresent(v -> user.setLastName(v));
             str(fields.get("phoneNumber")).ifPresent(v -> {
-                String phone = canonicalPhone(v);
-                if (!phone.equals(user.getPhoneNumber()) && userRepository.existsByPhoneNumber(phone)) {
-                    throw new IllegalArgumentException("Phone number already in use: " + phone);
+                if (!v.equals(user.getPhoneNumber()) && userRepository.existsByPhoneNumber(v)) {
+                    throw new IllegalArgumentException("Phone number already in use: " + v);
                 }
-                user.setPhoneNumber(phone);
+                user.setPhoneNumber(v);
             });
             str(fields.get("serviceArea")).ifPresent(tech::setServiceArea);
             str(fields.get("openingHours")).ifPresent(tech::setOpeningHours);

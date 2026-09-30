@@ -48,6 +48,7 @@ class _HomeScreenState extends State<HomeScreen> with LangAware<HomeScreen> {
     setState(() => _loading = true);
     try {
       final jobs = await TechnicianApi.instance.myJobs();
+      LocationReporter.instance.onActiveJob = jobs.any((j) => j.isActive);
       if (mounted) setState(() => _jobs = jobs);
     } catch (e) {
       if (mounted) showError(context, e);

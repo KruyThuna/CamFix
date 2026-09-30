@@ -17,8 +17,11 @@ public interface JobRepository extends JpaRepository<Job, Long> {
     List<Job> findByTechnicianId(Long technicianId);
     boolean existsByCustomerUserId(Long customerUserId);
     boolean existsByTechnicianId(Long technicianId);
+<<<<<<< HEAD
 
     List<Job> findByCustomerUserId(Long customerUserId);
+=======
+>>>>>>> origin/main
 
     long countByStatus(String status);
 

@@ -11,10 +11,6 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 
 /**
  * The "starting from" catalog price shown to a customer before they book -
@@ -23,10 +19,6 @@ import lombok.NoArgsConstructor;
  */
 @Entity
 @Table(name = "service_price")
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
 public class ServicePrice {
 
     @Id

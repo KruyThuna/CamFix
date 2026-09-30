@@ -34,7 +34,6 @@ import com.api.dto.admin.AdminTechnicianRequest;
 import com.api.dto.admin.AdminTechnicianResponse;
 import com.api.dto.admin.DashboardStatsResponse;
 import com.api.dto.admin.TechnicianLocationResponse;
-import com.api.dto.auth.UserResponse;
 import com.api.exception.EmailAlreadyExistsException;
 import com.api.exception.ForbiddenException;
 import com.api.exception.InvalidCredentialsException;
@@ -326,6 +325,7 @@ public class AdminService {
         return toDto(tech);
     }
 
+<<<<<<< HEAD
     /** Sets a new random temporary password for a technician's account and
      *  returns it in plaintext, once, for the admin to relay - there's no
      *  email/SMS delivery for this in the project, and the technician isn't
@@ -343,49 +343,34 @@ public class AdminService {
     }
 
     // --- Users ---------------------------------------------------------------
+=======
+    private static final SecureRandom RNG = new SecureRandom();
+    private static final String TEMP_PASSWORD_ALPHABET =
+            "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
+>>>>>>> origin/main
 
-    @Transactional(readOnly = true)
-    public List<UserResponse> listUsers(String role, String q) {
-        String needle = q == null ? "" : q.trim().toLowerCase(Locale.ROOT);
-        return userRepository.findAll().stream()
-                .filter(u -> isBlank(role) || role.equalsIgnoreCase(u.getRole()))
-                .filter(u -> needle.isEmpty() || matchesUser(u, needle))
-                .sorted((a, b) -> Long.compare(nz(a.getUserId()), nz(b.getUserId())))
-                .map(UserResponse::from)
-                .collect(Collectors.toList());
-    }
-
-    /**
-     * Sets a fresh random password on the target user and returns it in plain
-     * text exactly once, so the admin can relay it out of band. There's no
-     * "must change password on next login" flag wired up in this schema, so
-     * the user keeps this password until they change it themselves.
-     */
-    public AdminPasswordResetResponse resetUserPassword(Long id) {
-        Users user = userRepository.findById(id)
-                .orElseThrow(() -> new NoSuchElementException("User not found: " + id));
+    /** Sets a new random temporary password for a technician's account and
+     *  returns it in plaintext, once, for the admin to relay - there's no
+     *  email/SMS delivery for this in the project, and the technician isn't
+     *  otherwise locked out (approval/suspension already cover that), so this
+     *  only exists for "I forgot my password" support requests. */
+    public AdminPasswordResetResponse resetTechnicianPassword(Long id) {
+        Technician tech = loadTechnician(id);
+        Users user = tech.getUsers();
         String temporaryPassword = generateTemporaryPassword();
         user.setPassword(passwordEncoder.encode(temporaryPassword));
         userRepository.save(user);
-        return new AdminPasswordResetResponse(user.getUserId(), user.getEmail(), temporaryPassword);
+        AdminPasswordResetResponse r = new AdminPasswordResetResponse();
+        r.setTemporaryPassword(temporaryPassword);
+        return r;
     }
-
-    private static final SecureRandom RANDOM = new SecureRandom();
-    private static final String PASSWORD_ALPHABET =
-            "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%";
 
     private static String generateTemporaryPassword() {
-        StringBuilder sb = new StringBuilder(12);
-        for (int i = 0; i < 12; i++) {
-            sb.append(PASSWORD_ALPHABET.charAt(RANDOM.nextInt(PASSWORD_ALPHABET.length())));
+        StringBuilder sb = new StringBuilder(10);
+        for (int i = 0; i < 10; i++) {
+            sb.append(TEMP_PASSWORD_ALPHABET.charAt(RNG.nextInt(TEMP_PASSWORD_ALPHABET.length())));
         }
         return sb.toString();
-    }
-
-    private static boolean matchesUser(Users u, String needle) {
-        return contains(nullToEmpty(u.getFirstName()) + " " + nullToEmpty(u.getLastName()), needle)
-                || contains(u.getEmail(), needle)
-                || contains(u.getPhoneNumber(), needle);
     }
 
     // --- Jobs --------------------------------------------------------------

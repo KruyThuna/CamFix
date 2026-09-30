@@ -3,6 +3,7 @@ package com.api.service.impl;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -274,6 +275,10 @@ public class AuthServiceImpl implements AuthService {
         return body;
     }
 
+    @Override
+    public List<Users> findAllUsers() {
+        return userRepository.findAll();
+    }
 
     private AuthResponse tokenFor(Users user, String message) {
         return new AuthResponse(message, jwtService.generateToken(user.getEmail()));
