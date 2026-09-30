@@ -15,6 +15,7 @@ import com.api.entity.TechnicianServicePhoto;
 import com.api.service.PublicTechnicianService;
 import com.api.service.TechnicianServiceManager;
 import com.api.dto.response.PublicTechnicianResponse;
+import com.api.dto.response.CompletedWorkResponse;
 import com.api.dto.technician.TechnicianServiceResponse;
 
 /** The customer-facing technician directory - public (no auth), approved
@@ -46,6 +47,13 @@ public class PublicTechnicianController {
     @GetMapping("/{id}/services")
     public List<TechnicianServiceResponse> listServices(@PathVariable Long id) {
         return services.listPublic(id);
+    }
+
+    /** Completed work, newest first, without customer details. */
+    @GetMapping("/{id}/completed-work")
+    public List<CompletedWorkResponse> completedWork(
+            @PathVariable Long id, @RequestParam(defaultValue = "0") int page) {
+        return services.completedWork(id, page);
     }
 
     /** Public photo for one listing (approved technicians only). */

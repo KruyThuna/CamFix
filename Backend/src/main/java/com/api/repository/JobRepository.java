@@ -3,12 +3,16 @@ package com.api.repository;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
 import com.api.entity.Job;
 
 @Repository
 public interface JobRepository extends JpaRepository<Job, Long> {
+
+    Page<Job> findByTechnicianIdAndStatus(Long technicianId, String status, Pageable pageable);
 
     List<Job> findByTechnicianId(Long technicianId);
     boolean existsByCustomerUserId(Long customerUserId);

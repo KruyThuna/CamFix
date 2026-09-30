@@ -6,6 +6,8 @@ import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -19,6 +21,7 @@ import com.api.repository.TechnicianServicePhotoRepository;
 import com.api.repository.TechnicianServiceRepository;
 import com.api.security.AuthSupport;
 import com.api.dto.technician.TechnicianServiceRequest;
+import com.api.dto.response.CompletedWorkResponse;
 import com.api.dto.technician.TechnicianServiceResponse;
 import com.api.exception.InvalidCredentialsException;
 
@@ -68,6 +71,17 @@ public class TechnicianServiceManager {
     }
 
     // --- Self-service (technician app) -----------------------------------------
+
+    @Transactional(readOnly = true)
+    public List<CompletedWorkResponse> completedWork(Long technicianId, int page) {
+        publicTechnicianService.get(technicianId);
+        if (page < 0) throw new IllegalArgumentException("page must be non-negative");
+        var pageable = PageRequest.of(page, 20, Sort.by("completedAt", "id").descending());
+        return jobRepository.findByTechnicianIdAndStatus(technicianId, STATUS_COMPLETED, pageable)
+                .map(job -> new CompletedWorkResponse(
+                        job.getId(), job.getCategory(), job.getCompletedAt(),
+                        job.getCustomerUserId(), job.getCustomerName())).getContent();
+    }
 
     @Transactional(readOnly = true)
     public List<TechnicianServiceResponse> listMine(String authorization) {
