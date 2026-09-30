@@ -1,9 +1,9 @@
-package com.api.Service;
+package com.api.service;
 
-import com.api.Config.SmsConfig;
-import com.api.Service.mail.EmailSender;
-import com.api.Service.sms.LogSmsSender;
-import com.api.Service.sms.SmsSender;
+import com.api.config.SmsConfig;
+import com.api.service.mail.EmailSender;
+import com.api.service.sms.LogSmsSender;
+import com.api.service.sms.SmsSender;
 import com.api.exception.SmsDeliveryException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;

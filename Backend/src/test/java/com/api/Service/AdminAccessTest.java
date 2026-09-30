@@ -1,8 +1,8 @@
-package com.api.Service;
+package com.api.service;
 
-import com.api.Entity.Users;
-import com.api.Repo.UserRepository;
-import com.api.Security.JwtService;
+import com.api.entity.Users;
+import com.api.repository.UserRepository;
+import com.api.security.JwtService;
 import com.api.exception.ForbiddenException;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;

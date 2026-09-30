@@ -8,6 +8,7 @@ import '../l10n/app_strings.dart';
 import '../models/chat.dart';
 import '../services/chat_api.dart';
 import '../models/review.dart';
+import '../models/completed_work.dart';
 import '../models/service_provider.dart';
 import '../models/technician_service_listing.dart';
 import '../services/api_client.dart';
@@ -119,6 +120,34 @@ class _ProviderDetailScreenState extends State<ProviderDetailScreen> {
   bool _loadingReviews = false;
   List<TechnicianServiceListing> _services = const [];
   bool _loadingServices = false;
+  List<CompletedWork> _completedWork = [];
+  bool _loadingWork = false;
+  bool _workError = false;
+  bool _moreWork = false;
+  int _workPage = 0;
+
+  Future<void> _loadWork({bool more = false}) async {
+    final id = _technicianId;
+    if (id == null || _loadingWork) return;
+    setState(() {
+      _loadingWork = true;
+      _workError = false;
+    });
+    final page = more ? _workPage + 1 : 0;
+    try {
+      final work = await TechniciansApi.instance.completedWork(id, page: page);
+      if (!mounted) return;
+      setState(() {
+        _completedWork = more ? [..._completedWork, ...work] : work;
+        _workPage = page;
+        _moreWork = work.length == 20;
+      });
+    } catch (_) {
+      if (mounted) setState(() => _workError = true);
+    } finally {
+      if (mounted) setState(() => _loadingWork = false);
+    }
+  }
 
   /// The listing picked on the Achievements tab (one per booking).
   int? _selectedListingId;
@@ -664,7 +693,17 @@ class _ProviderDetailScreenState extends State<ProviderDetailScreen> {
     final bool active = i == _tabIndex;
     return Expanded(
       child: InkWell(
-        onTap: () => setState(() => _tabIndex = i),
+        onTap: () {
+          setState(() => _tabIndex = i);
+          if (i == 1) {
+            _loadWork();
+            final id = _technicianId;
+            if (id != null) {
+              _loadProvider(id);
+              _loadServices(id);
+            }
+          }
+        },
         borderRadius: BorderRadius.circular(8),
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 6),
@@ -956,6 +995,8 @@ class _ProviderDetailScreenState extends State<ProviderDetailScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        _buildWorkHistory(),
+        const SizedBox(height: 20),
         Text('${categoryLabel(p.category)} ${_roleLabel(p.role)}',
             style: TextStyle(
                 fontSize: 15, fontWeight: FontWeight.w800, color: _text)),
@@ -1008,12 +1049,14 @@ class _ProviderDetailScreenState extends State<ProviderDetailScreen> {
                 size: 15, color: AppColors.white),
           ),
           const SizedBox(width: 8),
-          Text(
-              jobs > 0
-                  ? '$jobs ${AppStrings.t('jobCompletedSuffix')}'
-                  : AppStrings.t('noJobsCompletedYet'),
-              style: TextStyle(
-                  fontSize: 13, fontWeight: FontWeight.w600, color: _text)),
+          Expanded(
+            child: Text(
+                jobs > 0
+                    ? '$jobs ${AppStrings.t('jobCompletedSuffix')}'
+                    : AppStrings.t('noJobsCompletedYet'),
+                style: TextStyle(
+                    fontSize: 13, fontWeight: FontWeight.w600, color: _text)),
+          ),
         ]),
         const SizedBox(height: 16),
         if (_loadingServices)
@@ -1035,6 +1078,110 @@ class _ProviderDetailScreenState extends State<ProviderDetailScreen> {
               mainAxisExtent: 236,
             ),
             itemBuilder: (context, i) => _buildListingCard(p, _services[i]),
+          ),
+      ],
+    );
+  }
+
+  void _showCustomerProfile(CompletedWork work) {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(children: [
+                Expanded(
+                    child: Text(AppStrings.t('profile'),
+                        style: Theme.of(context).textTheme.titleLarge)),
+                CloseButton(onPressed: () => Navigator.pop(context)),
+              ]),
+              const CircleAvatar(
+                  radius: 36, child: Icon(Icons.person_outline, size: 40)),
+              const SizedBox(height: 12),
+              Text(work.customerName,
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.titleLarge),
+              const SizedBox(height: 24),
+              ListTile(
+                leading: const Icon(Icons.task_alt_rounded, color: _green),
+                title: Text(categoryLabel(work.category)),
+                subtitle: Text(work.completedAt == null
+                    ? AppStrings.t('done')
+                    : '${AppStrings.t('done')} · ${_dateLabel(work.completedAt!)}'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildWorkHistory() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(children: [
+          Expanded(child: _sectionTitle(AppStrings.t('completedWorkHistory'))),
+          IconButton(
+            tooltip: AppStrings.t('retry'),
+            onPressed: _loadingWork ? null : () => _loadWork(),
+            icon: const Icon(Icons.refresh_rounded),
+          ),
+        ]),
+        for (final work in _completedWork)
+          Card(
+            color: _surface,
+            child: ListTile(
+              leading: const Icon(Icons.task_alt_rounded, color: _green),
+              title: Text(categoryLabel(work.category)),
+              onTap: work.customerName.isEmpty
+                  ? null
+                  : () => _showCustomerProfile(work),
+              trailing: work.customerName.isEmpty
+                  ? null
+                  : IconButton(
+                      tooltip: AppStrings.t('viewProfile'),
+                      icon: const Icon(Icons.person_outline),
+                      onPressed: () => _showCustomerProfile(work),
+                    ),
+              subtitle: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                      work.customerName.isEmpty
+                          ? AppStrings.t('camfixUser')
+                          : work.customerName,
+                      style: const TextStyle(fontWeight: FontWeight.w600)),
+                  Text(work.completedAt == null
+                      ? AppStrings.t('done')
+                      : '${AppStrings.t('done')} · ${_dateLabel(work.completedAt!)}'),
+                ],
+              ),
+            ),
+          ),
+        if (_loadingWork)
+          const Padding(
+            padding: EdgeInsets.all(16),
+            child: Center(child: CircularProgressIndicator()),
+          )
+        else if (_workError)
+          TextButton.icon(
+            onPressed: () =>
+                _loadWork(more: _completedWork.isNotEmpty && _moreWork),
+            icon: const Icon(Icons.refresh),
+            label: Text(AppStrings.t('workHistoryError')),
+          )
+        else if (_completedWork.isEmpty)
+          Text(AppStrings.t('noJobsCompletedYet'),
+              style: TextStyle(color: _muted)),
+        if (_moreWork && !_loadingWork && !_workError)
+          TextButton(
+            onPressed: () => _loadWork(more: true),
+            child: Text(AppStrings.t('workHistoryMore')),
           ),
       ],
     );

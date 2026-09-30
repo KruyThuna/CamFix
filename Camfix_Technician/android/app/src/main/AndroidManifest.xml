@@ -1,8 +1,23 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Every API call. Previously declared only in src/debug, so release and
+         profile builds could not reach the backend at all. -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+
+    <!-- geolocator: LocationReporter shares the technician's position so
+         customers can find them. Without these declared, the runtime request
+         in device_location.dart can never be granted. -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+
+    <!-- image_picker: taking a profile photo with the camera. -->
+    <uses-permission android:name="android.permission.CAMERA"/>
+
     <application
-        android:label="camfix_technician"
+        android:label="CAM FIX Technician"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/ic_launcher"
+        android:networkSecurityConfig="@xml/network_security_config">
         <activity
             android:name=".MainActivity"
             android:exported="true"

@@ -3,15 +3,26 @@
   "configurations": [
     {
       "name": "api",
+<<<<<<< HEAD
       "runtimeExecutable": "C:\\CamV4\\CamFix\\Backend\\gradlew.bat",
+=======
+      "runtimeExecutable": "C:\\team\\Backend\\mvnw.cmd",
+>>>>>>> origin/main
       "runtimeArgs": [
         "bootRun"
       ],
+<<<<<<< HEAD
       "cwd": "C:\\CamV4\\CamFix\\Backend",
       "port": 8081,
       "autoPort": false,
       "env": {
         "SPRING_DATASOURCE_URL": "jdbc:mysql://localhost:3306/CamFix?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC",
+=======
+      "cwd": "C:\\team\\Backend",
+      "port": 8081,
+      "autoPort": false,
+      "env": {
+>>>>>>> origin/main
         "SPRING_JPA_HIBERNATE_DDL_AUTO": "update",
         "TEXTBELT_KEY": "",
         "APP_OTP_EXPOSE_CODE": "true",
@@ -33,7 +44,11 @@
         "--dart-define",
         "GOOGLE_SIGNIN_CLIENT_ID=40346879984-3duact8qmqrtj862no0tggnfh84jji7u.apps.googleusercontent.com"
       ],
+<<<<<<< HEAD
       "cwd": "C:\\CamV4\\CamFix\\Camfix_App",
+=======
+      "cwd": "C:\\team\\Camfix_App",
+>>>>>>> origin/main
       "port": 8090
     },
     {
@@ -51,7 +66,11 @@
         "--dart-define",
         "API_BASE_URL=http://localhost:8081"
       ],
+<<<<<<< HEAD
       "cwd": "C:\\CamV4\\CamFix\\Camfix_Technician",
+=======
+      "cwd": "C:\\team\\Camfix_Technician",
+>>>>>>> origin/main
       "port": 8092
     },
     {
@@ -65,7 +84,11 @@
         "5173",
         "--strictPort"
       ],
+<<<<<<< HEAD
       "cwd": "C:\\CamV4\\CamFix\\admin",
+=======
+      "cwd": "C:\\team\\admin",
+>>>>>>> origin/main
       "port": 5173
     }
   ]

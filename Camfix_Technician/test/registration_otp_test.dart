@@ -23,6 +23,10 @@ void main() {
     await tester.tap(find.text('Next: Verify identity'));
     await tester.pumpAndSettle();
     expect(find.byType(IdentityVerificationScreen), findsOneWidget);
+<<<<<<< HEAD
     
+=======
+
+>>>>>>> origin/main
   });
 }

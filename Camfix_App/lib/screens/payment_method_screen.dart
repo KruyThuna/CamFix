@@ -11,7 +11,7 @@ import 'khqr_pay_screen.dart';
 import 'payment_success_screen.dart';
 import 'payment_summary_screen.dart';
 
-enum _Method { khqr, applePay, card, paypal }
+enum _Method { khqr, card, paypal }
 
 /// Payment Method (mockup): choose how to pay, then confirm. Card needs a
 /// saved card on file first - if there isn't one, "Confirm Payment" opens
@@ -33,7 +33,7 @@ class PaymentMethodScreen extends StatefulWidget {
 }
 
 class _PaymentMethodScreenState extends State<PaymentMethodScreen> {
-  _Method _selected = _Method.applePay;
+  _Method _selected = _Method.khqr;
   bool _busy = false;
 
   /// Real Bakong KHQR - only offered when the server has merchant keys.
@@ -46,13 +46,18 @@ class _PaymentMethodScreenState extends State<PaymentMethodScreen> {
       if (!mounted || !on) return;
       setState(() {
         _khqr = true;
-        _selected = _Method.khqr;
       });
     });
   }
 
   Future<void> _confirm() async {
     if (_selected == _Method.khqr) {
+      if (!_khqr) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppStrings.t('localBankUnavailable'))),
+        );
+        return;
+      }
       await Navigator.of(context).push(MaterialPageRoute(
         builder: (_) =>
             KhqrPayScreen(booking: widget.booking, quote: widget.quote),
@@ -72,7 +77,6 @@ class _PaymentMethodScreenState extends State<PaymentMethodScreen> {
         widget.booking.id,
         widget.quote.id,
         paymentMethod: switch (_selected) {
-          _Method.applePay => 'APPLE_PAY',
           _Method.card => 'CARD',
           _Method.paypal => 'PAYPAL',
           _Method.khqr => 'KHQR',
@@ -153,22 +157,12 @@ class _PaymentMethodScreenState extends State<PaymentMethodScreen> {
                           style: TextStyle(
                               fontSize: 12.5, color: p.textSecondary)),
                       const SizedBox(height: 12),
-                      if (_khqr) ...[
-                        _methodTile(
-                          p,
-                          method: _Method.khqr,
-                          icon: Icons.qr_code_2_rounded,
-                          title: AppStrings.t('khqrTitle'),
-                          subtitle: AppStrings.t('khqrSubtitle'),
-                        ),
-                        const SizedBox(height: 10),
-                      ],
                       _methodTile(
                         p,
-                        method: _Method.applePay,
-                        icon: Icons.apple,
-                        title: AppStrings.t('applePay'),
-                        subtitle: AppStrings.t('applePaySubtitle'),
+                        method: _Method.khqr,
+                        icon: Icons.account_balance_rounded,
+                        title: AppStrings.t('localBank'),
+                        subtitle: AppStrings.t('localBankSubtitle'),
                       ),
                       const SizedBox(height: 10),
                       _methodTile(

@@ -5,6 +5,10 @@
    Tables        : 15 (see creation order below — resolves FK dependencies)
    Author note   : all timestamps use SYSUTCDATETIME() (UTC); convert to
                     Asia/Phnom_Penh (UTC+7) in the application layer.
+
+   NOT what's deployed: the backend actually runs on MySQL, with different
+   table/column names throughout. See the ADDENDUM at the end of this file
+   before running anything here against the project's real database.
    ===================================================================== */
 
 SET ANSI_NULLS ON;
@@ -466,3 +470,372 @@ SELECT c.Category_Name, p.Starting_Price, p.Description
 FROM Service_Prices p
 JOIN Service_Categories c ON c.CategoryID = p.CategoryID
 WHERE c.Category_Name = N'Air Conditioner';
+
+
+
+
+/* =====================================================================
+   ADDENDUM — what Hibernate actually expects (MySQL, not SQL Server)
+   =====================================================================
+   Everything above this line is the original SQL Server design doc. It was
+   never implemented that way: the running backend (application.properties)
+   connects to MySQL, and every com.api.entity.* class declares its own
+   table/column names via @Table/@Column - those, not the design above, are
+   what the backend actually reads and writes (naming strategy is
+   PhysicalNamingStrategyStandardImpl, so no implicit case/snake_case
+   conversion happens; a name not given explicitly is used verbatim).
+
+   The 14 tables below are that real schema - one CREATE TABLE per entity
+   that is actually wired into a repository somewhere (com.api.entity has a
+   15th class, ServiceCategory, that maps to a table but has no repository
+   ever injected anywhere - it and its table are dead code, not included
+   here). Column types/nullability/defaults are taken directly from each
+   entity's @Column annotations, cross-checked line-by-line against
+   `SHOW CREATE TABLE` for the ones that already exist live.
+
+   Four of these tables did not exist in `camfix` until this file's history:
+   job, service_price, service_quote, review - every endpoint touching one
+   500'd with "table doesn't exist" until each was added (see
+   add_job_pricing_tables.sql and add_review_table.sql, which are the files
+   actually run; this section is kept in sync with them, not a substitute).
+
+   IMPORTANT - this section describes what a table SHOULD look like to match
+   its entity, not necessarily what the live table currently IS. The other
+   10 tables already exist, but several of them still carry leftover columns
+   and foreign keys from an earlier schema iteration that the entities below
+   were never updated to match, and at least one of those leftovers is an
+   active bug, not just unused clutter:
+
+     - favorites.TechnicianID carries TWO foreign keys at once: one to
+       `technician` (what Technician.java actually maps to) and one to the
+       orphaned `technicians` table (1 unrelated leftover row). Every insert
+       must satisfy BOTH simultaneously. Confirmed live: favoriting
+       technician_id=1 succeeds only because id 1 happens to also exist in
+       the orphan table; favoriting technician_id=2 fails outright with
+       "foreign key constraint fails (FK_Favorites_Technicians ...
+       REFERENCES technicians)". This is not a hypothetical - it is actively
+       blocking the favorites feature for most technicians today.
+
+     - call_history and technician_addresses each still have their old
+       PascalCase columns (CallerID, TechnicianID, ...) alongside the
+       lowercase ones the entities actually populate (user_id,
+       technician_id, ...). The old columns are NOT NULL with no default,
+       and no entity sets them, so - given this server's sql_mode
+       (STRICT_TRANS_TABLES) - every insert into either table fails outright
+       ("Field 'CallerID' doesn't have a default value"). Confirmed by
+       column inspection, not yet reproduced through the API.
+
+     - technician_live_locations has no `id` column at all, even though
+       TechnicianLiveLocation.java declares one as its @Id
+       (@GeneratedValue(IDENTITY)). Its primary key is the legacy
+       `TechnicianID` column instead. Two services (AdminService,
+       BookingService) actively inject this repository, so this is wired-up,
+       not dead code - any .save() through it should fail on the missing
+       identity column.
+
+   None of the three are touched by this addendum or by the two .sql files
+   it references - fixing them means dropping/renaming columns and
+   constraints on tables that already hold real rows (technician has 2,
+   users has ~35), which is a different, riskier kind of change than adding
+   a table that doesn't exist yet. Flagged here for a deliberate follow-up.
+
+   The tables below are ordered so every FOREIGN KEY target already exists
+   by the time it's referenced.
+   ===================================================================== */
+
+CREATE TABLE IF NOT EXISTS category (
+    category_id    BIGINT NOT NULL AUTO_INCREMENT,
+    categoryName   VARCHAR(100) NOT NULL,
+    description    VARCHAR(500) NULL,
+    icon           VARCHAR(255) NULL,
+    PRIMARY KEY (category_id),
+    UNIQUE KEY uq_category_name (categoryName)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE IF NOT EXISTS users (
+    Userid         BIGINT NOT NULL AUTO_INCREMENT,
+    Full_name      VARCHAR(50)  NOT NULL,
+    Last_name      VARCHAR(50)  NOT NULL,
+    DateofBirth    DATE         NULL,
+    Email          VARCHAR(100) NOT NULL,
+    Phone_number   VARCHAR(100) NOT NULL,
+    Password_hash  VARCHAR(100) NOT NULL,
+    Profile_image  VARCHAR(500) NULL,
+    ROLE           VARCHAR(20)  NOT NULL,
+    STATUS         VARCHAR(20)  NOT NULL,
+    has_password         BIT NOT NULL DEFAULT 0,
+    must_change_password BIT NOT NULL DEFAULT 0,
+    created_at     DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    updated_at     DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
+    PRIMARY KEY (Userid),
+    UNIQUE KEY uq_users_email (Email),
+    UNIQUE KEY uq_users_phone (Phone_number)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 1:1 with users (UNIQUE on user_id). Also carries the admin-console fields
+-- (approval_status, photo, ...) added after the original 3 columns.
+CREATE TABLE IF NOT EXISTS technician (
+    technician_id        BIGINT NOT NULL AUTO_INCREMENT,
+    user_id               BIGINT NOT NULL,
+    category_id           BIGINT NOT NULL,
+    business_name          VARCHAR(255) NOT NULL,
+    experience_year        INT          NOT NULL,
+    description            VARCHAR(500) NULL,
+    average_rating         DECIMAL(3,2) NULL,
+    verified               BIT NOT NULL DEFAULT 0,
+    availability_status    VARCHAR(20)  NULL,
+    approval_status        VARCHAR(20)  NULL,
+    approved_at            DATETIME(6)  NULL,
+    rejection_reason       VARCHAR(500) NULL,
+    service_area           VARCHAR(255) NULL,
+    opening_hours          VARCHAR(255) NULL,
+    rating_count           INT          NULL,
+    photo                  LONGBLOB     NULL,
+    photo_content_type     VARCHAR(100) NULL,
+    lastLat                DOUBLE       NULL,
+    lastLng                DOUBLE       NULL,
+    last_location_at       DATETIME(6)  NULL,
+    created_at             DATETIME(6) NOT NULL,
+    updated_at             DATETIME(6) NOT NULL,
+    PRIMARY KEY (technician_id),
+    UNIQUE KEY uq_technician_user (user_id),
+    KEY idx_technician_category (category_id),
+    CONSTRAINT fk_technician_user
+        FOREIGN KEY (user_id) REFERENCES users (Userid),
+    CONSTRAINT fk_technician_category
+        FOREIGN KEY (category_id) REFERENCES category (category_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- UserAddress.java has no @Column annotations at all; Hibernate's implicit
+-- naming strategy uses each Java field name verbatim as the column name
+-- (PhysicalNamingStrategyStandardImpl performs no transformation on top of
+-- that), which is why these names are camelCase/mixed-case rather than the
+-- snake_case used everywhere else in this file.
+CREATE TABLE IF NOT EXISTS user_addresses (
+    id             BIGINT NOT NULL AUTO_INCREMENT,
+    userId         BIGINT       NULL,
+    address_Name   VARCHAR(255) NULL,
+    address_Line   VARCHAR(255) NULL,
+    city           VARCHAR(255) NULL,
+    province       VARCHAR(255) NULL,
+    latitude       DOUBLE       NULL,
+    longitude      DOUBLE       NULL,
+    isDefault      BIT          NULL,
+    PRIMARY KEY (id),
+    KEY idx_user_addresses_user (userId),
+    CONSTRAINT fk_user_addresses_user
+        FOREIGN KEY (userId) REFERENCES users (Userid)
+        ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS technician_addresses (
+    address_id     BIGINT NOT NULL AUTO_INCREMENT,
+    technician_id  BIGINT       NULL,
+    business_name  VARCHAR(255) NULL,
+    address_line   VARCHAR(255) NOT NULL,
+    city           VARCHAR(255) NULL,
+    province       VARCHAR(255) NULL,
+    latitude       DOUBLE       NULL,
+    longitude      DOUBLE       NULL,
+    is_default     BIT          NULL,
+    create_at      DATETIME(6)  NULL,
+    update_at      DATETIME(6)  NULL,
+    PRIMARY KEY (address_id),
+    KEY idx_technician_addresses_technician (technician_id),
+    CONSTRAINT fk_technician_addresses_technician
+        FOREIGN KEY (technician_id) REFERENCES technician (technician_id)
+        ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- TechnicianLiveLocation.java expects an auto-increment `id` primary key
+-- distinct from technician_id (which only carries a UNIQUE constraint,
+-- enforcing 1:1 without being the key itself). See the note above the
+-- ADDENDUM heading - the live table today uses technician_id AS the primary
+-- key instead, with no `id` column, which does not match this.
+CREATE TABLE IF NOT EXISTS technician_live_locations (
+    id             BIGINT NOT NULL AUTO_INCREMENT,
+    technician_id  BIGINT NOT NULL,
+    latitude       DOUBLE NOT NULL,
+    longitude      DOUBLE NOT NULL,
+    accuracy       DOUBLE NULL,
+    created_at     DATETIME(6) NULL,
+    last_update    DATETIME(6) NULL,
+    PRIMARY KEY (id),
+    UNIQUE KEY uq_technician_live_locations_technician (technician_id),
+    KEY idx_technician_live_locations_last_update (last_update),
+    CONSTRAINT fk_technician_live_locations_technician
+        FOREIGN KEY (technician_id) REFERENCES technician (technician_id)
+        ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- See the note above the ADDENDUM heading - the live `favorites` table
+-- today also has a second, conflicting foreign key to the orphaned
+-- `technicians` table that is not shown here and actively breaks inserts.
+CREATE TABLE IF NOT EXISTS favorites (
+    FavoriteID     BIGINT NOT NULL AUTO_INCREMENT,
+    UserID         BIGINT NOT NULL,
+    TechnicianID   BIGINT NOT NULL,
+    Created_At     DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    PRIMARY KEY (FavoriteID),
+    UNIQUE KEY UQ_Favorites_User_Technician (UserID, TechnicianID),
+    KEY idx_favorites_technician (TechnicianID),
+    CONSTRAINT fk_favorites_user
+        FOREIGN KEY (UserID) REFERENCES users (Userid)
+        ON DELETE CASCADE,
+    CONSTRAINT fk_favorites_technician
+        FOREIGN KEY (TechnicianID) REFERENCES technician (technician_id)
+        ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS notification (
+    notification_id  BIGINT NOT NULL AUTO_INCREMENT,
+    user_id           BIGINT NOT NULL,
+    title             VARCHAR(150) NOT NULL,
+    message           TEXT         NOT NULL,
+    title_km          VARCHAR(150) NULL,
+    message_km        TEXT         NULL,
+    type              VARCHAR(40)  NULL,
+    job_id            BIGINT       NULL,
+    is_read           BIT NULL DEFAULT 0,
+    created_at        DATETIME(6)  NULL,
+    PRIMARY KEY (notification_id),
+    KEY idx_notification_user (user_id),
+    CONSTRAINT fk_notification_user
+        FOREIGN KEY (user_id) REFERENCES users (Userid)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE IF NOT EXISTS password_reset_token (
+    resetId          BIGINT NOT NULL AUTO_INCREMENT,
+    userId            BIGINT       NULL,
+    token             VARCHAR(255) NULL,
+    expires_at_date   DATETIME(6)  NULL,
+    is_used           DATETIME(6)  NULL,
+    create_at         DATETIME(6)  NULL,
+    PRIMARY KEY (resetId),
+    KEY idx_password_reset_token_user (userId),
+    CONSTRAINT fk_password_reset_token_user
+        FOREIGN KEY (userId) REFERENCES users (Userid)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- See the note above the ADDENDUM heading - the live `call_history` table
+-- today also has legacy CallerID/TechnicianID columns not shown here,
+-- NOT NULL with no default, that this entity never populates.
+CREATE TABLE IF NOT EXISTS call_history (
+    call_id           BIGINT NOT NULL AUTO_INCREMENT,
+    user_id            BIGINT      NOT NULL,
+    technician_id      BIGINT      NOT NULL,
+    call_status        VARCHAR(20) NOT NULL,
+    started_at         DATETIME(6) NULL,
+    ended_at           DATETIME(6) NULL,
+    duration_seconds   INT NULL DEFAULT 0,
+    created_at         DATETIME(6) NULL,
+    PRIMARY KEY (call_id),
+    KEY idx_call_history_user (user_id),
+    KEY idx_call_history_technician (technician_id),
+    CONSTRAINT fk_call_history_user
+        FOREIGN KEY (user_id) REFERENCES users (Userid),
+    CONSTRAINT fk_call_history_technician
+        FOREIGN KEY (technician_id) REFERENCES technician (technician_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS job (
+    id                 BIGINT NOT NULL AUTO_INCREMENT,
+    customer_name      VARCHAR(255)  NOT NULL,
+    customer_phone     VARCHAR(255)  NOT NULL,
+    customer_user_id   BIGINT        NULL,
+    category           VARCHAR(255)  NOT NULL,
+    description        VARCHAR(2000) NOT NULL,
+    address            VARCHAR(255)  NULL,
+    lat                DOUBLE        NULL,
+    lng                DOUBLE        NULL,
+    status             VARCHAR(20)   NOT NULL,
+    booking_type       VARCHAR(20)   NULL,
+    starting_price     DOUBLE        NULL,
+    technician_id      BIGINT        NULL,
+    created_at         DATETIME(6)   NULL,
+    scheduled_at       DATETIME(6)   NULL,
+    assigned_at        DATETIME(6)   NULL,
+    completed_at       DATETIME(6)   NULL,
+    notes              VARCHAR(2000) NULL,
+    PRIMARY KEY (id),
+    KEY idx_job_technician_id (technician_id),
+    KEY idx_job_status (status),
+    KEY idx_job_customer_user_id (customer_user_id),
+    CONSTRAINT fk_job_technician
+        FOREIGN KEY (technician_id) REFERENCES technician (technician_id)
+        ON DELETE SET NULL,
+    CONSTRAINT fk_job_customer_user
+        FOREIGN KEY (customer_user_id) REFERENCES users (Userid)
+        ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE IF NOT EXISTS review (
+    id                BIGINT NOT NULL AUTO_INCREMENT,
+    job_id            BIGINT      NOT NULL,
+    customer_user_id  BIGINT      NOT NULL,
+    technician_id     BIGINT      NOT NULL,
+    rating            INT         NOT NULL,
+    comment           VARCHAR(1000) NULL,
+    created_at        DATETIME(6) NULL,
+    updated_at        DATETIME(6) NULL,
+    PRIMARY KEY (id),
+    UNIQUE KEY UQ_Review_Job (job_id),
+    KEY idx_review_technician_id (technician_id),
+    KEY idx_review_customer_user_id (customer_user_id),
+    CONSTRAINT fk_review_job
+        FOREIGN KEY (job_id) REFERENCES job (id)
+        ON DELETE CASCADE,
+    CONSTRAINT fk_review_customer_user
+        FOREIGN KEY (customer_user_id) REFERENCES users (Userid)
+        ON DELETE RESTRICT,
+    CONSTRAINT fk_review_technician
+        FOREIGN KEY (technician_id) REFERENCES technician (technician_id)
+        ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE IF NOT EXISTS service_price (
+    id              BIGINT NOT NULL AUTO_INCREMENT,
+    category_id     BIGINT       NOT NULL,
+    starting_price  DOUBLE       NOT NULL,
+    description     VARCHAR(255) NULL,
+    created_at      DATETIME(6)  NULL,
+    updated_at      DATETIME(6)  NULL,
+    PRIMARY KEY (id),
+    UNIQUE KEY uq_service_price_category (category_id),
+    CONSTRAINT fk_service_price_category
+        FOREIGN KEY (category_id) REFERENCES category (category_id)
+        ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE IF NOT EXISTS service_quote (
+    id               BIGINT NOT NULL AUTO_INCREMENT,
+    job_id           BIGINT       NOT NULL,
+    technician_id    BIGINT       NOT NULL,
+    version          INT          NOT NULL,
+    inspection_fee   DOUBLE       NOT NULL DEFAULT 0,
+    labor_cost       DOUBLE       NOT NULL DEFAULT 0,
+    parts_cost       DOUBLE       NOT NULL DEFAULT 0,
+    travel_fee       DOUBLE       NOT NULL DEFAULT 0,
+    total_amount     DOUBLE       NOT NULL DEFAULT 0,
+    reason           VARCHAR(500) NULL,
+    status           VARCHAR(20)  NOT NULL,
+    created_at       DATETIME(6)  NULL,
+    updated_at       DATETIME(6)  NULL,
+    PRIMARY KEY (id),
+    KEY idx_service_quote_job_id (job_id),
+    KEY idx_service_quote_technician_id (technician_id),
+    CONSTRAINT fk_service_quote_job
+        FOREIGN KEY (job_id) REFERENCES job (id)
+        ON DELETE CASCADE,
+    CONSTRAINT fk_service_quote_technician
+        FOREIGN KEY (technician_id) REFERENCES technician (technician_id)
+        ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+/* =====================================================================
+   Tables that exist live but that NO entity maps to - orphaned leftovers
+   from earlier iterations, not part of the schema above, not touched by
+   anything in this addendum:
+     technicians, notifications, service_categories, password_reset_tokens,
+     user_live_locations, reviews (plural - unrelated to `review` above)
+   ===================================================================== */

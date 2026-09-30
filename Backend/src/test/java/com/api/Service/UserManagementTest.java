@@ -1,10 +1,10 @@
-package com.api.Service;
+package com.api.service;
 
-import com.api.Entity.Users;
-import com.api.Repo.UserRepository;
-import com.api.Repo.TechnicianRepository;
-import com.api.Repo.JobRepository;
-import com.api.Security.JwtService;
+import com.api.entity.Users;
+import com.api.repository.UserRepository;
+import com.api.repository.TechnicianRepository;
+import com.api.repository.JobRepository;
+import com.api.security.JwtService;
 import com.api.exception.ForbiddenException;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -19,8 +19,9 @@ class UserManagementTest {
     private final JwtService jwt = mock(JwtService.class);
     private final PasswordEncoder passwords = mock(PasswordEncoder.class);
     private final JobRepository jobs = mock(JobRepository.class);
+    private final AdminService admin = mock(AdminService.class);
     private final UserManagementService service = new UserManagementService(
-            users, technicians, jwt, passwords, mock(AdminService.class), jobs);
+            users, technicians, jwt, passwords, admin, jobs);
 
     private Users user(long id, String role) {
         Users u = new Users(); u.setUserId(id); u.setRole(role); u.setStatus("ACTIVE");
@@ -98,6 +99,23 @@ class UserManagementTest {
         assertThrows(ForbiddenException.class, () -> service.update("Bearer token", 3L,
                 new UserManagementService.EditUser("No", "Change", "012345679")));
         verify(users, never()).delete(main);
+    }
+
+    @Test void passwordResetPreservesAdminHierarchy() {
+        actor("ADMIN");
+        for (Users target : List.of(user(1, "ADMIN"), user(2, "MAIN_ADMIN"), user(3, "ADMIN"))) {
+            when(users.findById(target.getUserId())).thenReturn(Optional.of(target));
+            assertThrows(ForbiddenException.class,
+                    () -> service.resetPassword("Bearer token", target.getUserId()));
+        }
+        verifyNoInteractions(admin);
+        when(users.findById(4L)).thenReturn(Optional.of(user(4, "CUSTOMER")));
+        service.resetPassword("Bearer token", 4L);
+        verify(admin).resetUserPassword(4L);
+        actor("MAIN_ADMIN");
+        service.resetPassword("Bearer token", 3L);
+        verify(admin).resetUserPassword(3L);
+        assertThrows(ForbiddenException.class, () -> service.resetPassword("Bearer token", 2L));
     }
 
     @Test void adminCannotEditOtherAdmins() {

@@ -271,9 +271,10 @@ class _PaymentSummaryScreenState extends State<PaymentSummaryScreen> {
                     Icon(Icons.shield_outlined,
                         size: 14, color: p.textSecondary),
                     const SizedBox(width: 6),
-                    Text(AppStrings.t('paymentsSecureNote'),
-                        style:
-                            TextStyle(fontSize: 11.5, color: p.textSecondary)),
+                    Flexible(
+                        child: Text(AppStrings.t('paymentsSecureNote'),
+                            style: TextStyle(
+                                fontSize: 11.5, color: p.textSecondary))),
                   ],
                 ),
                 const SizedBox(height: 24),
@@ -315,11 +316,13 @@ class _PaymentSummaryScreenState extends State<PaymentSummaryScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label,
-              style: TextStyle(
-                  fontSize: bold ? 15 : 13.5,
-                  fontWeight: bold ? FontWeight.w800 : FontWeight.w500,
-                  color: bold ? p.textPrimary : p.textSecondary)),
+          Expanded(
+              child: Text(label,
+                  style: TextStyle(
+                      fontSize: bold ? 15 : 13.5,
+                      fontWeight: bold ? FontWeight.w800 : FontWeight.w500,
+                      color: bold ? p.textPrimary : p.textSecondary))),
+          const SizedBox(width: 12),
           Text('\$${amount.toStringAsFixed(2)}',
               style: TextStyle(
                   fontSize: bold ? 17 : 14,

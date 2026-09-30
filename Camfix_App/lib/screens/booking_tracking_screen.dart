@@ -63,6 +63,7 @@ class _BookingTrackingScreenState extends State<BookingTrackingScreen>
 
   /// The recorded payment, once the customer has paid.
   Payment? _payment;
+  bool _openingPayment = false;
   final _map = MapController();
 
   @override
@@ -127,6 +128,39 @@ class _BookingTrackingScreenState extends State<BookingTrackingScreen>
       }
     } catch (e) {
       if (mounted) setState(() => _loadError = e.toString());
+    }
+  }
+
+  Future<void> _resumePayment() async {
+    if (_openingPayment) return;
+    setState(() => _openingPayment = true);
+    try {
+      final booking = await BookingsApi.instance.getOne(_id!);
+      final payment = await BookingsApi.instance.payment(_id!);
+      final quotes = await BookingsApi.instance.quotes(_id!);
+      if (!mounted) return;
+      setState(() {
+        _booking = booking;
+        _payment = payment;
+        _quotes = quotes;
+      });
+      if (payment != null ||
+          !const {'IN_PROGRESS', 'COMPLETED'}.contains(booking.status) ||
+          !quotes.any((q) => q.isAccepted)) {
+        return;
+      }
+      final quote = quotes.lastWhere((q) => q.isAccepted);
+      await Navigator.of(context).push(MaterialPageRoute(
+        builder: (_) => PaymentSummaryScreen(booking: booking, quote: quote),
+      ));
+      if (mounted) await _load();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(e.toString())));
+      }
+    } finally {
+      if (mounted) setState(() => _openingPayment = false);
     }
   }
 
@@ -1071,6 +1105,21 @@ class _BookingTrackingScreenState extends State<BookingTrackingScreen>
                   color: AppColors.primaryBlue)),
         ]),
         const SizedBox(height: 6),
+        if (pay == null &&
+            const {'IN_PROGRESS', 'COMPLETED'}.contains(b.status))
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton.icon(
+              onPressed: _openingPayment ? null : _resumePayment,
+              icon: _openingPayment
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2))
+                  : const Icon(Icons.payment),
+              label: Text(AppStrings.t('payNow')),
+            ),
+          ),
         Align(
           alignment: Alignment.centerRight,
           child: TextButton.icon(

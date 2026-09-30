@@ -1,4 +1,5 @@
 import '../models/review.dart';
+import '../models/completed_work.dart';
 import '../models/service_provider.dart';
 import '../models/technician_service_listing.dart';
 import 'api_client.dart';
@@ -10,6 +11,17 @@ class TechniciansApi {
   static final TechniciansApi instance = TechniciansApi._();
 
   final _client = ApiClient.instance;
+
+  Future<List<CompletedWork>> completedWork(int technicianId,
+      {int page = 0}) async {
+    final raw = await _client.getJsonList(
+        '/api/technicians/$technicianId/completed-work?page=$page',
+        withAuth: false);
+    return raw
+        .whereType<Map<String, dynamic>>()
+        .map(CompletedWork.fromJson)
+        .toList();
+  }
 
   Future<List<ServiceProvider>> list({String? category}) async {
     final path = category == null || category.isEmpty
@@ -29,9 +41,8 @@ class TechniciansApi {
   }
 
   Future<List<Review>> reviews(int technicianId) async {
-    final raw = await _client.getJsonList(
-        '/api/technicians/$technicianId/reviews',
-        withAuth: false);
+    final raw = await _client
+        .getJsonList('/api/technicians/$technicianId/reviews', withAuth: false);
     return raw.whereType<Map<String, dynamic>>().map(Review.fromJson).toList();
   }
 
