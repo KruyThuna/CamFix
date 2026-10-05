@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'app_settings.dart';
+import 'services/api_config.dart';
 import 'services/connectivity_service.dart';
 import 'services/profile_image.dart';
 import 'services/saved_card_store.dart';
@@ -44,6 +45,7 @@ Future<void> main() async {
   // Restore the saved language / theme before the first frame so the app
   // opens in the language the user last chose.
   await AppSettings.instance.load();
+  await ApiConfig.load(); // restore saved server endpoint
   await ProfileImage.instance.load(); // restore the saved profile photo
   await SavedCardStore.instance.load(); // restore the saved payment card
   await SearchHistoryStore.instance.load(); // restore recent search queries

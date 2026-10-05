@@ -1,0 +1,9 @@
+# Copy this file to %USERPROFILE%\.cloudflared\config.yml.
+# Keep the real credentials JSON outside this repository.
+tunnel: dbdca579-55cf-4120-9396-37bd0ef1f2ad
+credentials-file: C:\Users\YOUR_USERNAME\.cloudflared\dbdca579-55cf-4120-9396-37bd0ef1f2ad.json
+
+ingress:
+  - hostname: api.camapp.store
+    service: http://127.0.0.1:8081
+  - service: http_status:404

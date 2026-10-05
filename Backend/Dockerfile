@@ -8,6 +8,7 @@ WORKDIR /app
 # change doesn't re-download the world.
 COPY gradlew settings.gradle.kts build.gradle.kts ./
 COPY gradle ./gradle
+RUN chmod +x gradlew
 RUN ./gradlew --no-daemon dependencies || true
 
 COPY src ./src

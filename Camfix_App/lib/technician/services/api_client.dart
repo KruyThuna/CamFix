@@ -1,20 +1,15 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
+import '../../services/api_config.dart';
 import 'token_store.dart';
 
 /// Thin wrapper around the CAM FIX Spring Boot API.
 ///
-/// Base URL resolution (override with `--dart-define=API_BASE_URL=...`):
-///  - Android emulator  -> http://10.0.2.2:8081  (host loopback alias)
-///  - iOS sim / desktop / web -> http://localhost:8081
-///  - REAL Android/iOS device -> MUST pass your PC's LAN IP, e.g.
-///    `flutter run --dart-define=API_BASE_URL=http://192.168.x.x:8081`
-///    (10.0.2.2 / localhost do not exist on a physical phone — the request
-///    just hangs and you get "Cannot reach the server. TimeoutException".)
+/// Uses the public API configured by [ApiConfig]. Development environments can
+/// override it with `--dart-define=API_BASE_URL=...`.
 class ApiException implements Exception {
   ApiException(this.statusCode, this.message);
   final int statusCode;
@@ -35,16 +30,7 @@ class ApiClient {
   ApiClient._();
   static final ApiClient instance = ApiClient._();
 
-  static const String _override =
-      String.fromEnvironment('API_BASE_URL', defaultValue: '');
-
-  String get baseUrl {
-    if (_override.isNotEmpty) return _override;
-    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
-      return 'http://10.0.2.2:8081';
-    }
-    return 'http://localhost:8081';
-  }
+  String get baseUrl => ApiConfig.baseUrl;
 
   final http.Client _http = http.Client();
 
@@ -112,13 +98,16 @@ class ApiClient {
       request.headers['Authorization'] = 'Bearer $token';
     }
     if (fields != null) request.fields.addAll(fields);
-    request.files.add(http.MultipartFile.fromBytes(
-      fieldName,
-      bytes,
-      filename: filename,
-      contentType:
-          contentType == null ? null : http.MediaType.parse(contentType),
-    ));
+    request.files.add(
+      http.MultipartFile.fromBytes(
+        fieldName,
+        bytes,
+        filename: filename,
+        contentType: contentType == null
+            ? null
+            : http.MediaType.parse(contentType),
+      ),
+    );
 
     final http.StreamedResponse streamed;
     try {
@@ -135,14 +124,17 @@ class ApiClient {
       try {
         final decoded = jsonDecode(res.body);
         if (decoded is Map<String, dynamic>) json = decoded;
-      } catch (_) {/* non-JSON body */}
+      } catch (_) {
+        /* non-JSON body */
+      }
     }
     if (res.statusCode >= 200 && res.statusCode < 300) return json;
-    final msg = (json['message'] ??
-            json['error'] ??
-            res.reasonPhrase ??
-            'Request failed')
-        .toString();
+    final msg =
+        (json['message'] ??
+                json['error'] ??
+                res.reasonPhrase ??
+                'Request failed')
+            .toString();
     throw ApiException(res.statusCode, msg);
   }
 
@@ -161,29 +153,25 @@ class ApiClient {
     String path,
     Map<String, dynamic> body, {
     bool withAuth = false,
-  }) =>
-      _send('POST', path, body: body, withAuth: withAuth);
+  }) => _send('POST', path, body: body, withAuth: withAuth);
 
   Future<Map<String, dynamic>> putJson(
     String path,
     Map<String, dynamic> body, {
     bool withAuth = true,
-  }) =>
-      _send('PUT', path, body: body, withAuth: withAuth);
+  }) => _send('PUT', path, body: body, withAuth: withAuth);
 
   Future<Map<String, dynamic>> patchJson(
     String path,
     Map<String, dynamic> body, {
     bool withAuth = true,
-  }) =>
-      _send('PATCH', path, body: body, withAuth: withAuth);
+  }) => _send('PATCH', path, body: body, withAuth: withAuth);
 
   Future<Map<String, dynamic>> deleteJson(
     String path, {
     Map<String, dynamic>? body,
     bool withAuth = true,
-  }) =>
-      _send('DELETE', path, body: body, withAuth: withAuth);
+  }) => _send('DELETE', path, body: body, withAuth: withAuth);
 
   /// `ttl` > `Duration.zero` serves a cached response instantly if it's
   /// still fresh, and otherwise revalidates with `If-None-Match` (a 304
@@ -196,8 +184,7 @@ class ApiClient {
     String path, {
     bool withAuth = true,
     Duration ttl = Duration.zero,
-  }) =>
-      _send('GET', path, withAuth: withAuth, ttl: ttl);
+  }) => _send('GET', path, withAuth: withAuth, ttl: ttl);
 
   Future<Map<String, dynamic>> _send(
     String method,
@@ -224,10 +211,16 @@ class ApiClient {
       final f = switch (method) {
         'GET' => _http.get(uri, headers: headers),
         'PUT' => _http.put(uri, headers: headers, body: jsonEncode(body ?? {})),
-        'PATCH' =>
-          _http.patch(uri, headers: headers, body: jsonEncode(body ?? {})),
-        'DELETE' =>
-          _http.delete(uri, headers: headers, body: jsonEncode(body ?? {})),
+        'PATCH' => _http.patch(
+          uri,
+          headers: headers,
+          body: jsonEncode(body ?? {}),
+        ),
+        'DELETE' => _http.delete(
+          uri,
+          headers: headers,
+          body: jsonEncode(body ?? {}),
+        ),
         _ => _http.post(uri, headers: headers, body: jsonEncode(body ?? {})),
       };
       res = await f.timeout(const Duration(seconds: 15));
@@ -235,18 +228,19 @@ class ApiClient {
       if (cached != null) return cached.body; // stale beats nothing
       throw ApiException(
         0,
-        'The server at $baseUrl did not respond. On a real device run the app '
-        "with --dart-define=API_BASE_URL=http://<your-PC-IP>:8081 (and check "
-        'the PC and phone share a Wi-Fi network / the firewall allows port 8081).',
+        'Server at $baseUrl timed out. Tap "Server URL" to check settings.',
       );
     } catch (e) {
       if (cached != null) return cached.body;
-      throw ApiException(0, 'Cannot reach the server at $baseUrl. $e');
+      throw ApiException(0, 'Cannot reach server at $baseUrl: $e');
     }
 
     if (res.statusCode == 304 && cached != null) {
-      _cache[cacheKey] =
-          _CacheEntry(cached.body, cached.etag, DateTime.now().add(ttl));
+      _cache[cacheKey] = _CacheEntry(
+        cached.body,
+        cached.etag,
+        DateTime.now().add(ttl),
+      );
       return cached.body;
     }
 
@@ -255,22 +249,28 @@ class ApiClient {
       try {
         final decoded = jsonDecode(res.body);
         if (decoded is Map<String, dynamic>) json = decoded;
-      } catch (_) {/* non-JSON body */}
+      } catch (_) {
+        /* non-JSON body */
+      }
     }
 
     if (res.statusCode >= 200 && res.statusCode < 300) {
       if (cacheable) {
-        _cache[cacheKey] =
-            _CacheEntry(json, res.headers['etag'], DateTime.now().add(ttl));
+        _cache[cacheKey] = _CacheEntry(
+          json,
+          res.headers['etag'],
+          DateTime.now().add(ttl),
+        );
       }
       return json;
     }
 
-    final msg = (json['message'] ??
-            json['error'] ??
-            res.reasonPhrase ??
-            'Request failed')
-        .toString();
+    final msg =
+        (json['message'] ??
+                json['error'] ??
+                res.reasonPhrase ??
+                'Request failed')
+            .toString();
     throw ApiException(res.statusCode, msg);
   }
 }

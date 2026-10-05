@@ -1,20 +1,15 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
+import 'api_config.dart';
 import 'token_store.dart';
 
 /// Thin wrapper around the CAM FIX Spring Boot API.
 ///
-/// Base URL resolution (override with `--dart-define=API_BASE_URL=...`):
-///  - Android emulator  -> http://10.0.2.2:8081  (host loopback alias)
-///  - iOS sim / desktop / web -> http://localhost:8081
-///  - REAL Android/iOS device -> MUST pass your PC's LAN IP, e.g.
-///    `flutter run --dart-define=API_BASE_URL=http://192.168.x.x:8081`
-///    (10.0.2.2 / localhost do not exist on a physical phone — the request
-///    just hangs and you get "Cannot reach the server. TimeoutException".)
+/// Uses the public API configured by [ApiConfig]. Development environments can
+/// override it with `--dart-define=API_BASE_URL=...`.
 class ApiException implements Exception {
   ApiException(this.statusCode, this.message);
   final int statusCode;
@@ -27,16 +22,7 @@ class ApiClient {
   ApiClient._();
   static final ApiClient instance = ApiClient._();
 
-  static const String _override =
-      String.fromEnvironment('API_BASE_URL', defaultValue: '');
-
-  String get baseUrl {
-    if (_override.isNotEmpty) return _override;
-    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
-      return 'http://10.0.2.2:8081';
-    }
-    return 'http://localhost:8081';
-  }
+  String get baseUrl => ApiConfig.baseUrl;
 
   final http.Client _http = http.Client();
 
@@ -55,34 +41,25 @@ class ApiClient {
     String path,
     Map<String, dynamic> body, {
     bool withAuth = false,
-  }) =>
-      _send('POST', path, body: body, withAuth: withAuth);
+  }) => _send('POST', path, body: body, withAuth: withAuth);
 
   Future<Map<String, dynamic>> putJson(
     String path,
     Map<String, dynamic> body, {
     bool withAuth = true,
-  }) =>
-      _send('PUT', path, body: body, withAuth: withAuth);
+  }) => _send('PUT', path, body: body, withAuth: withAuth);
 
-  Future<Map<String, dynamic>> getJson(
-    String path, {
-    bool withAuth = true,
-  }) =>
+  Future<Map<String, dynamic>> getJson(String path, {bool withAuth = true}) =>
       _send('GET', path, withAuth: withAuth);
 
   Future<Map<String, dynamic>> deleteJson(
     String path, {
     bool withAuth = true,
-  }) =>
-      _send('DELETE', path, withAuth: withAuth);
+  }) => _send('DELETE', path, withAuth: withAuth);
 
   /// GET a JSON *array* endpoint. Non-2xx throws [ApiException] with the
   /// backend's `{"message": ...}` when present.
-  Future<List<dynamic>> getJsonList(
-    String path, {
-    bool withAuth = true,
-  }) async {
+  Future<List<dynamic>> getJsonList(String path, {bool withAuth = true}) async {
     final uri = Uri.parse('$baseUrl$path');
     final headers = await _headers(withAuth: withAuth);
     final http.Response res;
@@ -104,7 +81,9 @@ class ApiClient {
     try {
       final j = jsonDecode(res.body);
       if (j is Map && j['message'] != null) msg = j['message'].toString();
-    } catch (_) {/* non-JSON body */}
+    } catch (_) {
+      /* non-JSON body */
+    }
     throw ApiException(res.statusCode, msg);
   }
 
@@ -128,12 +107,13 @@ class ApiClient {
     } on TimeoutException {
       throw ApiException(
         0,
-        'The server at $baseUrl did not respond. On a real device run the app '
-        "with --dart-define=API_BASE_URL=http://<your-PC-IP>:8081 (and check "
-        'the PC and phone share a Wi-Fi network / the firewall allows port 8081).',
+        'Server at $baseUrl timed out. Tap "Server URL" below to switch servers.',
       );
     } catch (e) {
-      throw ApiException(0, 'Cannot reach the server at $baseUrl. $e');
+      throw ApiException(
+        0,
+        'Cannot reach server at $baseUrl. Tap "Server URL" to check settings.',
+      );
     }
 
     Map<String, dynamic> json = const {};
@@ -141,13 +121,18 @@ class ApiClient {
       try {
         final decoded = jsonDecode(res.body);
         if (decoded is Map<String, dynamic>) json = decoded;
-      } catch (_) {/* non-JSON body */}
+      } catch (_) {
+        /* non-JSON body */
+      }
     }
 
     if (res.statusCode >= 200 && res.statusCode < 300) return json;
 
     final msg =
-        (json['message'] ?? json['error'] ?? res.reasonPhrase ?? 'Request failed')
+        (json['message'] ??
+                json['error'] ??
+                res.reasonPhrase ??
+                'Request failed')
             .toString();
     throw ApiException(res.statusCode, msg);
   }

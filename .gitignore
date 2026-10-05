@@ -1,0 +1,32 @@
+# Environment secrets
+.env
+*.env
+*.pem
+*.json.key
+
+# Cloudflare & runtime logs
+.runtime/
+.cloudflared/
+*.log
+*.err
+*.pid
+
+# APK binaries (built by CI/CD)
+*.apk
+Camfix_Latest.apk
+
+# Node / Admin
+admin/node_modules/
+admin/dist/
+
+# Flutter
+Camfix_App/build/
+Camfix_App/.dart_tool/
+Camfix_App/.flutter-plugins
+Camfix_App/.flutter-plugins-dependencies
+Camfix_App/test/failures/
+
+# Backend & Gradle
+Backend/build/
+Backend/.gradle/
+.gradle/

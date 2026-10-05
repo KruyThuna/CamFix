@@ -181,14 +181,14 @@ class _SelfieCameraScreenState extends State<SelfieCameraScreen>
                                   child: CameraPreview(
                                     _camera!,
                                     child: const IgnorePointer(
-                                      child: const Center(
-                                        child: const FractionallySizedBox(
+                                      child: Center(
+                                        child: FractionallySizedBox(
                                           widthFactor: .68,
                                           heightFactor: .86,
-                                          child: const DecoratedBox(
-                                            decoration: const ShapeDecoration(
-                                              shape: const OvalBorder(
-                                                side: const BorderSide(
+                                          child: DecoratedBox(
+                                            decoration: ShapeDecoration(
+                                              shape: OvalBorder(
+                                                side: BorderSide(
                                                   color: Colors.white70,
                                                   width: 2,
                                                 ),

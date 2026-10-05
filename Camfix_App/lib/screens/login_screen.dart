@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+
 import '../l10n/app_strings.dart';
 import '../services/api_client.dart';
+import '../services/api_config.dart';
 import '../services/auth_api.dart';
 import '../theme/app_theme.dart';
 import '../widgets/app_buttons.dart';
@@ -49,10 +51,105 @@ class _LoginScreenState extends State<LoginScreen> {
       if (!mounted) return;
       goToDashboardAfterLogin(context);
     } on ApiException catch (e) {
-      _snack(e.message); // e.g. "Invalid email or password"
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            content: Text(e.message),
+            action: SnackBarAction(
+              label: 'Server URL',
+              textColor: AppColors.cyan,
+              onPressed: _showServerDialog,
+            ),
+            duration: const Duration(seconds: 8),
+          ),
+        );
     } finally {
       if (mounted) setState(() => _loading = false);
     }
+  }
+
+  void _showServerDialog() {
+    final controller = TextEditingController(text: ApiConfig.baseUrl);
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Server Connection'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Backend server endpoint for this phone:',
+              style: TextStyle(fontSize: 13, color: Colors.black87),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: controller,
+              decoration: const InputDecoration(
+                labelText: 'Backend URL',
+                hintText: 'https://...',
+                border: OutlineInputBorder(),
+                isDense: true,
+              ),
+            ),
+            const SizedBox(height: 10),
+            const Text(
+              'Quick Presets:',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: [
+                ActionChip(
+                  label: const Text(
+                    'Live Tunnel',
+                    style: TextStyle(fontSize: 11),
+                  ),
+                  onPressed: () => controller.text = ApiConfig.liveTunnelUrl,
+                ),
+                ActionChip(
+                  label: const Text(
+                    'api.camapp.store',
+                    style: TextStyle(fontSize: 11),
+                  ),
+                  onPressed: () => controller.text = ApiConfig.domainUrl,
+                ),
+              ],
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              controller.text = ApiConfig.defaultProductionUrl;
+            },
+            child: const Text('Default'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              final nav = Navigator.of(ctx);
+              await ApiConfig.setCustomUrl(controller.text.trim());
+              nav.pop();
+              if (!mounted) return;
+              setState(() {});
+              _snack('Server updated to: ${ApiConfig.baseUrl}');
+            },
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -82,14 +179,17 @@ class _LoginScreenState extends State<LoginScreen> {
               // Form fades + slides up just after the header animates in.
               TweenAnimationBuilder<double>(
                 tween: Tween(
-                    begin: MediaQuery.disableAnimationsOf(context) ? 1 : 0,
-                    end: 1),
+                  begin: MediaQuery.disableAnimationsOf(context) ? 1 : 0,
+                  end: 1,
+                ),
                 duration: const Duration(milliseconds: 700),
                 curve: const Interval(.35, 1, curve: Curves.easeOutCubic),
                 builder: (context, t, child) => Opacity(
                   opacity: t,
                   child: Transform.translate(
-                      offset: Offset(0, 24 * (1 - t)), child: child),
+                    offset: Offset(0, 24 * (1 - t)),
+                    child: child,
+                  ),
                 ),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -123,8 +223,9 @@ class _LoginScreenState extends State<LoginScreen> {
                       Align(
                         alignment: Alignment.centerRight,
                         child: TextButton(
-                          onPressed: () => Navigator.of(context)
-                              .pushNamed('/forgot-password'),
+                          onPressed: () =>
+                              Navigator.of(context)
+                                  .pushNamed('/forgot-password'),
                           style: TextButton.styleFrom(
                             padding: EdgeInsets.zero,
                             minimumSize: const Size(0, 0),
@@ -156,18 +257,22 @@ class _LoginScreenState extends State<LoginScreen> {
                       Row(
                         children: [
                           Expanded(
-                              child: Divider(
-                                  color:
-                                      AppColors.white.withValues(alpha: 0.4))),
+                            child: Divider(
+                              color: AppColors.white.withValues(alpha: 0.4),
+                            ),
+                          ),
                           Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 12),
-                            child:
-                                Text(AppStrings.t('or'), style: AppText.body),
+                            child: Text(
+                              AppStrings.t('or'),
+                              style: AppText.body,
+                            ),
                           ),
                           Expanded(
-                              child: Divider(
-                                  color:
-                                      AppColors.white.withValues(alpha: 0.4))),
+                            child: Divider(
+                              color: AppColors.white.withValues(alpha: 0.4),
+                            ),
+                          ),
                         ],
                       ),
                       const SizedBox(height: 18),
@@ -191,8 +296,10 @@ class _LoginScreenState extends State<LoginScreen> {
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Text(AppStrings.t('dontHaveAccount'),
-                                style: AppText.body),
+                            Text(
+                              AppStrings.t('dontHaveAccount'),
+                              style: AppText.body,
+                            ),
                             GestureDetector(
                               onTap: () =>
                                   Navigator.of(context).pushNamed('/signup'),
@@ -209,7 +316,26 @@ class _LoginScreenState extends State<LoginScreen> {
                           ],
                         ),
                       ),
-                      const SizedBox(height: 32),
+                      const SizedBox(height: 16),
+                      Center(
+                        child: TextButton.icon(
+                          onPressed: _showServerDialog,
+                          icon: const Icon(
+                            Icons.dns_outlined,
+                            size: 14,
+                            color: Colors.white60,
+                          ),
+                          label: Text(
+                            'Server: ${ApiConfig.baseUrl}',
+                            style: const TextStyle(
+                              color: Colors.white60,
+                              fontSize: 11,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
                     ],
                   ),
                 ),

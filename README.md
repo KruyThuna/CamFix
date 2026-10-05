@@ -45,3 +45,52 @@ docker compose up --build
 
 See `Camfix_App/README.md` for the Flutter app and manual backend setup
 instructions (local MySQL, running `gradlew bootRun` directly, etc.).
+
+## Hosting the mobile API through Cloudflare Tunnel
+
+The Android APK is installed on devices; Cloudflare Tunnel publishes the
+Spring Boot API used by the app. The release app connects to
+`https://api.camapp.store`.
+
+Prerequisites:
+
+1. Delegate `camapp.store` to the two nameservers assigned on the Cloudflare
+   Overview page.
+2. In Cloudflare DNS, keep a proxied `CNAME` named `api` targeting
+   `dbdca579-55cf-4120-9396-37bd0ef1f2ad.cfargotunnel.com`.
+3. Install `cloudflared` and keep the tunnel credentials outside this repo in
+   `%USERPROFILE%\.cloudflared`.
+4. Copy `deploy/cloudflare/config.yml.example` to
+   `%USERPROFILE%\.cloudflared\config.yml`, then replace `YOUR_USERNAME`.
+5. Start MySQL on port 3306.
+
+From the repository root, build the backend and start both the API and named
+tunnel:
+
+```powershell
+.\scripts\start-hosting.ps1
+```
+
+For later starts when `Backend\build\libs\api.jar` is already current:
+
+```powershell
+.\scripts\start-hosting.ps1 -SkipBackendBuild
+```
+
+Check local API, tunnel connector, public DNS, and public HTTPS separately:
+
+```powershell
+.\scripts\check-hosting.ps1
+```
+
+Runtime logs and PID files are written to the ignored `.runtime` directory.
+Never commit `cert.pem`, the tunnel credentials JSON, database passwords, or
+JWT secrets.
+
+Build the release APK only after the public API check returns HTTP 200:
+
+```powershell
+cd .\Camfix_App
+flutter analyze --no-pub
+flutter build apk --release --no-pub
+```
