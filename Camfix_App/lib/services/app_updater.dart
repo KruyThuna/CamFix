@@ -5,7 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 /// Checks GitHub Releases for new APK builds and prompts the user to auto-update.
 abstract final class AppUpdater {
-  static const String currentVersion = '1.2.9+18';
+  static const String currentVersion = '1.3.0+19';
   static const String repoOwner = 'KruyThuna';
   static const String repoName = 'CamFix';
 
