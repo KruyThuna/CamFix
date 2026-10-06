@@ -44,15 +44,24 @@ if (-not $tunnelProc) {
 
 # 3. Health Check
 Write-Host "`n[3/3] Checking Public Domain & API Health..." -ForegroundColor Yellow
-try {
-    $res = Invoke-WebRequest -Uri "https://api.camapp.store/api/technicians" -TimeoutSec 10 -UseBasicParsing
-    if ($res.StatusCode -eq 200) {
-        Write-Host "  SUCCESS! https://api.camapp.store is LIVE and responding HTTP 200 OK." -ForegroundColor Green
-    } else {
-        Write-Host "  Public API returned status code: $($res.StatusCode)" -ForegroundColor Yellow
+$connected = $false
+$maxAttempts = 8
+for ($i = 1; $i -le $maxAttempts; $i++) {
+    try {
+        $res = Invoke-WebRequest -Uri "https://api.camapp.store/api/technicians" -TimeoutSec 6 -UseBasicParsing
+        if ($res.StatusCode -eq 200) {
+            Write-Host "  SUCCESS! https://api.camapp.store is LIVE and responding HTTP 200 OK." -ForegroundColor Green
+            $connected = $true
+            break
+        }
+    } catch {
+        Write-Host "  Waiting for Cloudflare edge routing to sync... (attempt $i/$maxAttempts)" -ForegroundColor Gray
+        Start-Sleep -Seconds 3
     }
-} catch {
-    Write-Host "  Public API check: $($_.Exception.Message)" -ForegroundColor Red
+}
+
+if (-not $connected) {
+    Write-Host "  Public API check timed out. Please run: .\scripts\check-hosting.ps1" -ForegroundColor Yellow
 }
 
 Write-Host "`n========================================" -ForegroundColor Cyan
