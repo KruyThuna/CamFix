@@ -85,11 +85,19 @@ public class KhqrService {
     }
 
     public boolean enabled() {
-        return !accountId.isEmpty() && !apiToken.isEmpty();
+        return !accountId.isEmpty();
     }
 
     public KhqrConfig config() {
         return new KhqrConfig(enabled(), merchantName);
+    }
+
+    public void markPaidIfPresent(Long jobId, Long quoteId, String method) {
+        repository.findFirstByJobIdAndQuoteIdOrderByIdDesc(jobId, quoteId).ifPresent(row -> {
+            row.setStatus("PAID");
+            row.setBakongHash("PAID_" + method + "_" + System.currentTimeMillis());
+            repository.save(row);
+        });
     }
 
     KhqrResponse create(Long jobId, Long quoteId, double amountUsd) {
@@ -122,12 +130,14 @@ public class KhqrService {
         if ("PAID".equals(row.getStatus())) {
             return new Check("PAID", true, row.getQuoteId());
         }
-        JsonNode tx = lookup(md5);
-        if (tx != null && amountMatches(tx, row.getAmount())) {
-            row.setStatus("PAID");
-            row.setBakongHash(tx.path("hash").asText(null));
-            repository.save(row);
-            return new Check("PAID", true, row.getQuoteId());
+        if (!apiToken.isEmpty()) {
+            JsonNode tx = lookup(md5);
+            if (tx != null && amountMatches(tx, row.getAmount())) {
+                row.setStatus("PAID");
+                row.setBakongHash(tx.path("hash").asText(null));
+                repository.save(row);
+                return new Check("PAID", true, row.getQuoteId());
+            }
         }
         if (LocalDateTime.now(ZONE).isAfter(row.getExpiresAt())) {
             row.setStatus("EXPIRED");

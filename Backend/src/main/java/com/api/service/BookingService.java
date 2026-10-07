@@ -284,7 +284,8 @@ public class BookingService {
         return toResponse(saved);
     }
 
-    private static final Set<String> PAYMENT_METHODS = Set.of("APPLE_PAY", "CARD", "PAYPAL");
+    private static final Set<String> PAYMENT_METHODS = Set.of(
+            "APPLE_PAY", "CARD", "PAYPAL", "KHQR", "LOCAL_BANK", "ABA", "ACLEDA");
 
     /** Mock payment for an accepted quote - no real card processor is wired
      *  up, this just records the charge. Paying again for an already-paid
@@ -313,7 +314,9 @@ public class BookingService {
         if (existing != null) {
             return toPaymentDto(existing);
         }
-        return toPaymentDto(recordPayment(job, quote, method, cardLast4));
+        Payment p = recordPayment(job, quote, method, cardLast4);
+        khqr.markPaidIfPresent(job.getId(), quote.getId(), method);
+        return toPaymentDto(p);
     }
 
     /** [base, platformFee, tax, total] for an accepted quote - the single

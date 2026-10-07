@@ -574,7 +574,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       fontWeight: FontWeight.w800,
                       color: p.textPrimary)),
               const SizedBox(height: 3),
-              Text('What needs fixing in your home today?',
+              Text(AppStrings.t('whatNeedsFixingToday'),
                   style: TextStyle(fontSize: 11, color: p.textSecondary)),
             ])));
   }
@@ -650,8 +650,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
         Row(children: [
           const Icon(Icons.near_me_rounded, size: 16, color: Color(0xFF16A873)),
           const SizedBox(width: 6),
-          const Text('TRACKING',
-              style: TextStyle(
+          Text(AppStrings.t('trackingCaps'),
+              style: const TextStyle(
                   fontSize: 10.5,
                   letterSpacing: 0.6,
                   fontWeight: FontWeight.w900,
@@ -1127,7 +1127,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         Padding(
           padding: const EdgeInsets.fromLTRB(20, 4, 20, 0),
           child: _sectionHeader(
-            'Categories',
+            AppStrings.t('categories'),
             onSeeAll: () => MainShell.of(context)?.goToTab(1),
           ),
         ),
@@ -1177,11 +1177,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
   /// Book a service / Active Job / History segmented switcher.
   Widget _buildReferenceSections() {
     final p = context.pal;
-    const fixes = [
-      ('Leaking Pipe Repair', 'Water network', Icons.water_drop_outlined),
-      ('AC Refrigerant Recharge', 'Air Conditioner', Icons.ac_unit_rounded),
-      ('Circuit Breaker Tripping', 'Electrical', Icons.bolt_rounded),
-      ('Drain Unclogging', 'Water network', Icons.plumbing_rounded),
+    final fixes = [
+      (AppStrings.t('leakingPipeRepair'), 'Water network', Icons.water_drop_outlined),
+      (AppStrings.t('acRefrigerantRecharge'), 'Air Conditioner', Icons.ac_unit_rounded),
+      (AppStrings.t('circuitBreakerTripping'), 'Electrical', Icons.bolt_rounded),
+      (AppStrings.t('drainUnclogging'), 'Water network', Icons.plumbing_rounded),
     ];
     const offerCount = 2;
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -1192,7 +1192,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           child: Column(children: [
             Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: _sectionHeader('Special Offers & Benefits',
+                child: _sectionHeader(AppStrings.t('specialOffersBenefits'),
                     onSeeAll: () => MainShell.of(context)?.goToTab(1))),
             const SizedBox(height: 12),
             SizedBox(
@@ -1236,8 +1236,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                       ),
                                       child: Text(
                                           i == 0
-                                              ? 'SEASONAL SERVICE'
-                                              : 'WHY CAM FIX',
+                                              ? AppStrings.t('seasonalService')
+                                              : AppStrings.t('whyCamFix'),
                                           style: TextStyle(
                                               fontSize: 10,
                                               fontWeight: FontWeight.w800,
@@ -1258,8 +1258,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 const SizedBox(height: 14),
                                 Text(
                                     i == 0
-                                        ? 'AC Inspection & Care'
-                                        : 'Built on real reviews',
+                                        ? AppStrings.t('acInspectionCare')
+                                        : AppStrings.t('builtOnRealReviews'),
                                     style: TextStyle(
                                         fontSize: 16,
                                         color: ink,
@@ -1267,22 +1267,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 const SizedBox(height: 8),
                                 if (i == 0)
                                   Text(
-                                      'Keep your home cool with professional AC maintenance.',
+                                      AppStrings.t('keepHomeCoolAc'),
                                       style: TextStyle(
                                           fontSize: 12,
                                           height: 1.5,
                                           color: ink))
                                 else
-                                  const Column(
+                                  Column(
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
                                       _BenefitCheckRow(
-                                          'Technicians reviewed before approval'),
+                                          AppStrings.t('techniciansReviewedBefore')),
                                       _BenefitCheckRow(
-                                          'Ratings from real completed jobs'),
+                                          AppStrings.t('ratingsFromRealJobs')),
                                       _BenefitCheckRow(
-                                          'Track your booking in real time'),
+                                          AppStrings.t('trackBookingRealTime')),
                                     ],
                                   ),
                                 const Spacer(),
@@ -1306,8 +1306,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                             : MainShell.of(context)?.goToTab(1),
                                         child: Text(
                                             i == 0
-                                                ? 'Find AC specialists'
-                                                : 'Explore services',
+                                                ? AppStrings.t('findAcSpecialists')
+                                                : AppStrings.t('exploreServices'),
                                             style: const TextStyle(
                                                 fontSize: 12)))),
                               ]));
@@ -1320,7 +1320,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               children: [
                 // Only real technician listings - hidden until any exist.
                 if (_popular.isNotEmpty) ...[
-                  _sectionHeader('Popular Services',
+                  _sectionHeader(AppStrings.t('popularServices'),
                       onSeeAll: () => MainShell.of(context)?.goToTab(1)),
                   const SizedBox(height: 12),
                   _buildPopularServicesRow(),
@@ -1331,12 +1331,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   spacing: 12,
                   runSpacing: 4,
                   children: [
-                    Text('Common Fixes & Fast Booking',
+                    Text(AppStrings.t('commonFixesFastBooking'),
                         style: TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.w800,
                             color: p.textPrimary)),
-                    Text('Instant Estimates',
+                    Text(AppStrings.t('instantEstimates'),
                         style: TextStyle(fontSize: 11, color: p.textSecondary)),
                   ],
                 ),
@@ -1380,9 +1380,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                             fontSize: 12,
                                             fontWeight: FontWeight.w600)),
                                     subtitle: Text(
-                                        prices[fix.$2] != null ? 'From \$${prices[fix.$2]!.toStringAsFixed(0)}' : 'View specialists',
+                                        prices[fix.$2] != null ? '${AppStrings.t('fromPrice')} \$${prices[fix.$2]!.toStringAsFixed(0)}' : AppStrings.t('viewSpecialists'),
                                         style: const TextStyle(fontSize: 10)),
-                                    trailing: TextButton(style: TextButton.styleFrom(backgroundColor: const Color(0xFFE8EBFF), minimumSize: const Size(44, 32)), onPressed: () => MainShell.of(context)?.openServiceCategory(fix.$2), child: const Text('Book', style: TextStyle(fontSize: 10))),
+                                    trailing: TextButton(style: TextButton.styleFrom(backgroundColor: const Color(0xFFE8EBFF), minimumSize: const Size(44, 32)), onPressed: () => MainShell.of(context)?.openServiceCategory(fix.$2), child: Text(AppStrings.t('book'), style: const TextStyle(fontSize: 10))),
                                     onTap: () => MainShell.of(context)?.openServiceCategory(fix.$2)))),
                     ]);
                   },
@@ -1403,13 +1403,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('Verified technicians',
+                            Text(AppStrings.t('verifiedTechniciansTitle'),
                                 style: TextStyle(
                                     fontSize: 12.5,
                                     fontWeight: FontWeight.w700,
                                     color: p.textPrimary)),
                             Text(
-                                'Every technician is reviewed before they can take jobs',
+                                AppStrings.t('verifiedTechniciansDesc'),
                                 style: TextStyle(
                                     fontSize: 10.5, color: p.textSecondary)),
                           ],
@@ -1530,7 +1530,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('STARTING',
+                      Text(AppStrings.t('startingPrice'),
                           style: TextStyle(
                               fontSize: 9,
                               fontWeight: FontWeight.w800,
@@ -1556,9 +1556,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10)),
                   ),
-                  child: const Text('Book',
+                  child: Text(AppStrings.t('book'),
                       style:
-                          TextStyle(fontSize: 11, fontWeight: FontWeight.w800)),
+                          const TextStyle(fontSize: 11, fontWeight: FontWeight.w800)),
                 ),
               ]),
             ]),
@@ -2814,12 +2814,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     showDialog<void>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Trust & Safety'),
-        content: const Text(
-          'Every technician goes through admin review before they can appear '
-          'in the app or take jobs. Ratings you see come only from customers '
-          'who completed a real booking with that technician.',
-        ),
+        title: Text(AppStrings.t('trustAndSafety')),
+        content: Text(AppStrings.t('trustAndSafetyDesc')),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(),

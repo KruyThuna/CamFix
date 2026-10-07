@@ -24,3 +24,4 @@ docker compose down
 Write-Host "  Docker containers stopped." -ForegroundColor Green
 
 Write-Host "`nServer and Tunnel are completely stopped.`n" -ForegroundColor Yellow
+

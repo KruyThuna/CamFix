@@ -299,6 +299,120 @@ class AppStrings {
       AppLang.en: 'Popular Services',
       AppLang.km: 'សេវាកម្មពេញនិយម',
     },
+    'categories': {
+      AppLang.en: 'Categories',
+      AppLang.km: 'ប្រភេទសេវាកម្ម',
+    },
+    'commonFixesFastBooking': {
+      AppLang.en: 'Common Fixes & Fast Booking',
+      AppLang.km: 'ការជួសជុលទូទៅ និងការកក់រហ័ស',
+    },
+    'instantEstimates': {
+      AppLang.en: 'Instant Estimates',
+      AppLang.km: 'ការប៉ាន់ស្មានតម្លៃភ្លាមៗ',
+    },
+    'specialOffersBenefits': {
+      AppLang.en: 'Special Offers & Benefits',
+      AppLang.km: 'ការផ្ដល់ជូនពិសេស និងអត្ថប្រយោជន៍',
+    },
+    'seasonalService': {
+      AppLang.en: 'SEASONAL SERVICE',
+      AppLang.km: 'សេវាកម្មតាមរដូវកាល',
+    },
+    'whyCamFix': {
+      AppLang.en: 'WHY CAM FIX',
+      AppLang.km: 'ហេតុអ្វីជ្រើសរើស CAM FIX',
+    },
+    'acInspectionCare': {
+      AppLang.en: 'AC Inspection & Care',
+      AppLang.km: 'ការពិនិត្យ និងថែទាំម៉ាស៊ីនត្រជាក់',
+    },
+    'keepHomeCoolAc': {
+      AppLang.en: 'Keep your home cool with professional AC maintenance.',
+      AppLang.km: 'រក្សាគេហដ្ឋានរបស់អ្នកឱ្យត្រជាក់ជាមួយការថែទាំម៉ាស៊ីនត្រជាក់ជំនាញ។',
+    },
+    'builtOnRealReviews': {
+      AppLang.en: 'Built on real reviews',
+      AppLang.km: 'ផ្អែកលើការវាយតម្លៃពិតប្រាកដ',
+    },
+    'techniciansReviewedBefore': {
+      AppLang.en: 'Technicians reviewed before approval',
+      AppLang.km: 'ជាងទាំងអស់ត្រូវបានត្រួតពិនិត្យមុនអនុម័ត',
+    },
+    'ratingsFromRealJobs': {
+      AppLang.en: 'Ratings from real completed jobs',
+      AppLang.km: 'ពិន្ទុពីការងារជាក់ស្តែងដែលបានបញ្ចប់',
+    },
+    'trackBookingRealTime': {
+      AppLang.en: 'Track your booking in real time',
+      AppLang.km: 'តាមដានការកក់របស់អ្នកតាមពេលវេលាជាក់ស្តែង',
+    },
+    'findAcSpecialists': {
+      AppLang.en: 'Find AC specialists',
+      AppLang.km: 'ស្វែងរកជាងម៉ាស៊ីនត្រជាក់',
+    },
+    'exploreServices': {
+      AppLang.en: 'Explore services',
+      AppLang.km: 'ស្វែងរកសេវាកម្មផ្សេងៗ',
+    },
+    'leakingPipeRepair': {
+      AppLang.en: 'Leaking Pipe Repair',
+      AppLang.km: 'ជួសជុលបំពង់ទឹកលិច',
+    },
+    'acRefrigerantRecharge': {
+      AppLang.en: 'AC Refrigerant Recharge',
+      AppLang.km: 'បញ្ចូលហ្គាសម៉ាស៊ីនត្រជាក់',
+    },
+    'circuitBreakerTripping': {
+      AppLang.en: 'Circuit Breaker Tripping',
+      AppLang.km: 'ដោះស្រាយបញ្ហាដាច់ចរន្តអគ្គិសនី',
+    },
+    'drainUnclogging': {
+      AppLang.en: 'Drain Unclogging',
+      AppLang.km: 'បូម ឬបង្ហូរស្ទះលូទឹក',
+    },
+    'fromPrice': {
+      AppLang.en: 'From',
+      AppLang.km: 'ចាប់ពី',
+    },
+    'viewSpecialists': {
+      AppLang.en: 'View specialists',
+      AppLang.km: 'មើលជាងជំនាញ',
+    },
+    'verifiedTechniciansTitle': {
+      AppLang.en: 'Verified technicians',
+      AppLang.km: 'ជាងដែលមានការបញ្ជាក់ត្រឹមត្រូវ',
+    },
+    'verifiedTechniciansDesc': {
+      AppLang.en: 'Every technician is reviewed before they can take jobs',
+      AppLang.km: 'រាល់ជាងទាំងអស់សុទ្ធតែត្រូវបានត្រួតពិនិត្យ មុនពេលទទួលការងារ',
+    },
+    'startingPrice': {
+      AppLang.en: 'STARTING',
+      AppLang.km: 'ចាប់ផ្ដើមពី',
+    },
+    'book': {
+      AppLang.en: 'Book',
+      AppLang.km: 'កក់',
+    },
+    'whatNeedsFixingToday': {
+      AppLang.en: 'What needs fixing in your home today?',
+      AppLang.km: 'តើគេហដ្ឋានរបស់អ្នកត្រូវការជួសជុលអ្វីខ្លះថ្ងៃនេះ?',
+    },
+    'trackingCaps': {
+      AppLang.en: 'TRACKING',
+      AppLang.km: 'តាមដាន',
+    },
+    'trustAndSafety': {
+      AppLang.en: 'Trust & Safety',
+      AppLang.km: 'ទំនុកចិត្ត និងសុវត្ថិភាព',
+    },
+    'trustAndSafetyDesc': {
+      AppLang.en:
+          'Every technician goes through admin review before they can appear in the app or take jobs. Ratings you see come only from customers who completed a real booking with that technician.',
+      AppLang.km:
+          'ជាងទាំងអស់ត្រូវបានពិនិត្យផ្ទៀងផ្ទាត់ដោយអ្នកគ្រប់គ្រង មុនពេលអាចបង្ហាញខ្លួនក្នុងកម្មវិធី ឬទទួលការងារបាន។ ការវាយតម្លៃដែលអ្នកឃើញ គឺបានមកពីអតិថិជនពិតប្រាកដដែលបានកក់សេវាជាមួយជាងនោះប៉ុណ្ណោះ។',
+    },
     'servicePackages': {
       AppLang.en: 'Service Packages',
       AppLang.km: 'កញ្ចប់សេវាកម្ម',
@@ -1264,6 +1378,43 @@ class AppStrings {
     'khqrCopied': {
       AppLang.en: 'KHQR code copied',
       AppLang.km: 'បានចម្លងកូដ KHQR'
+    },
+    'bakongKhqrTab': {AppLang.en: 'Bakong KHQR', AppLang.km: 'Bakong KHQR'},
+    'abaMobileTab': {AppLang.en: 'ABA Mobile', AppLang.km: 'ABA Mobile'},
+    'acledaPayTab': {AppLang.en: 'ACLEDA Pay', AppLang.km: 'ACLEDA Pay'},
+    'downloadQr': {AppLang.en: 'Download QR', AppLang.km: 'ទាញយក QR'},
+    'paywayLink': {
+      AppLang.en: 'PayWay - Payment Link',
+      AppLang.km: 'PayWay - តំណទូទាត់',
+    },
+    'autoVerifying': {
+      AppLang.en: 'Auto-verifying payment status...',
+      AppLang.km: 'កំពុងផ្ទៀងផ្ទាត់ការទូទាត់ដោយស្វ័យប្រវត្តិ...',
+    },
+    'directPay': {AppLang.en: 'DIRECT PAY', AppLang.km: 'ទូទាត់ផ្ទាល់'},
+    'scanPayDone': {
+      AppLang.en: 'Scan. Pay. Done.',
+      AppLang.km: 'ស្កេន. បង់ប្រាក់. រួចរាល់.',
+    },
+    'memberOfKhqr': {
+      AppLang.en: 'Member of KHQR',
+      AppLang.km: 'សមាជិកនៃ KHQR',
+    },
+    'openAbaApp': {
+      AppLang.en: 'Open ABA Mobile',
+      AppLang.km: 'បើកកម្មវិធី ABA Mobile',
+    },
+    'openAcledaApp': {
+      AppLang.en: 'Open ACLEDA Mobile',
+      AppLang.km: 'បើកកម្មវិធី ACLEDA',
+    },
+    'confirmPaymentPrompt': {
+      AppLang.en: 'Have you completed the payment in your banking app?',
+      AppLang.km: 'តើអ្នកបានបញ្ចប់ការបង់ប្រាក់ក្នុងកម្មវិធីធនាគារហើយឬនៅ?',
+    },
+    'confirmPaid': {
+      AppLang.en: 'Yes, I have paid',
+      AppLang.km: 'បាទ/ចាស បានបង់រួចហើយ',
     },
 
     // --- Tracking technician (redesign) -------------------------------------

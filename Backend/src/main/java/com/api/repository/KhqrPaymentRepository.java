@@ -11,4 +11,6 @@ import com.api.entity.KhqrPayment;
 public interface KhqrPaymentRepository extends JpaRepository<KhqrPayment, Long> {
 
     Optional<KhqrPayment> findByMd5AndJobId(String md5, Long jobId);
+
+    Optional<KhqrPayment> findFirstByJobIdAndQuoteIdOrderByIdDesc(Long jobId, Long quoteId);
 }
