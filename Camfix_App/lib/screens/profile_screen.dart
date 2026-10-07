@@ -12,6 +12,7 @@ import '../services/token_store.dart';
 import '../theme/app_theme.dart';
 import '../widgets/user_avatar.dart';
 import 'payment_wallet_screen.dart';
+import '../services/app_update_service.dart';
 
 /// Profile screen (mockup pages 22-23 / 44-45): user summary card, real
 /// account info, quick settings (Payment / Notifications / Language), a
@@ -543,6 +544,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
           AppStrings.t('trustShieldDesc'),
           tint: AppColors.primaryBlue,
           onTap: _showTrustInfo,
+        ),
+        _divider(),
+        _richNavRow(
+          Icons.system_update_rounded,
+          AppStrings.t('appUpdateTitle'),
+          AppStrings.t('appUpdateSubtitle'),
+          tint: const Color(0xFFE67E22),
+          trailing: Padding(
+            padding: const EdgeInsets.only(right: 4),
+            child: Text(
+              'v${AppUpdateService.currentVersion}',
+              style: TextStyle(
+                fontSize: 12.5,
+                fontWeight: FontWeight.w600,
+                color: context.pal.textSecondary,
+              ),
+            ),
+          ),
+          onTap: () => AppUpdateService.instance
+              .checkForUpdate(context, silent: false),
         ),
       ],
     );

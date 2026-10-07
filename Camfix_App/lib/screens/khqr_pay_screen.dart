@@ -1,10 +1,16 @@
 import 'dart:async';
+import 'dart:io' show Directory, File, Platform;
+import 'dart:ui' as ui;
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart' show RenderRepaintBoundary;
 import 'package:flutter/services.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../app_settings.dart';
 import '../l10n/app_strings.dart';
 import '../models/payment.dart';
 import '../models/service_quote.dart';
@@ -16,7 +22,8 @@ import 'payment_success_screen.dart';
 enum BankTab { bakong, aba, acleda }
 
 /// Real Bakong KHQR payment: dynamic KHQR for the accepted quote.
-/// Supports NBC Bakong KHQR, ABA Mobile, and ACLEDA Pay with auto-verification.
+/// Supports NBC Bakong KHQR, ABA Mobile, and ACLEDA Pay with auto-verification,
+/// high-resolution QR image saving to gallery/storage, and direct mobile app-to-app payment.
 class KhqrPayScreen extends StatefulWidget {
   const KhqrPayScreen({super.key, required this.booking, required this.quote});
 
@@ -29,6 +36,8 @@ class KhqrPayScreen extends StatefulWidget {
 
 class _KhqrPayScreenState extends State<KhqrPayScreen> {
   static const _khqrRed = Color(0xFFE1232E);
+
+  final GlobalKey _standTicketKey = GlobalKey();
 
   BankTab _selectedTab = BankTab.bakong;
   String? _qr;
@@ -62,18 +71,24 @@ class _KhqrPayScreenState extends State<KhqrPayScreen> {
       _error = null;
     });
     try {
-      final j = await BookingsApi.instance
-          .startKhqr(widget.booking.id, widget.quote.id);
+      final res = await BookingsApi.instance.startKhqr(
+        widget.booking.id,
+        widget.quote.id,
+      );
       if (!mounted) return;
       setState(() {
-        _qr = j['qrString']?.toString();
-        _md5 = j['md5']?.toString();
-        _amount = (j['amount'] as num?)?.toDouble() ?? widget.quote.totalAmount;
-        _merchant = (j['merchantName'] ?? 'CamFix Field Service Co., Ltd.').toString();
-        _expiresAt = DateTime.tryParse((j['expiresAt'] ?? '').toString());
+        _qr = res['qr'] as String?;
+        _md5 = res['md5'] as String?;
+        _amount = (res['amount'] as num?)?.toDouble() ?? widget.quote.totalAmount;
+        _merchant = (res['merchantName'] as String?) ?? _merchant;
+        final exp = res['expiresAt'] as String?;
+        _expiresAt = exp != null ? DateTime.tryParse(exp) : null;
         _status = 'PENDING';
       });
-      _poll = Timer.periodic(const Duration(seconds: 4), (_) => _check());
+
+      // Poll every 3 seconds for webhook / payment completion
+      _poll = Timer.periodic(const Duration(seconds: 3), (_) => _check());
+      // Refresh countdown UI every second
       _tick = Timer.periodic(const Duration(seconds: 1), (_) {
         if (!mounted) return;
         setState(() {});
@@ -132,45 +147,293 @@ class _KhqrPayScreenState extends State<KhqrPayScreen> {
     return '$m:$s';
   }
 
-  Future<void> _downloadQr() async {
+  /// Captures Stand Ticket as high-resolution PNG image and saves it to real device gallery/downloads
+  Future<void> _saveQrToGallery() async {
     if (_qr == null) return;
-    await Clipboard.setData(ClipboardData(text: _qr!));
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(AppStrings.t('khqrCopied'))),
+    try {
+      // Copy KHQR string to clipboard immediately for backup
+      await Clipboard.setData(ClipboardData(text: _qr!));
+
+      final boundary = _standTicketKey.currentContext?.findRenderObject()
+          as RenderRepaintBoundary?;
+      if (boundary == null) {
+        throw Exception('Render boundary unavailable');
+      }
+
+      final image = await boundary.toImage(pixelRatio: 3.0);
+      final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+      if (byteData == null) {
+        throw Exception('PNG serialization failed');
+      }
+      final bytes = byteData.buffer.asUint8List();
+
+      String? savedPath;
+      if (!kIsWeb) {
+        savedPath = await _saveBytesToDevice(bytes);
+      }
+
+      if (!mounted) return;
+      _showSaveSuccessSheet(savedPath);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('${AppStrings.t('khqrCopied')} (Clipboard ready)'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
+  Future<String?> _saveBytesToDevice(Uint8List bytes) async {
+    try {
+      if (Platform.isAndroid) {
+        // 1. Try public Pictures/CamFix folder
+        final picturesDir = Directory('/storage/emulated/0/Pictures/CamFix');
+        if (!picturesDir.existsSync()) {
+          try {
+            picturesDir.createSync(recursive: true);
+          } catch (_) {}
+        }
+        if (picturesDir.existsSync()) {
+          final file = File('${picturesDir.path}/KHQR_CamFix_${widget.booking.id}.png');
+          file.writeAsBytesSync(bytes, flush: true);
+          return file.path;
+        }
+
+        // 2. Try public Download directory
+        final downloadDir = Directory('/storage/emulated/0/Download');
+        if (downloadDir.existsSync()) {
+          final file = File('${downloadDir.path}/KHQR_CamFix_${widget.booking.id}.png');
+          file.writeAsBytesSync(bytes, flush: true);
+          return file.path;
+        }
+      }
+
+      // 3. Fallback to external storage directory
+      final ext = await getExternalStorageDirectory();
+      if (ext != null) {
+        final file = File('${ext.path}/KHQR_CamFix_${widget.booking.id}.png');
+        file.writeAsBytesSync(bytes, flush: true);
+        return file.path;
+      }
+
+      // 4. Fallback to application documents
+      final app = await getApplicationDocumentsDirectory();
+      final file = File('${app.path}/KHQR_CamFix_${widget.booking.id}.png');
+      file.writeAsBytesSync(bytes, flush: true);
+      return file.path;
+    } catch (e) {
+      debugPrint('Save file error: $e');
+      return null;
+    }
+  }
+
+  void _showSaveSuccessSheet(String? savedPath) {
+    final isKm = AppSettings.instance.lang == AppLang.km;
+    final (bankName, _) = _getBankDetails(_selectedTab);
+
+    showModalBottomSheet<void>(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Colors.green.shade50,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(Icons.check_circle_rounded,
+                        color: Colors.green.shade600, size: 28),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          AppStrings.t('qrSavedSuccess'),
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          savedPath != null
+                              ? (isKm ? 'បានរក្សាទុកក្នុងរូបភាព/ទាញយក' : 'Saved in Pictures / Downloads')
+                              : (isKm ? 'បានចម្លងកូដ KHQR រួចរាល់' : 'KHQR code copied to clipboard'),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey.shade600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF8FAFC),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.grey.shade200),
+                ),
+                child: Text(
+                  AppStrings.t('qrSavedDesc'),
+                  style: const TextStyle(fontSize: 13, height: 1.45),
+                ),
+              ),
+              const SizedBox(height: 20),
+              FilledButton.icon(
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppColors.primaryBlue,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+                onPressed: () {
+                  Navigator.of(ctx).pop();
+                  _openBankApp(_selectedTab);
+                },
+                icon: const Icon(Icons.launch_rounded, size: 18),
+                label: Text(
+                  isKm ? 'បើក $bankName ឥឡូវនេះ' : 'Open $bankName Now',
+                  style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
+                ),
+              ),
+              const SizedBox(height: 8),
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(),
+                child: Text(
+                  isKm ? 'បិទ' : 'Dismiss',
+                  style: TextStyle(color: Colors.grey.shade600),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
-  Future<void> _openBankingOrPayWay() async {
+  (String name, String appLabelKey) _getBankDetails(BankTab tab) {
+    return switch (tab) {
+      BankTab.aba => ('ABA Mobile', 'openAbaApp'),
+      BankTab.acleda => ('ACLEDA Mobile', 'openAcledaApp'),
+      BankTab.bakong => ('Bakong', 'openBakongApp'),
+    };
+  }
+
+  /// Launch banking app directly on real mobile device
+  Future<void> _openBankApp(BankTab tab) async {
+    final (scheme, pkg, playStoreUrl, bankName) = switch (tab) {
+      BankTab.aba => (
+        'aba://qr?data=${Uri.encodeComponent(_qr ?? '')}',
+        'com.ababank.mobile',
+        'https://play.google.com/store/apps/details?id=com.ababank.mobile',
+        'ABA Mobile',
+      ),
+      BankTab.acleda => (
+        'acleda://qr?data=${Uri.encodeComponent(_qr ?? '')}',
+        'kh.com.acleda.mobile',
+        'https://play.google.com/store/apps/details?id=kh.com.acleda.mobile',
+        'ACLEDA Mobile',
+      ),
+      BankTab.bakong => (
+        'bakong://qr?data=${Uri.encodeComponent(_qr ?? '')}',
+        'kh.gov.nbc.bakong',
+        'https://play.google.com/store/apps/details?id=kh.gov.nbc.bakong',
+        'Bakong',
+      ),
+    };
+
+    // Copy QR string to clipboard so the bank app can read or paste it
+    if (_qr != null) {
+      await Clipboard.setData(ClipboardData(text: _qr!));
+    }
+
+    bool launched = false;
+
+    // 1. Try URL scheme
+    try {
+      final uri = Uri.parse(scheme);
+      if (await canLaunchUrl(uri)) {
+        launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+      }
+    } catch (_) {}
+
+    // 2. Try Android intent scheme if on Android
+    if (!launched && !kIsWeb && Platform.isAndroid) {
+      try {
+        final intentUri = Uri.parse(
+            'intent://#Intent;package=$pkg;action=android.intent.action.VIEW;end;');
+        if (await canLaunchUrl(intentUri)) {
+          launched = await launchUrl(intentUri, mode: LaunchMode.externalApplication);
+        }
+      } catch (_) {}
+    }
+
+    // 3. Fallback: prompt to open Google Play Store
+    if (!launched && mounted) {
+      final isKm = AppSettings.instance.lang == AppLang.km;
+      final playUri = Uri.parse(playStoreUrl);
+      final openStore = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+          title: Text(isKm ? 'បើកកម្មវិធី $bankName' : 'Open $bankName'),
+          content: Text(isKm
+              ? 'រកមិនឃើញកម្មវិធី $bankName នៅលើទូរស័ព្ទនេះទេ។ តើអ្នកចង់ដំឡើងពី Google Play Store ឬ?'
+              : 'Could not open $bankName on this device. Would you like to install it from Google Play Store?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(false),
+              child: Text(AppStrings.t('cancel')),
+            ),
+            FilledButton(
+              style: FilledButton.styleFrom(backgroundColor: AppColors.primaryBlue),
+              onPressed: () => Navigator.of(ctx).pop(true),
+              child: Text(isKm ? 'ដំឡើងពី Play Store' : 'Open Play Store'),
+            ),
+          ],
+        ),
+      );
+      if (openStore == true) {
+        await launchUrl(playUri, mode: LaunchMode.externalApplication);
+      }
+    }
+  }
+
+  /// Manual confirmation button if payment completed in bank app
+  Future<void> _manualConfirmPaid() async {
     final method = switch (_selectedTab) {
       BankTab.aba => 'ABA',
       BankTab.acleda => 'ACLEDA',
       BankTab.bakong => 'KHQR',
     };
 
-    // Deep link scheme to launch the bank app if installed
-    if (_selectedTab == BankTab.aba) {
-      final abaUri = Uri.parse('aba://qr?data=${Uri.encodeComponent(_qr ?? '')}');
-      if (await canLaunchUrl(abaUri)) {
-        await launchUrl(abaUri, mode: LaunchMode.externalApplication);
-      }
-    } else if (_selectedTab == BankTab.acleda) {
-      final acledaUri = Uri.parse('acleda://qr?data=${Uri.encodeComponent(_qr ?? '')}');
-      if (await canLaunchUrl(acledaUri)) {
-        await launchUrl(acledaUri, mode: LaunchMode.externalApplication);
-      }
-    } else if (_selectedTab == BankTab.bakong) {
-      final bakongUri = Uri.parse('bakong://qr?data=${Uri.encodeComponent(_qr ?? '')}');
-      if (await canLaunchUrl(bakongUri)) {
-        await launchUrl(bakongUri, mode: LaunchMode.externalApplication);
-      }
-    }
+    final isKm = AppSettings.instance.lang == AppLang.km;
 
-    if (!mounted) return;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text(AppStrings.t('paywayLink')),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        title: Text(isKm ? 'បញ្ជាក់ការទូទាត់ប្រាក់' : 'Confirm Payment'),
         content: Text(AppStrings.t('confirmPaymentPrompt')),
         actions: [
           TextButton(
@@ -178,6 +441,7 @@ class _KhqrPayScreenState extends State<KhqrPayScreen> {
             child: Text(AppStrings.t('cancel')),
           ),
           FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: AppColors.primaryBlue),
             onPressed: () => Navigator.of(ctx).pop(true),
             child: Text(AppStrings.t('confirmPaid')),
           ),
@@ -208,7 +472,10 @@ class _KhqrPayScreenState extends State<KhqrPayScreen> {
           _error = e.toString();
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString())),
+          SnackBar(
+            content: Text('Payment verification error: $e'),
+            behavior: SnackBarBehavior.floating,
+          ),
         );
       }
     }
@@ -218,25 +485,25 @@ class _KhqrPayScreenState extends State<KhqrPayScreen> {
   Widget build(BuildContext context) {
     final p = context.pal;
     final amountToDisplay = _amount ?? widget.quote.totalAmount;
+    final (bankName, bankActionKey) = _getBankDetails(_selectedTab);
 
     return Scaffold(
-      backgroundColor: p.background,
+      backgroundColor: const Color(0xFFF6F8FB),
       appBar: AppBar(
-        backgroundColor: p.background,
-        elevation: 0,
         title: Text(AppStrings.t('khqrTitle'),
-            style: TextStyle(color: p.textPrimary)),
-        iconTheme: IconThemeData(color: p.textPrimary),
+            style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18)),
+        backgroundColor: p.surface,
+        elevation: 0,
+        foregroundColor: p.textPrimary,
       ),
-      body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: AppLayout.maxPhoneWidth),
-          child: ListView(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Title & Direct Pay banner
+              // Top NBC standard header row
               Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Container(
                     padding:
@@ -259,7 +526,7 @@ class _KhqrPayScreenState extends State<KhqrPayScreen> {
                       children: [
                         Text(AppStrings.t('scanWithBanking'),
                             style: TextStyle(
-                                fontSize: 15,
+                                fontSize: 14.5,
                                 fontWeight: FontWeight.w800,
                                 color: p.textPrimary)),
                         Text('NBC Bakong Standard • Instant Settlement',
@@ -297,19 +564,27 @@ class _KhqrPayScreenState extends State<KhqrPayScreen> {
               _buildBankTabs(),
               const SizedBox(height: 16),
 
-              // KHQR Stand Ticket
-              _buildKhqrStand(p, amountToDisplay),
+              // KHQR Stand Ticket wrapped in RepaintBoundary for high-res image saving
+              RepaintBoundary(
+                key: _standTicketKey,
+                child: _buildKhqrStand(p, amountToDisplay),
+              ),
               const SizedBox(height: 16),
 
-              // Action buttons: [ Download QR ] [ PayWay - Payment Link ]
+              // Action buttons: [ 📥 រក្សាទុក QR ] [ 🚀 បើកកម្មវិធីធនាគារ ]
               Row(
                 children: [
                   Expanded(
                     child: OutlinedButton.icon(
-                      onPressed: _downloadQr,
+                      onPressed: _saveQrToGallery,
                       icon: const Icon(Icons.download_rounded, size: 18),
-                      label: Text(AppStrings.t('downloadQr'),
-                          style: const TextStyle(fontSize: 12)),
+                      label: Text(
+                        AppStrings.t('saveQrToGallery'),
+                        style: const TextStyle(
+                            fontSize: 12, fontWeight: FontWeight.w700),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         side: BorderSide(
@@ -324,18 +599,32 @@ class _KhqrPayScreenState extends State<KhqrPayScreen> {
                   ),
                   const SizedBox(width: 10),
                   Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: _openBankingOrPayWay,
-                      icon: const Icon(Icons.credit_card_rounded, size: 18),
-                      label: Text(AppStrings.t('paywayLink'),
-                          style: const TextStyle(fontSize: 12)),
-                      style: OutlinedButton.styleFrom(
+                    child: ElevatedButton.icon(
+                      onPressed: () => _openBankApp(_selectedTab),
+                      icon: Icon(
+                        _selectedTab == BankTab.aba
+                            ? Icons.account_balance_rounded
+                            : (_selectedTab == BankTab.acleda
+                                ? Icons.account_balance_wallet_rounded
+                                : Icons.hub_rounded),
+                        size: 18,
+                      ),
+                      label: Text(
+                        AppStrings.t(bankActionKey),
+                        style: const TextStyle(
+                            fontSize: 12, fontWeight: FontWeight.w800),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 12),
-                        side: BorderSide(
-                            color: AppColors.primaryBlue.withValues(alpha: 0.3)),
-                        backgroundColor:
-                            AppColors.primaryBlue.withValues(alpha: 0.05),
-                        foregroundColor: AppColors.primaryBlue,
+                        backgroundColor: _selectedTab == BankTab.aba
+                            ? const Color(0xFF005A9C)
+                            : (_selectedTab == BankTab.acleda
+                                ? const Color(0xFF0A2B4E)
+                                : AppColors.primaryBlue),
+                        foregroundColor: Colors.white,
+                        elevation: 0,
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12)),
                       ),
@@ -343,11 +632,34 @@ class _KhqrPayScreenState extends State<KhqrPayScreen> {
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 14),
+
+              // Step-by-step guidance card for real mobile device payment
+              _buildGuideCard(p),
+              const SizedBox(height: 14),
 
               // Auto-verifying status bar
               _buildStatusBar(p),
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
+
+              // Manual confirmation button if already paid in bank app
+              OutlinedButton.icon(
+                onPressed: _manualConfirmPaid,
+                icon: const Icon(Icons.check_circle_outline_rounded, size: 18),
+                label: Text(
+                  AppStrings.t('iHavePaid'),
+                  style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+                ),
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  side: BorderSide(color: Colors.green.shade600, width: 1.2),
+                  foregroundColor: Colors.green.shade700,
+                  backgroundColor: Colors.green.shade50.withValues(alpha: 0.5),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
             ],
           ),
         ),
@@ -359,7 +671,7 @@ class _KhqrPayScreenState extends State<KhqrPayScreen> {
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: const Color(0xFFF1F4F9),
+        color: const Color(0xFFE2E8F0),
         borderRadius: BorderRadius.circular(24),
       ),
       child: Row(
@@ -377,13 +689,27 @@ class _KhqrPayScreenState extends State<KhqrPayScreen> {
     return Expanded(
       child: InkWell(
         borderRadius: BorderRadius.circular(20),
-        onTap: () => setState(() => _selectedTab = tab),
+        onTap: () {
+          if (_selectedTab != tab) {
+            setState(() => _selectedTab = tab);
+            _start();
+          }
+        },
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 8),
           alignment: Alignment.center,
           decoration: BoxDecoration(
             color: active ? AppColors.primaryBlue : Colors.transparent,
             borderRadius: BorderRadius.circular(20),
+            boxShadow: active
+                ? [
+                    BoxShadow(
+                      color: AppColors.primaryBlue.withValues(alpha: 0.3),
+                      blurRadius: 6,
+                      offset: const Offset(0, 2),
+                    )
+                  ]
+                : null,
           ),
           child: Text(
             label,
@@ -579,6 +905,53 @@ class _KhqrPayScreenState extends State<KhqrPayScreen> {
                   ),
                 ),
               ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Step-by-step guidance card for real mobile payments
+  Widget _buildGuideCard(AppPalette p) {
+    final guideText = switch (_selectedTab) {
+      BankTab.aba => AppStrings.t('howToPayAba'),
+      BankTab.acleda => AppStrings.t('howToPayAcleda'),
+      BankTab.bakong => AppStrings.t('howToPayBakong'),
+    };
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.smartphone_rounded,
+                  size: 16, color: AppColors.primaryBlue),
+              const SizedBox(width: 6),
+              Text(
+                AppStrings.t('howToPayMobile'),
+                style: const TextStyle(
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w800,
+                  color: Color(0xFF1E293B),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            guideText,
+            style: TextStyle(
+              fontSize: 11.5,
+              height: 1.45,
+              color: Colors.grey.shade700,
             ),
           ),
         ],

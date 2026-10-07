@@ -21,6 +21,7 @@ import '../services/osrm_api.dart';
 import '../services/service_prices_api.dart';
 import '../services/technicians_api.dart';
 import '../services/token_store.dart';
+import '../services/app_update_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/user_avatar.dart';
 import 'booking_sheet.dart';
@@ -229,6 +230,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
       _heroPage = (_heroPage + 1) % _heroBanners.length;
       _heroController.animateToPage(_heroPage,
           duration: const Duration(milliseconds: 400), curve: Curves.easeOut);
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) AppUpdateService.instance.checkOnStart(context);
     });
   }
 

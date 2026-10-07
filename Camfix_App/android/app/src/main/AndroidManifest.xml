@@ -1,4 +1,5 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
     <uses-permission android:name="android.permission.INTERNET"/>
     <!-- connectivity_plus: read Wi-Fi / mobile / no-connection state -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
@@ -7,6 +8,9 @@
     <!-- geolocator: "use my current location" on Edit Profile -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+    <!-- Save QR code to gallery / downloads on mobile -->
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="28" tools:replace="android:maxSdkVersion"/>
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32"/>
     <application
         android:label="CAM FIX"
         android:name="${applicationName}"
@@ -66,5 +70,26 @@
             <action android:name="android.intent.action.VIEW"/>
             <data android:scheme="geo"/>
         </intent>
+        <!-- Banking deep link schemes -->
+        <intent>
+            <action android:name="android.intent.action.VIEW"/>
+            <data android:scheme="aba"/>
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW"/>
+            <data android:scheme="acleda"/>
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW"/>
+            <data android:scheme="acledamobile"/>
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW"/>
+            <data android:scheme="bakong"/>
+        </intent>
+        <!-- Banking package queries for direct app launching -->
+        <package android:name="com.ababank.mobile"/>
+        <package android:name="kh.com.acleda.mobile"/>
+        <package android:name="kh.gov.nbc.bakong"/>
     </queries>
 </manifest>

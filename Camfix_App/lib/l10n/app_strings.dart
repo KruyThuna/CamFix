@@ -1416,6 +1416,50 @@ class AppStrings {
       AppLang.en: 'Yes, I have paid',
       AppLang.km: 'បាទ/ចាស បានបង់រួចហើយ',
     },
+    'saveQrToGallery': {
+      AppLang.en: 'Save QR to Gallery',
+      AppLang.km: 'រក្សាទុក QR ក្នុងទូរស័ព្ទ',
+    },
+    'qrSavedSuccess': {
+      AppLang.en: 'QR Code Saved Successfully!',
+      AppLang.km: 'បានរក្សាទុក QR កូដដោយជោគជ័យ!',
+    },
+    'qrSavedDesc': {
+      AppLang.en:
+          'The KHQR image has been saved to your device. Open your banking app and choose "Scan from Gallery" to pay.',
+      AppLang.km:
+          'រូបភាព KHQR ត្រូវបានរក្សាទុកក្នុងទូរស័ព្ទរបស់អ្នក។ សូមបើកកម្មវិធីធនាគារ រួចជ្រើសរើស «ស្កេនពីរូបភាព (Gallery)» ដើម្បីទូទាត់ប្រាក់ភ្លាមៗ។',
+    },
+    'openBakongApp': {
+      AppLang.en: 'Open Bakong App',
+      AppLang.km: 'បើកកម្មវិធី Bakong',
+    },
+    'howToPayMobile': {
+      AppLang.en: 'How to pay on this phone:',
+      AppLang.km: 'របៀបទូទាត់ប្រាក់លើទូរស័ព្ទនេះ៖',
+    },
+    'howToPayAba': {
+      AppLang.en:
+          '1. Tap "Download QR" to save the ticket image.\n2. Tap "Open ABA Mobile" below.\n3. In ABA Mobile, choose QR Scan -> Gallery -> Confirm payment.',
+      AppLang.km:
+          '១. ចុច «ទាញយក QR» ដើម្បីរក្សាទុករូបភាព។\n២. ចុច «បើក ABA Mobile» ខាងក្រោម។\n៣. ក្នុង ABA Mobile ជ្រើសរើស ស្កេន (Scan) -> រូបភាពពីវិចិត្រសាល (Gallery) -> បញ្ជាក់ការទូទាត់។',
+    },
+    'howToPayAcleda': {
+      AppLang.en:
+          '1. Tap "Download QR" to save the ticket image.\n2. Tap "Open ACLEDA Mobile" below.\n3. In ACLEDA Mobile, choose QR Scan -> Gallery -> Confirm payment.',
+      AppLang.km:
+          '១. ចុច «ទាញយក QR» ដើម្បីរក្សាទុករូបភាព។\n២. ចុច «បើក ACLEDA Mobile» ខាងក្រោម។\n៣. ក្នុង ACLEDA Mobile ជ្រើសរើស ស្កេន (Scan) -> រូបភាពពីវិចិត្រសាល (Gallery) -> បញ្ជាក់ការទូទាត់។',
+    },
+    'howToPayBakong': {
+      AppLang.en:
+          '1. Tap "Download QR" to save the ticket image.\n2. Tap "Open Bakong App" below.\n3. In Bakong, choose Scan -> Gallery -> Confirm payment.',
+      AppLang.km:
+          '១. ចុច «ទាញយក QR» ដើម្បីរក្សាទុករូបភាព។\n២. ចុច «បើក Bakong App» ខាងក្រោម។\n៣. ក្នុង Bakong ជ្រើសរើស ស្កេន (Scan) -> រូបភាពពីវិចិត្រសាល (Gallery) -> បញ្ជាក់ការទូទាត់។',
+    },
+    'iHavePaid': {
+      AppLang.en: 'I have completed payment',
+      AppLang.km: 'ខ្ញុំបានទូទាត់ប្រាក់រួចរាល់',
+    },
 
     // --- Tracking technician (redesign) -------------------------------------
     'trackingTechnician': {
@@ -1639,6 +1683,14 @@ class AppStrings {
     'trustShieldDesc': {
       AppLang.en: 'How we keep bookings safe • Privacy',
       AppLang.km: 'របៀបយើងរក្សាសុវត្ថិភាពការកក់ • ឯកជនភាព',
+    },
+    'appUpdateTitle': {
+      AppLang.en: 'Check for Updates',
+      AppLang.km: 'ពិនិត្យមើលកំណែថ្មី',
+    },
+    'appUpdateSubtitle': {
+      AppLang.en: 'Ensure you have the latest features and fixes',
+      AppLang.km: 'ធានាថាអ្នកមានមុខងារ និងសុវត្ថិភាពចុងក្រោយ',
     },
     'trustPointReview': {
       AppLang.en:
