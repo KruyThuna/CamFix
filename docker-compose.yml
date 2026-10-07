@@ -48,8 +48,8 @@ services:
       # TWILIO_FROM_NUMBER:
       # TEXTBELT_KEY:
     ports:
-      # Localhost only - public traffic arrives via the Cloudflare Tunnel.
-      - "127.0.0.1:8081:8081"
+      # Listen on all interfaces so local devices on Wi-Fi/LAN can connect directly
+      - "8081:8081"
 
 volumes:
   camfix-mysql-data:
