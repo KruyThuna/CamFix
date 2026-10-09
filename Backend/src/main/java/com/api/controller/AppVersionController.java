@@ -25,8 +25,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/app")
 public class AppVersionController {
 
-    public static final String LATEST_VERSION = "1.3.1";
-    public static final int LATEST_BUILD_NUMBER = 21;
+    public static final String LATEST_VERSION = "1.3.2";
+    public static final int LATEST_BUILD_NUMBER = 22;
     public static final int MIN_SUPPORTED_BUILD = 1;
 
     @GetMapping("/version")
@@ -38,8 +38,8 @@ public class AppVersionController {
         res.put("downloadUrl", "https://api.camapp.store/api/app/download");
         res.put("fileSizeMb", getApkSizeMb());
         res.put("forceUpdate", false);
-        res.put("releaseNotesKm", "• បន្ថែមមុខងាររក្សាទុក QR កូដ (Save QR) ចូល Gallery/ទូរស័ព្ទ\n• បន្ថែមមុខងារបើកកម្មវិធី ABA Mobile, ACLEDA Pay, Bakong ដោយស្វ័យប្រវត្តិដើម្បីទូទាត់ប្រាក់ភ្លាមៗ\n• កែលម្អការទូទាត់លើទូរស័ព្ទដៃជាក់ស្តែង");
-        res.put("releaseNotesEn", "• Added Save QR to Gallery / Downloads for mobile devices\n• Direct mobile app opening for ABA Mobile, ACLEDA Pay & Bakong\n• Improved payment experience on physical mobile phones");
+        res.put("releaseNotesKm", "• កែលម្អផ្ទាំងទូទាត់ប្រាក់ KHQR Bakong Standee ផ្លូវការ\n• បន្ថែមផ្ទាំងជ្រើសរើសវិធីសាស្ត្រទូទាត់ និងគណនីដែលបានភ្ជាប់ (Bound Asset)\n• បង្ហាញកំណត់ត្រាប្រតិបត្តិការផ្ទាល់ (Live Service Progress SLA)");
+        res.put("releaseNotesEn", "• Official NBC Bakong KHQR Standee payment UI\n• Bound asset quick selector and payment options modal\n• Real-time Live Service Progress operational log with STANDARD SLA");
         return ResponseEntity.ok(res);
     }
 
