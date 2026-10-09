@@ -1556,11 +1556,19 @@ class AppStrings {
     },
     'serviceProgress': {
       AppLang.en: 'Service Progress',
-      AppLang.km: 'វឌ្ឍនភាពសេវា'
+      AppLang.km: 'វឌ្ឍនភាពសេវាកម្ម'
     },
     'serviceProgressSub': {
       AppLang.en: 'Every step of this booking, as it happens',
       AppLang.km: 'គ្រប់ជំហាននៃការកក់នេះ',
+    },
+    'liveOperationalLog': {
+      AppLang.en: 'Live operational log for technician & client',
+      AppLang.km: 'កំណត់ត្រាប្រតិបត្តិការផ្ទាល់សម្រាប់ជាង និងអតិថិជន',
+    },
+    'standardSla': {
+      AppLang.en: 'STANDARD SLA',
+      AppLang.km: 'កិច្ចព្រមព្រៀង SLA ស្តង់ដារ',
     },
     'doneState': {AppLang.en: 'Done', AppLang.km: 'រួចរាល់'},
     'inProgressState': {AppLang.en: 'In progress', AppLang.km: 'កំពុងដំណើរការ'},
@@ -1916,6 +1924,14 @@ class AppStrings {
     'assetsBound': {
       AppLang.en: 'Assets bound',
       AppLang.km: 'វិធីទូទាត់ដែលបានភ្ជាប់'
+    },
+    'selectPaymentMethod': {
+      AppLang.en: 'Select Payment Method',
+      AppLang.km: 'ជ្រើសរើសវិធីសាស្ត្រទូទាត់',
+    },
+    'fourOptions': {
+      AppLang.en: '4 Options',
+      AppLang.km: 'ជម្រើស ៤',
     },
     'cash': {AppLang.en: 'Cash', AppLang.km: 'សាច់ប្រាក់'},
     'cashSubtitle': {

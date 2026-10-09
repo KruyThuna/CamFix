@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io' show Directory, File, Platform;
+import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -17,7 +18,10 @@ import '../models/service_quote.dart';
 import '../services/bookings_api.dart';
 import '../services/bookings_store.dart' show Booking, BookingsStore;
 import '../theme/app_theme.dart';
+import 'payment_method_screen.dart';
 import 'payment_success_screen.dart';
+import 'payment_summary_screen.dart' show PaymentBreakdown;
+import 'services_screen.dart' show categoryLabel;
 
 enum BankTab { bakong, aba, acleda }
 
@@ -485,7 +489,6 @@ class _KhqrPayScreenState extends State<KhqrPayScreen> {
   Widget build(BuildContext context) {
     final p = context.pal;
     final amountToDisplay = _amount ?? widget.quote.totalAmount;
-    final (bankName, bankActionKey) = _getBankDetails(_selectedTab);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF6F8FB),
@@ -502,7 +505,129 @@ class _KhqrPayScreenState extends State<KhqrPayScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Top NBC standard header row
+              // 1. Top "Select Payment Method" & Bound Asset Section
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      AppStrings.t('selectPaymentMethod'),
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF0F172A),
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  InkWell(
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => PaymentMethodScreen(
+                            booking: widget.booking,
+                            quote: widget.quote,
+                            breakdown: PaymentBreakdown.fromQuote(widget.quote),
+                          ),
+                        ),
+                      );
+                    },
+                    borderRadius: BorderRadius.circular(6),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 4, vertical: 2),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.tune_rounded,
+                              size: 13, color: Color(0xFF1877F2)),
+                          const SizedBox(width: 4),
+                          Text(
+                            AppStrings.t('fourOptions'),
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF1877F2),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 2),
+              Text(
+                AppStrings.t('assetsBound'),
+                style: const TextStyle(
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w500,
+                  color: Color(0xFF94A3B8),
+                ),
+              ),
+              const SizedBox(height: 10),
+
+              // Bound Asset Card (ABA PAY ••••9578592)
+              InkWell(
+                onTap: () => _openBankApp(BankTab.aba),
+                borderRadius: BorderRadius.circular(14),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 14, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: Colors.grey.shade200),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.03),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 36,
+                        height: 36,
+                        decoration: const BoxDecoration(
+                          color: Color(0xFF005A70),
+                          shape: BoxShape.circle,
+                        ),
+                        alignment: Alignment.center,
+                        child: const Text(
+                          'ABA\nPAY',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Color(0xFF00E5FF),
+                            fontWeight: FontWeight.w900,
+                            fontSize: 7.5,
+                            height: 1.0,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      const Text(
+                        '••••9578592',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w800,
+                          fontSize: 13.5,
+                          color: Color(0xFF0F172A),
+                          letterSpacing: 0.8,
+                        ),
+                      ),
+                      const Spacer(),
+                      Icon(Icons.chevron_right_rounded,
+                          color: Colors.grey.shade400, size: 22),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 18),
+
+              // 2. KHQR Header Row
               Row(
                 children: [
                   Container(
@@ -526,12 +651,12 @@ class _KhqrPayScreenState extends State<KhqrPayScreen> {
                       children: [
                         Text(AppStrings.t('scanWithBanking'),
                             style: TextStyle(
-                                fontSize: 14.5,
+                                fontSize: 14,
                                 fontWeight: FontWeight.w800,
                                 color: p.textPrimary)),
                         Text('NBC Bakong Standard • Instant Settlement',
                             style: TextStyle(
-                                fontSize: 11, color: p.textSecondary)),
+                                fontSize: 10.5, color: p.textSecondary)),
                       ],
                     ),
                   ),
@@ -560,38 +685,36 @@ class _KhqrPayScreenState extends State<KhqrPayScreen> {
               ),
               const SizedBox(height: 14),
 
-              // Bank tab switcher: [Bakong KHQR] [ABA Mobile] [ACLEDA Pay]
+              // 3. Bank Tab Switcher: [Bakong KHQR] [ABA Mobile] [ACLEDA Pay]
               _buildBankTabs(),
               const SizedBox(height: 16),
 
-              // KHQR Stand Ticket wrapped in RepaintBoundary for high-res image saving
+              // 4. KHQR Stand Ticket wrapped in RepaintBoundary for high-res image saving
               RepaintBoundary(
                 key: _standTicketKey,
                 child: _buildKhqrStand(p, amountToDisplay),
               ),
               const SizedBox(height: 16),
 
-              // Action buttons: [ 📥 រក្សាទុក QR ] [ 🚀 បើកកម្មវិធីធនាគារ ]
+              // 5. Action Buttons: [ 📥 Download QR ] [ 📋 PayWay – Payment Link ]
               Row(
                 children: [
                   Expanded(
-                    child: OutlinedButton.icon(
+                    child: FilledButton.icon(
                       onPressed: _saveQrToGallery,
-                      icon: const Icon(Icons.download_rounded, size: 18),
+                      icon: const Icon(Icons.download_rounded, size: 17),
                       label: Text(
-                        AppStrings.t('saveQrToGallery'),
+                        AppStrings.t('downloadQr'),
                         style: const TextStyle(
                             fontSize: 12, fontWeight: FontWeight.w700),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        side: BorderSide(
-                            color: AppColors.primaryBlue.withValues(alpha: 0.3)),
-                        backgroundColor:
-                            AppColors.primaryBlue.withValues(alpha: 0.05),
-                        foregroundColor: AppColors.primaryBlue,
+                      style: FilledButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 13),
+                        backgroundColor: const Color(0xFFE8EEFC),
+                        foregroundColor: const Color(0xFF1E3A8A),
+                        elevation: 0,
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12)),
                       ),
@@ -599,31 +722,20 @@ class _KhqrPayScreenState extends State<KhqrPayScreen> {
                   ),
                   const SizedBox(width: 10),
                   Expanded(
-                    child: ElevatedButton.icon(
+                    child: FilledButton.icon(
                       onPressed: () => _openBankApp(_selectedTab),
-                      icon: Icon(
-                        _selectedTab == BankTab.aba
-                            ? Icons.account_balance_rounded
-                            : (_selectedTab == BankTab.acleda
-                                ? Icons.account_balance_wallet_rounded
-                                : Icons.hub_rounded),
-                        size: 18,
-                      ),
+                      icon: const Icon(Icons.copy_rounded, size: 16),
                       label: Text(
-                        AppStrings.t(bankActionKey),
+                        AppStrings.t('paywayLink'),
                         style: const TextStyle(
-                            fontSize: 12, fontWeight: FontWeight.w800),
+                            fontSize: 12, fontWeight: FontWeight.w700),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        backgroundColor: _selectedTab == BankTab.aba
-                            ? const Color(0xFF005A9C)
-                            : (_selectedTab == BankTab.acleda
-                                ? const Color(0xFF0A2B4E)
-                                : AppColors.primaryBlue),
-                        foregroundColor: Colors.white,
+                      style: FilledButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 13),
+                        backgroundColor: const Color(0xFFE8EEFC),
+                        foregroundColor: const Color(0xFF1E3A8A),
                         elevation: 0,
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12)),
@@ -634,21 +746,18 @@ class _KhqrPayScreenState extends State<KhqrPayScreen> {
               ),
               const SizedBox(height: 14),
 
-              // Step-by-step guidance card for real mobile device payment
-              _buildGuideCard(p),
+              // 6. Auto-verifying Status Bar
+              _buildStatusBar(p),
               const SizedBox(height: 14),
 
-              // Auto-verifying status bar
-              _buildStatusBar(p),
-              const SizedBox(height: 12),
-
-              // Manual confirmation button if already paid in bank app
+              // 7. Manual Confirmation Button
               OutlinedButton.icon(
                 onPressed: _manualConfirmPaid,
                 icon: const Icon(Icons.check_circle_outline_rounded, size: 18),
                 label: Text(
                   AppStrings.t('iHavePaid'),
-                  style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+                  style: const TextStyle(
+                      fontWeight: FontWeight.w700, fontSize: 13),
                 ),
                 style: OutlinedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 12),
@@ -660,6 +769,39 @@ class _KhqrPayScreenState extends State<KhqrPayScreen> {
                   ),
                 ),
               ),
+              const SizedBox(height: 16),
+
+              // 8. Subtle Dotted Divider
+              Container(
+                margin: const EdgeInsets.symmetric(vertical: 6),
+                height: 1,
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final boxWidth = constraints.constrainWidth();
+                    const dashWidth = 3.0;
+                    const dashSpace = 3.0;
+                    final dashCount =
+                        (boxWidth / (dashWidth + dashSpace)).floor();
+                    return Flex(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      direction: Axis.horizontal,
+                      children: List.generate(dashCount, (_) {
+                        return const SizedBox(
+                          width: dashWidth,
+                          height: 1,
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(color: Color(0xFF93C5FD)),
+                          ),
+                        );
+                      }),
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(height: 10),
+
+              // 9. Integrated Live Service Progress Section
+              _buildServiceProgressCard(p),
             ],
           ),
         ),
@@ -671,20 +813,38 @@ class _KhqrPayScreenState extends State<KhqrPayScreen> {
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: const Color(0xFFE2E8F0),
+        color: const Color(0xFFE8EEF5),
         borderRadius: BorderRadius.circular(24),
       ),
       child: Row(
         children: [
-          _tabPill(BankTab.bakong, AppStrings.t('bakongKhqrTab')),
-          _tabPill(BankTab.aba, AppStrings.t('abaMobileTab')),
-          _tabPill(BankTab.acleda, AppStrings.t('acledaPayTab')),
+          _tabPill(
+            BankTab.bakong,
+            label: AppStrings.t('bakongKhqrTab'),
+          ),
+          _tabPill(
+            BankTab.aba,
+            label: 'Mobile',
+            prefix: 'ABA ',
+            prefixColor: const Color(0xFF005A70),
+          ),
+          _tabPill(
+            BankTab.acleda,
+            label: 'Pay',
+            prefix: 'ACLEDA ',
+            prefixColor: const Color(0xFF0A2B4E),
+          ),
         ],
       ),
     );
   }
 
-  Widget _tabPill(BankTab tab, String label) {
+  Widget _tabPill(
+    BankTab tab, {
+    required String label,
+    String? prefix,
+    Color? prefixColor,
+  }) {
     final active = _selectedTab == tab;
     return Expanded(
       child: InkWell(
@@ -699,262 +859,253 @@ class _KhqrPayScreenState extends State<KhqrPayScreen> {
           padding: const EdgeInsets.symmetric(vertical: 8),
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            color: active ? AppColors.primaryBlue : Colors.transparent,
+            color: active ? const Color(0xFF185BFF) : Colors.transparent,
             borderRadius: BorderRadius.circular(20),
             boxShadow: active
                 ? [
                     BoxShadow(
-                      color: AppColors.primaryBlue.withValues(alpha: 0.3),
+                      color: const Color(0xFF185BFF).withValues(alpha: 0.3),
                       blurRadius: 6,
                       offset: const Offset(0, 2),
                     )
                   ]
                 : null,
           ),
-          child: Text(
-            label,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: active ? Colors.white : AppColors.textDark,
-            ),
-          ),
+          child: prefix == null
+              ? Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: active ? Colors.white : const Color(0xFF0F172A),
+                  ),
+                )
+              : Text.rich(
+                  TextSpan(
+                    children: [
+                      TextSpan(
+                        text: prefix,
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w800,
+                          color: active
+                              ? Colors.white
+                              : (prefixColor ?? const Color(0xFF0F172A)),
+                        ),
+                      ),
+                      TextSpan(
+                        text: label,
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color:
+                              active ? Colors.white : const Color(0xFF0F172A),
+                        ),
+                      ),
+                    ],
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
         ),
       ),
     );
   }
 
-  /// Official Red KHQR Stand design
+  /// Official Authentic NBC Red KHQR Stand design matching the national standard
   Widget _buildKhqrStand(AppPalette p, double amount) {
     return Container(
+      clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: _khqrRed.withValues(alpha: 0.35), width: 1.5),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.grey.shade200, width: 1),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.08),
-            blurRadius: 18,
+            blurRadius: 22,
             offset: const Offset(0, 6),
           ),
         ],
       ),
-      child: Column(
-        children: [
-          const SizedBox(height: 16),
-          // Bakong Emblem & Header
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                width: 32,
-                height: 32,
-                decoration: BoxDecoration(
-                  border: Border.all(color: _khqrRed, width: 2),
-                  shape: BoxShape.circle,
-                ),
-                child: const Center(
-                  child: Icon(Icons.hub_rounded, size: 18, color: _khqrRed),
-                ),
-              ),
-              const SizedBox(width: 8),
-              const Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'បាគង',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w900,
-                      color: _khqrRed,
-                      height: 1.1,
-                    ),
-                  ),
-                  Text(
-                    'BAKONG',
-                    style: TextStyle(
-                      fontSize: 9,
-                      fontWeight: FontWeight.w900,
-                      color: _khqrRed,
-                      letterSpacing: 1.5,
-                      height: 1.0,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          const SizedBox(height: 6),
-          Text(
-            AppStrings.t('scanPayDone'),
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              color: Colors.grey.shade600,
-            ),
-          ),
-          const SizedBox(height: 12),
+      child: CustomPaint(
+        painter: const _KhqrStandPainter(),
+        child: Column(
+          children: [
+            const SizedBox(height: 24),
 
-          // Center QR Code with red circular emblem
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.grey.shade200),
-            ),
-            child: SizedBox(
-              width: 210,
-              height: 210,
-              child: switch (_status) {
-                'LOADING' => const Center(child: CircularProgressIndicator()),
-                'ERROR' => Center(
-                    child: Text(_error ?? '',
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(color: Colors.red, fontSize: 12))),
-                _ => Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      Opacity(
-                        opacity: _status == 'EXPIRED' ? 0.15 : 1,
-                        child: QrImageView(
-                          data: _qr ?? 'CAMFIX-KHQR-DEV',
-                          size: 210,
-                          backgroundColor: Colors.white,
-                          errorCorrectionLevel: QrErrorCorrectLevel.M,
-                        ),
-                      ),
-                      // Center Red Bakong emblem
-                      Container(
-                        width: 38,
-                        height: 38,
-                        decoration: BoxDecoration(
-                          color: _khqrRed,
-                          shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white, width: 2.5),
-                        ),
-                        child: const Icon(
-                          Icons.hub_rounded,
-                          color: Colors.white,
-                          size: 20,
-                        ),
-                      ),
-                      if (_status == 'EXPIRED')
-                        FilledButton.icon(
-                          onPressed: _start,
-                          icon: const Icon(Icons.refresh_rounded),
-                          label: Text(AppStrings.t('newQr')),
-                        ),
-                    ],
-                  ),
-              },
-            ),
-          ),
-          const SizedBox(height: 12),
-
-          // Merchant name
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Text(
-              _merchant,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w700,
-                color: Color(0xFF1F2937),
-              ),
-            ),
-          ),
-          const SizedBox(height: 4),
-
-          // Amount
-          Text(
-            '\$${amount.toStringAsFixed(2)} USD',
-            style: const TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.w900,
-              color: Color(0xFF111827),
-            ),
-          ),
-          const SizedBox(height: 16),
-
-          // Red curved ribbon at bottom
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 10),
-            decoration: const BoxDecoration(
-              color: _khqrRed,
-              borderRadius: BorderRadius.vertical(bottom: Radius.circular(22)),
-            ),
-            alignment: Alignment.center,
-            child: Row(
+            // Top Bakong Emblem & Header
+            const Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.verified_rounded,
-                    size: 15, color: Colors.white),
-                const SizedBox(width: 6),
-                Text(
-                  AppStrings.t('memberOfKhqr'),
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w800,
-                    fontSize: 12,
-                    letterSpacing: 0.5,
+                SizedBox(
+                  width: 36,
+                  height: 36,
+                  child: CustomPaint(
+                    painter: _BakongLogoPainter(),
                   ),
+                ),
+                SizedBox(width: 8),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'បាគង',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w900,
+                        color: _khqrRed,
+                        height: 1.1,
+                      ),
+                    ),
+                    Text(
+                      'BAKONG',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w900,
+                        color: _khqrRed,
+                        letterSpacing: 2.0,
+                        height: 1.0,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
-          ),
-        ],
-      ),
-    );
-  }
+            const SizedBox(height: 6),
+            Text(
+              AppStrings.t('scanPayDone'),
+              style: TextStyle(
+                fontSize: 11.5,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey.shade700,
+              ),
+            ),
+            const SizedBox(height: 12),
 
-  /// Step-by-step guidance card for real mobile payments
-  Widget _buildGuideCard(AppPalette p) {
-    final guideText = switch (_selectedTab) {
-      BankTab.aba => AppStrings.t('howToPayAba'),
-      BankTab.acleda => AppStrings.t('howToPayAcleda'),
-      BankTab.bakong => AppStrings.t('howToPayBakong'),
-    };
+            // Center Dynamic QR Code with center Bakong emblem badge
+            Center(
+              child: SizedBox(
+                width: 225,
+                height: 225,
+                child: switch (_status) {
+                  'LOADING' => const Center(child: CircularProgressIndicator()),
+                  'ERROR' => Center(
+                      child: Text(_error ?? '',
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(color: Colors.red, fontSize: 12))),
+                  _ => Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        Opacity(
+                          opacity: _status == 'EXPIRED' ? 0.15 : 1.0,
+                          child: QrImageView(
+                            data: _qr ?? 'CAMFIX-KHQR-DEV',
+                            size: 225,
+                            padding: const EdgeInsets.all(4),
+                            backgroundColor: Colors.transparent,
+                            errorCorrectionLevel: QrErrorCorrectLevel.M,
+                          ),
+                        ),
+                        // Center Red Circular Bakong Emblem
+                        Container(
+                          width: 38,
+                          height: 38,
+                          decoration: BoxDecoration(
+                            color: _khqrRed,
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white, width: 2.5),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.18),
+                                blurRadius: 4,
+                                offset: const Offset(0, 1),
+                              ),
+                            ],
+                          ),
+                          padding: const EdgeInsets.all(6),
+                          child: const CustomPaint(
+                            painter: _BakongLogoPainter(
+                              color: Colors.white,
+                              strokeWidth: 1.6,
+                            ),
+                          ),
+                        ),
+                        if (_status == 'EXPIRED')
+                          FilledButton.icon(
+                            onPressed: _start,
+                            icon: const Icon(Icons.refresh_rounded),
+                            label: Text(AppStrings.t('newQr')),
+                          ),
+                      ],
+                    ),
+                },
+              ),
+            ),
+            const SizedBox(height: 12),
 
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.grey.shade200),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(Icons.smartphone_rounded,
-                  size: 16, color: AppColors.primaryBlue),
-              const SizedBox(width: 6),
-              Text(
-                AppStrings.t('howToPayMobile'),
+            // Merchant name
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Text(
+                _merchant,
+                textAlign: TextAlign.center,
                 style: const TextStyle(
-                  fontSize: 12.5,
+                  fontSize: 15,
                   fontWeight: FontWeight.w800,
-                  color: Color(0xFF1E293B),
+                  color: Color(0xFF0F172A),
                 ),
               ),
-            ],
-          ),
-          const SizedBox(height: 6),
-          Text(
-            guideText,
-            style: TextStyle(
-              fontSize: 11.5,
-              height: 1.45,
-              color: Colors.grey.shade700,
             ),
-          ),
-        ],
+            const SizedBox(height: 4),
+
+            // Amount
+            Text(
+              '\$${amount.toStringAsFixed(2)} USD',
+              style: const TextStyle(
+                fontSize: 26,
+                fontWeight: FontWeight.w900,
+                color: Color(0xFF020617),
+              ),
+            ),
+            const SizedBox(height: 14),
+
+            // Bottom row: Member of KHQR + right wave ribbon space
+            Padding(
+              padding: const EdgeInsets.fromLTRB(18, 0, 18, 16),
+              child: Row(
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'Member of',
+                        style: TextStyle(
+                          fontSize: 9,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.grey.shade600,
+                        ),
+                      ),
+                      const Text(
+                        'KHQR',
+                        style: TextStyle(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w900,
+                          color: _khqrRed,
+                          letterSpacing: 0.8,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const Spacer(),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -1015,4 +1166,406 @@ class _KhqrPayScreenState extends State<KhqrPayScreen> {
       ),
     );
   }
+
+  /// Live Service Progress Card embedded below KHQR
+  Widget _buildServiceProgressCard(AppPalette p) {
+    final b = widget.booking;
+    final current = switch (b.status) {
+      'REQUESTED' => 1,
+      'ASSIGNED' || 'ON_THE_WAY' => 2,
+      'ARRIVED' => 3,
+      'QUOTE_PENDING' => 4,
+      'IN_PROGRESS' => 5,
+      'COMPLETED' => 7,
+      _ => 2,
+    };
+    final cancelled = b.status == 'CANCELLED';
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: Colors.grey.shade200),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      AppStrings.t('serviceProgress'),
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                        color: p.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      AppStrings.t('liveOperationalLog'),
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: p.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF1F5F9),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  AppStrings.t('standardSla'),
+                  style: const TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF475569),
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          for (var i = 0; i < 7; i++)
+            _serviceProgressRow(
+              p,
+              b,
+              index: i,
+              done: !cancelled && i + 1 < current,
+              active: !cancelled && i + 1 == current,
+              last: i == 6,
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _serviceProgressRow(
+    AppPalette p,
+    Booking b, {
+    required int index,
+    required bool done,
+    required bool active,
+    required bool last,
+  }) {
+    const green = Color(0xFF1E9E52);
+    final time = _getStepTime(index, b);
+
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SizedBox(
+            width: 28,
+            child: Column(
+              children: [
+                Container(
+                  width: 24,
+                  height: 24,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: done
+                        ? green
+                        : active
+                            ? AppColors.primaryBlue
+                            : Colors.white,
+                    border: Border.all(
+                      color: done
+                          ? green
+                          : active
+                              ? AppColors.primaryBlue
+                              : Colors.grey.shade300,
+                      width: 1.5,
+                    ),
+                  ),
+                  alignment: Alignment.center,
+                  child: done
+                      ? const Icon(Icons.check_rounded,
+                          size: 15, color: Colors.white)
+                      : Text(
+                          '${index + 1}',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w800,
+                            color: active ? Colors.white : p.textSecondary,
+                          ),
+                        ),
+                ),
+                if (!last)
+                  Expanded(
+                    child: Container(
+                      width: 2,
+                      color: done ? green : Colors.grey.shade200,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          _getStepTitle(index, b),
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w800,
+                            color: active ? AppColors.primaryBlue : p.textPrimary,
+                          ),
+                        ),
+                      ),
+                      if (time != null)
+                        Text(
+                          _formatClock(time),
+                          style: TextStyle(
+                            fontSize: 10.5,
+                            color: p.textSecondary,
+                          ),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    _getStepDesc(index, b),
+                    style: TextStyle(fontSize: 11.5, color: p.textSecondary),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _getStepTitle(int i, Booking b) {
+    if (b.isSelfDrop && i == 1) return AppStrings.t('stepReadyForDropOff');
+    if (b.isSelfDrop && i == 2) return AppStrings.t('stepItemReceived');
+    return switch (i) {
+      0 => AppStrings.t('stageWaiting'),
+      1 => AppStrings.t('stageTraveling'),
+      2 => AppStrings.t('stageArrived'),
+      3 => AppStrings.t('stageDiagnose'),
+      4 => AppStrings.t('stageRepair'),
+      5 => AppStrings.t('stageComplete'),
+      _ => AppStrings.t('stageReview'),
+    };
+  }
+
+  String _getStepDesc(int i, Booking b) {
+    final tech = b.technicianName ?? AppStrings.t('technicianLabel');
+    return switch (i) {
+      0 => '${AppStrings.t('stageWaitingDesc')} ${categoryLabel(b.category)}',
+      1 => b.isSelfDrop
+          ? AppStrings.t('selfDropBringInfo')
+          : (b.hasTechnicianFix
+              ? 'Start Traveling Approaching via Bay St, 1.4 km remaining'
+              : '$tech ${AppStrings.t('stageTravelingDesc')}'),
+      2 => b.isSelfDrop
+          ? AppStrings.t('selfDropReceivedInfo')
+          : AppStrings.t('stageArrivedDesc'),
+      3 => AppStrings.t('stageDiagnoseDesc'),
+      4 => AppStrings.t('stageRepairDesc'),
+      5 => AppStrings.t('stageCompleteDesc'),
+      _ => AppStrings.t('stageReviewDesc'),
+    };
+  }
+
+  DateTime? _getStepTime(int i, Booking b) {
+    return switch (i) {
+      0 => b.createdAt ?? DateTime.now().subtract(const Duration(minutes: 25)),
+      1 => b.assignedAt ?? DateTime.now().subtract(const Duration(minutes: 18)),
+      5 => b.completedAt,
+      _ => null,
+    };
+  }
+
+  static String _formatClock(DateTime d) {
+    final h = d.hour % 12 == 0 ? 12 : d.hour % 12;
+    return '${h.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')} ${d.hour < 12 ? 'AM' : 'PM'}';
+  }
+}
+
+/// Vector painter for the National Bank of Cambodia (NBC) Bakong 8-pointed star emblem
+class _BakongLogoPainter extends CustomPainter {
+  const _BakongLogoPainter({
+    this.color = const Color(0xFFE1232E),
+    this.strokeWidth = 2.2,
+  });
+
+  final Color color;
+  final double strokeWidth;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final outerR = size.width / 2;
+    final notchR = outerR * 0.84;
+    final innerR = outerR * 0.68;
+
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth
+      ..strokeJoin = StrokeJoin.round
+      ..strokeCap = StrokeCap.round;
+
+    final path = Path();
+    for (int i = 0; i < 8; i++) {
+      final aOuter = (i * 45) * math.pi / 180;
+      final aN1 = (i * 45 + 13) * math.pi / 180;
+      final aInner = (i * 45 + 22.5) * math.pi / 180;
+      final aN2 = (i * 45 + 32) * math.pi / 180;
+
+      final pOuter = Offset(
+          center.dx + outerR * math.cos(aOuter), center.dy + outerR * math.sin(aOuter));
+      final pN1 = Offset(
+          center.dx + notchR * math.cos(aN1), center.dy + notchR * math.sin(aN1));
+      final pInner = Offset(
+          center.dx + innerR * math.cos(aInner), center.dy + innerR * math.sin(aInner));
+      final pN2 = Offset(
+          center.dx + notchR * math.cos(aN2), center.dy + notchR * math.sin(aN2));
+
+      if (i == 0) {
+        path.moveTo(pOuter.dx, pOuter.dy);
+      } else {
+        path.lineTo(pOuter.dx, pOuter.dy);
+      }
+      path.lineTo(pN1.dx, pN1.dy);
+      path.lineTo(pInner.dx, pInner.dy);
+      path.lineTo(pN2.dx, pN2.dy);
+    }
+    path.close();
+    canvas.drawPath(path, paint);
+
+    // Inner loop / notch
+    final loopPaint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth
+      ..strokeCap = StrokeCap.round;
+
+    final s = outerR * 0.38;
+    final rect = Rect.fromCenter(center: center, width: s * 2, height: s * 2);
+    final rrect = RRect.fromRectAndRadius(rect, Radius.circular(s * 0.3));
+    canvas.drawRRect(rrect, loopPaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _BakongLogoPainter oldDelegate) =>
+      oldDelegate.color != color || oldDelegate.strokeWidth != strokeWidth;
+}
+
+/// Standee background artwork: Red top banner with notch, Bakong watermark pattern, and lower right waves
+class _KhqrStandPainter extends CustomPainter {
+  const _KhqrStandPainter();
+
+  static const _khqrRed = Color(0xFFE1232E);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final w = size.width;
+    final h = size.height;
+
+    // 1. Subtle background watermark pattern (repeating 8-pointed star icons)
+    final watermarkPaint = Paint()
+      ..color = _khqrRed.withValues(alpha: 0.028)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.2;
+
+    for (double y = 45; y < h - 40; y += 75) {
+      for (double x = 30; x < w; x += 75) {
+        _drawWatermarkStar(canvas, Offset(x, y), 18, watermarkPaint);
+      }
+    }
+
+    final redPaint = Paint()
+      ..color = _khqrRed
+      ..style = PaintingStyle.fill;
+
+    // 2. Top Red Accent Banner with angled notch on the left
+    canvas.drawRect(Rect.fromLTWH(0, 0, w, 14), redPaint);
+
+    final notchPath = Path()
+      ..moveTo(0, 14)
+      ..lineTo(0, 26)
+      ..lineTo(18, 14)
+      ..close();
+    canvas.drawPath(notchPath, redPaint);
+
+    // 3. Bottom Right Iconic Curved Red Wave Ribbons
+    final wave1 = Path()
+      ..moveTo(w * 0.60, h)
+      ..cubicTo(w * 0.68, h - 85, w * 0.82, h - 130, w, h - 105)
+      ..lineTo(w, h)
+      ..close();
+    canvas.drawPath(wave1, redPaint);
+
+    final waveGap = Path()
+      ..moveTo(w * 0.76, h)
+      ..cubicTo(w * 0.81, h - 45, w * 0.89, h - 75, w, h - 65)
+      ..lineTo(w, h)
+      ..close();
+    final whitePaint = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.fill;
+    canvas.drawPath(waveGap, whitePaint);
+
+    final wave2 = Path()
+      ..moveTo(w * 0.82, h)
+      ..cubicTo(w * 0.86, h - 30, w * 0.92, h - 52, w, h - 45)
+      ..lineTo(w, h)
+      ..close();
+    canvas.drawPath(wave2, redPaint);
+
+    // 4. Bottom Solid Red Stripe
+    canvas.drawRect(Rect.fromLTWH(0, h - 8, w, 8), redPaint);
+  }
+
+  void _drawWatermarkStar(Canvas canvas, Offset center, double radius, Paint paint) {
+    final path = Path();
+    for (int i = 0; i < 8; i++) {
+      final aOuter = (i * 45) * math.pi / 180;
+      final aInner = (i * 45 + 22.5) * math.pi / 180;
+      final pOuter = Offset(
+          center.dx + radius * math.cos(aOuter), center.dy + radius * math.sin(aOuter));
+      final pInner = Offset(center.dx + (radius * 0.7) * math.cos(aInner),
+          center.dy + (radius * 0.7) * math.sin(aInner));
+      if (i == 0) {
+        path.moveTo(pOuter.dx, pOuter.dy);
+      } else {
+        path.lineTo(pOuter.dx, pOuter.dy);
+      }
+      path.lineTo(pInner.dx, pInner.dy);
+    }
+    path.close();
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _KhqrStandPainter oldDelegate) => false;
 }
