@@ -4,6 +4,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:url_launcher/url_launcher.dart';
+
 import '../app_settings.dart';
 import '../l10n/app_strings.dart';
 import '../models/chat.dart';
@@ -36,20 +37,32 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _ServiceItem {
-  const _ServiceItem(this.labelKey, this.icon, this.category);
+  const _ServiceItem(
+    this.labelKey,
+    this.icon,
+    this.category, {
+    this.badge,
+    this.englishLabel,
+  });
   final String labelKey;
   final IconData icon;
 
   /// Internal category name passed to `/services` (matches the keys in
   /// ServicesScreen's provider map / category chips).
   final String category;
+
+  /// Subtitle badge shown under category title (e.g. "Licensed", "24/7 Available").
+  final String? badge;
+
+  /// Direct label when displaying in English.
+  final String? englishLabel;
 }
 
 class _HeroBanner {
   const _HeroBanner(this.titleKey, this.icon, [this.category, this.imageAsset])
-      : rawTitle = null,
-        imageNetworkUrl = null,
-        provider = null;
+    : rawTitle = null,
+      imageNetworkUrl = null,
+      provider = null;
 
   /// A technician's own posted banner: real photo + free-form headline,
   /// tapping through to their profile instead of a category/tab.
@@ -57,11 +70,11 @@ class _HeroBanner {
     required String title,
     required this.imageNetworkUrl,
     required this.provider,
-  })  : titleKey = '',
-        icon = Icons.campaign_outlined,
-        category = null,
-        imageAsset = null,
-        rawTitle = title;
+  }) : titleKey = '',
+       icon = Icons.campaign_outlined,
+       category = null,
+       imageAsset = null,
+       rawTitle = title;
 
   final String titleKey;
   final IconData icon;
@@ -100,9 +113,14 @@ class _BenefitCheckRow extends StatelessWidget {
           const Icon(Icons.check_circle, size: 14, color: Color(0xFF91F3DC)),
           const SizedBox(width: 6),
           Expanded(
-            child: Text(text,
-                style: const TextStyle(
-                    fontSize: 11.5, height: 1.3, color: Colors.white)),
+            child: Text(
+              text,
+              style: const TextStyle(
+                fontSize: 11.5,
+                height: 1.3,
+                color: Colors.white,
+              ),
+            ),
           ),
         ],
       ),
@@ -114,13 +132,48 @@ class _DashboardScreenState extends State<DashboardScreen> {
   final _scaffoldKey = GlobalKey<ScaffoldState>();
 
   final _services = const [
-    _ServiceItem('svcElectrical', Icons.bolt_rounded, 'Electrical'),
-    _ServiceItem('svcWaterNetwork', Icons.plumbing_rounded, 'Water network'),
-    _ServiceItem('svcAirConditioner', Icons.ac_unit_rounded, 'Air Conditioner'),
     _ServiceItem(
-        'svcApplianceRepair', Icons.kitchen_outlined, 'Appliance Repair'),
-    _ServiceItem('svcCar', Icons.directions_car_filled_rounded, 'Car'),
-    _ServiceItem('svcMotorcycle', Icons.two_wheeler_rounded, 'Motorcycle'),
+      'svcElectrical',
+      Icons.bolt_rounded,
+      'Electrical',
+      badge: 'Licensed',
+      englishLabel: 'Electrical',
+    ),
+    _ServiceItem(
+      'svcWaterNetwork',
+      Icons.plumbing_rounded,
+      'Water network',
+      badge: '24/7 Available',
+      englishLabel: 'Plumbing',
+    ),
+    _ServiceItem(
+      'svcAirConditioner',
+      Icons.toys_rounded,
+      'Air Conditioner',
+      badge: 'Fast 15m',
+      englishLabel: 'Air Conditioner',
+    ),
+    _ServiceItem(
+      'svcApplianceRepair',
+      Icons.kitchen_outlined,
+      'Appliance Repair',
+      badge: 'All Brands',
+      englishLabel: 'Appliances',
+    ),
+    _ServiceItem(
+      'svcCar',
+      Icons.directions_car_filled_rounded,
+      'Car',
+      badge: '24/7 Available',
+      englishLabel: 'Car',
+    ),
+    _ServiceItem(
+      'svcMotorcycle',
+      Icons.two_wheeler_rounded,
+      'Motorcycle',
+      badge: 'Fast 15m',
+      englishLabel: 'Bike',
+    ),
   ];
 
   /// Real approved technicians from `GET /api/technicians`, fetched in
@@ -141,8 +194,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
   /// Newest still-open booking (from the polled [BookingsStore]) - the only
   /// thing the top "Tracking" card is ever shown for.
   Booking? get _activeBooking {
-    final open = [...BookingsStore.instance.upcoming]..sort((a, b) =>
-        (b.createdAt ?? DateTime(0)).compareTo(a.createdAt ?? DateTime(0)));
+    final open = [...BookingsStore.instance.upcoming]
+      ..sort(
+        (a, b) =>
+            (b.createdAt ?? DateTime(0)).compareTo(a.createdAt ?? DateTime(0)),
+      );
     return open.isEmpty ? null : open.first;
   }
 
@@ -164,25 +220,29 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Timer? _clock;
 
   static const _staticHeroBanners = [
-    _HeroBanner('heroAcTitle', Icons.ac_unit_rounded, 'Air Conditioner',
-        'assets/images/hero_ac_technician.png'),
+    _HeroBanner(
+      'heroAcTitle',
+      Icons.ac_unit_rounded,
+      'Air Conditioner',
+      'assets/images/hero_ac_technician.png',
+    ),
     _HeroBanner('heroGeneralTitle', Icons.build_rounded),
   ];
 
   /// The static promo slides plus one real slide per approved technician
   /// who has posted a banner (`GET /api/technicians` -> `bannerUrl`).
   List<_HeroBanner> get _heroBanners => [
-        ..._staticHeroBanners,
-        for (final t in _technicians)
-          if (t.bannerUrl != null)
-            _HeroBanner.technician(
-              title: (t.bannerTitle?.trim().isNotEmpty ?? false)
-                  ? t.bannerTitle!.trim()
-                  : t.name,
-              imageNetworkUrl: t.bannerUrl!,
-              provider: t,
-            ),
-      ];
+    ..._staticHeroBanners,
+    for (final t in _technicians)
+      if (t.bannerUrl != null)
+        _HeroBanner.technician(
+          title: (t.bannerTitle?.trim().isNotEmpty ?? false)
+              ? t.bannerTitle!.trim()
+              : t.name,
+          imageNetworkUrl: t.bannerUrl!,
+          provider: t,
+        ),
+  ];
 
   static IconData _categoryIcon(String c) {
     switch (c) {
@@ -221,15 +281,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
     _loadTechnicians();
     _loadRecentBooking();
     if (!FavoritesApi.instance.isLoaded) {
-      FavoritesApi.instance.list().then((_) {
-        if (mounted) setState(() {});
-      }).catchError((_) {});
+      FavoritesApi.instance
+          .list()
+          .then((_) {
+            if (mounted) setState(() {});
+          })
+          .catchError((_) {});
     }
     _heroTimer = Timer.periodic(const Duration(seconds: 5), (_) {
       if (!mounted || !_heroController.hasClients) return;
       _heroPage = (_heroPage + 1) % _heroBanners.length;
-      _heroController.animateToPage(_heroPage,
-          duration: const Duration(milliseconds: 400), curve: Curves.easeOut);
+      _heroController.animateToPage(
+        _heroPage,
+        duration: const Duration(milliseconds: 400),
+        curve: Curves.easeOut,
+      );
     });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) AppUpdateService.instance.checkOnStart(context);
@@ -241,8 +307,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
     try {
       final list = await BookingsApi.instance.listMine();
       if (!mounted || list.isEmpty) return;
-      list.sort((a, b) =>
-          (b.createdAt ?? DateTime(0)).compareTo(a.createdAt ?? DateTime(0)));
+      list.sort(
+        (a, b) =>
+            (b.createdAt ?? DateTime(0)).compareTo(a.createdAt ?? DateTime(0)),
+      );
       setState(() => _recentBooking = list.first);
     } catch (_) {
       // Best-effort - the card just doesn't show if this fails.
@@ -252,16 +320,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
   /// Pulls a few real reviews from the top-rated technicians already in
   /// [_technicians] for the "What Customers Say" section.
   Future<void> _loadTestimonials() async {
-    final picks = ([..._technicians]
-          ..sort((a, b) => b.rating.compareTo(a.rating)))
-        .where((t) => t.technicianId != null && t.ratingCount > 0)
-        .take(3);
+    final picks =
+        ([..._technicians]..sort((a, b) => b.rating.compareTo(a.rating)))
+            .where((t) => t.technicianId != null && t.ratingCount > 0)
+            .take(3);
     final collected = <Review>[];
     for (final t in picks) {
       try {
         final reviews = await TechniciansApi.instance.reviews(t.technicianId!);
-        collected
-            .addAll(reviews.where((r) => (r.comment ?? '').trim().isNotEmpty));
+        collected.addAll(
+          reviews.where((r) => (r.comment ?? '').trim().isNotEmpty),
+        );
       } catch (_) {
         // Skip this technician's reviews on failure, try the rest.
       }
@@ -276,8 +345,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Future<void> _loadTechnicians() async {
     final fix = await getCurrentLocation();
     if (mounted && fix.ok) {
-      setState(() =>
-          _userPos = LatLng(fix.position!.latitude, fix.position!.longitude));
+      setState(
+        () =>
+            _userPos = LatLng(fix.position!.latitude, fix.position!.longitude),
+      );
     }
     try {
       final list = await TechniciansApi.instance.list();
@@ -303,7 +374,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final me = _userPos;
     if (me == null || !t.hasLocation) return null;
     return distanceKmBetween(
-        me.latitude, me.longitude, t.latitude, t.longitude);
+      me.latitude,
+      me.longitude,
+      t.latitude,
+      t.longitude,
+    );
   }
 
   @override
@@ -347,21 +422,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
     OsrmApi.instance
         .route(origin: from, destination: LatLng(b.lat!, b.lng!))
         .then((r) {
-      if (mounted && r != null) setState(() => _eta = r.routes.first);
-    });
+          if (mounted && r != null) setState(() => _eta = r.routes.first);
+        });
   }
 
   /// Every approved technician's own priced listings, most-booked first.
   Future<void> _loadPopularListings(List<ServiceProvider> techs) async {
     final withId = techs.where((t) => t.technicianId != null).take(10);
-    final results = await Future.wait(withId.map((t) async {
-      try {
-        final ls = await TechniciansApi.instance.services(t.technicianId!);
-        return [for (final l in ls) (l, t)];
-      } catch (_) {
-        return <(TechnicianServiceListing, ServiceProvider)>[];
-      }
-    }));
+    final results = await Future.wait(
+      withId.map((t) async {
+        try {
+          final ls = await TechniciansApi.instance.services(t.technicianId!);
+          return [for (final l in ls) (l, t)];
+        } catch (_) {
+          return <(TechnicianServiceListing, ServiceProvider)>[];
+        }
+      }),
+    );
     final all = results.expand((e) => e).toList()
       ..sort((a, b) {
         final byJobs = b.$1.completedJobCount.compareTo(a.$1.completedJobCount);
@@ -424,8 +501,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return CircleAvatar(
       radius: radius,
       backgroundColor: p.surfaceAlt,
-      backgroundImage:
-          CachedNetworkImageProvider('${ApiClient.instance.baseUrl}$photo'),
+      backgroundImage: CachedNetworkImageProvider(
+        '${ApiClient.instance.baseUrl}$photo',
+      ),
     );
   }
 
@@ -458,13 +536,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 child: Container(
                   width: double.infinity,
                   constraints: BoxConstraints(
-                    minHeight: MediaQuery.of(context).size.height -
+                    minHeight:
+                        MediaQuery.of(context).size.height -
                         MediaQuery.of(context).padding.top,
                   ),
                   decoration: BoxDecoration(
                     color: p.surface,
-                    borderRadius:
-                        const BorderRadius.vertical(top: Radius.circular(28)),
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(28),
+                    ),
                   ),
                   padding: EdgeInsets.only(top: 4, bottom: 110 + bottomInset),
                   child: Column(
@@ -495,12 +575,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget _buildHeader() {
     final p = context.pal;
     return SafeArea(
-        bottom: false,
-        child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
-            child:
-                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Row(children: [
+      bottom: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
                 // Brand mark doubles as the drawer (menu) button.
                 InkWell(
                   onTap: () => _scaffoldKey.currentState?.openDrawer(),
@@ -509,78 +591,105 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     message: 'Menu',
                     child: ClipOval(
                       child: Image.asset(
-                          'assets/images/camfix_mascot_logo.webp',
-                          width: 40,
-                          height: 40,
-                          fit: BoxFit.cover),
+                        'assets/images/camfix_mascot_logo.webp',
+                        width: 40,
+                        height: 40,
+                        fit: BoxFit.cover,
+                      ),
                     ),
                   ),
                 ),
                 const SizedBox(width: 8),
                 const Expanded(
-                    child: Text('CAMFIX',
-                        style: TextStyle(
-                            color: AppColors.primaryBlue,
-                            fontSize: 18,
-                            letterSpacing: 2.5,
-                            fontWeight: FontWeight.w900))),
+                  child: Text(
+                    'CAMFIX',
+                    style: TextStyle(
+                      color: AppColors.primaryBlue,
+                      fontSize: 18,
+                      letterSpacing: 2.5,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ),
                 IconButton(
-                    tooltip: 'Favorites',
-                    onPressed: () =>
-                        Navigator.of(context).pushNamed('/favorites'),
-                    icon: const Icon(Icons.favorite_rounded,
-                        color: Colors.redAccent)),
+                  tooltip: 'Favorites',
+                  onPressed: () =>
+                      Navigator.of(context).pushNamed('/favorites'),
+                  icon: const Icon(
+                    Icons.favorite_rounded,
+                    color: Colors.redAccent,
+                  ),
+                ),
                 _bellIcon(),
                 IconButton(
-                    tooltip: AppStrings.t('profile'),
-                    onPressed: _openProfile,
-                    icon: const Icon(Icons.person_rounded,
-                        color: AppColors.primaryBlue)),
-              ]),
-              InkWell(
-                  onTap: _openProfile,
-                  child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      child: Row(children: [
-                        const Icon(Icons.location_on_outlined, size: 16),
-                        const SizedBox(width: 5),
-                        Expanded(
-                            child: Text(
-                                AppSettings.instance.defaultAddress ??
-                                    AppStrings.t('pickLocation'),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                    fontSize: 11, color: p.textPrimary))),
-                        const Icon(Icons.keyboard_arrow_down_rounded, size: 16),
-                      ]))),
-              TextField(
-                  readOnly: true,
-                  onTap: () => Navigator.of(context).pushNamed('/search'),
-                  decoration: InputDecoration(
-                      hintText: AppStrings.t('searchForService'),
-                      hintStyle:
-                          TextStyle(fontSize: 12, color: p.textSecondary),
-                      prefixIcon: const Icon(Icons.search_rounded, size: 20),
-                      filled: true,
-                      fillColor: p.surface,
-                      border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide.none))),
-              if (_activeBooking != null) ...[
-                const SizedBox(height: 14),
-                _activeTrackingCard(_activeBooking!),
+                  tooltip: AppStrings.t('profile'),
+                  onPressed: _openProfile,
+                  icon: const Icon(
+                    Icons.person_rounded,
+                    color: AppColors.primaryBlue,
+                  ),
+                ),
               ],
-              const SizedBox(height: 20),
-              Text('${AppStrings.t(_greetingKey)}, $_firstName',
-                  style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w800,
-                      color: p.textPrimary)),
-              const SizedBox(height: 3),
-              Text(AppStrings.t('whatNeedsFixingToday'),
-                  style: TextStyle(fontSize: 11, color: p.textSecondary)),
-            ])));
+            ),
+            InkWell(
+              onTap: _openProfile,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                child: Row(
+                  children: [
+                    const Icon(Icons.location_on_outlined, size: 16),
+                    const SizedBox(width: 5),
+                    Expanded(
+                      child: Text(
+                        AppSettings.instance.defaultAddress ??
+                            AppStrings.t('pickLocation'),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(fontSize: 11, color: p.textPrimary),
+                      ),
+                    ),
+                    const Icon(Icons.keyboard_arrow_down_rounded, size: 16),
+                  ],
+                ),
+              ),
+            ),
+            TextField(
+              readOnly: true,
+              onTap: () => Navigator.of(context).pushNamed('/search'),
+              decoration: InputDecoration(
+                hintText: AppStrings.t('searchForService'),
+                hintStyle: TextStyle(fontSize: 12, color: p.textSecondary),
+                prefixIcon: const Icon(Icons.search_rounded, size: 20),
+                filled: true,
+                fillColor: p.surface,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
+                ),
+              ),
+            ),
+            if (_activeBooking != null) ...[
+              const SizedBox(height: 14),
+              _activeTrackingCard(_activeBooking!),
+            ],
+            const SizedBox(height: 20),
+            Text(
+              '${AppStrings.t(_greetingKey)}, $_firstName',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w800,
+                color: p.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 3),
+            Text(
+              AppStrings.t('whatNeedsFixingToday'),
+              style: TextStyle(fontSize: 11, color: p.textSecondary),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   /// Top "Tracking" card for the newest open booking - every value is real:
@@ -597,8 +706,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
     final desc = booking.description;
     final cut = desc.indexOf(' - booked via app');
-    final serviceTitle =
-        cut > 0 ? desc.substring(0, cut) : categoryLabel(booking.category);
+    final serviceTitle = cut > 0
+        ? desc.substring(0, cut)
+        : categoryLabel(booking.category);
 
     // Dispatched -> On the way -> Arrived (Self Drop: Accepted -> Ready -> Received).
     final selfDrop = booking.isSelfDrop;
@@ -610,8 +720,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
     };
     final km = booking.hasTechnicianFix && booking.hasDestination && !selfDrop
         ? (_eta?.km ??
-            distanceKmBetween(booking.technicianLat!, booking.technicianLng!,
-                booking.lat!, booking.lng!))
+              distanceKmBetween(
+                booking.technicianLat!,
+                booking.technicianLng!,
+                booking.lat!,
+                booking.lng!,
+              ))
         : null;
     final steps = selfDrop
         ? [
@@ -634,10 +748,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final pill = booking.status == 'ON_THE_WAY' && _eta != null && !selfDrop
         ? '${AppStrings.t('inLabel')} ${_eta!.minutes} ${AppStrings.t('minShort')}'
         : booking.status == 'REQUESTED'
-            ? AppStrings.t('stepPending')
-            : (selfDrop && booking.scheduledAt != null)
-                ? booking.whenLabel
-                : null;
+        ? AppStrings.t('stepPending')
+        : (selfDrop && booking.scheduledAt != null)
+        ? booking.whenLabel
+        : null;
 
     return Container(
       padding: const EdgeInsets.all(14),
@@ -647,183 +761,254 @@ class _DashboardScreenState extends State<DashboardScreen> {
         border: Border.all(color: p.border),
         boxShadow: [
           BoxShadow(
-              color: p.shadow, blurRadius: 12, offset: const Offset(0, 4)),
+            color: p.shadow,
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
         ],
       ),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Row(children: [
-          const Icon(Icons.near_me_rounded, size: 16, color: Color(0xFF16A873)),
-          const SizedBox(width: 6),
-          Text(AppStrings.t('trackingCaps'),
-              style: const TextStyle(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(
+                Icons.near_me_rounded,
+                size: 16,
+                color: Color(0xFF16A873),
+              ),
+              const SizedBox(width: 6),
+              Text(
+                AppStrings.t('trackingCaps'),
+                style: const TextStyle(
                   fontSize: 10.5,
                   letterSpacing: 0.6,
                   fontWeight: FontWeight.w900,
-                  color: Color(0xFF16A873))),
-          Text('  •  #${booking.id}',
-              style: TextStyle(
+                  color: Color(0xFF16A873),
+                ),
+              ),
+              Text(
+                '  •  #${booking.id}',
+                style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w700,
-                  color: p.textSecondary)),
-          const Spacer(),
-          if (pill != null)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-              decoration: BoxDecoration(
-                color: const Color(0xFFEAF0FF),
-                borderRadius: BorderRadius.circular(999),
-              ),
-              child: Row(mainAxisSize: MainAxisSize.min, children: [
-                const Icon(Icons.schedule_rounded,
-                    size: 13, color: AppColors.primaryBlue),
-                const SizedBox(width: 4),
-                Text(pill,
-                    style: const TextStyle(
-                        fontSize: 10.5,
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.primaryBlue)),
-              ]),
-            ),
-        ]),
-        Divider(height: 20, color: p.border),
-        Row(children: [
-          tech != null
-              ? _avatar(tech, radius: 22)
-              : CircleAvatar(
-                  radius: 22,
-                  backgroundColor: p.surfaceAlt,
-                  child: const Icon(Icons.home_repair_service_rounded,
-                      color: AppColors.primaryBlue, size: 22),
+                  color: p.textSecondary,
                 ),
-          const SizedBox(width: 10),
-          Expanded(
-            child:
-                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text.rich(
-                TextSpan(children: [
-                  TextSpan(
-                      text: techName?.isNotEmpty == true
-                          ? techName!
-                          : AppStrings.t('waitingForTechnicianShort'),
-                      style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w800,
-                          color: p.textPrimary)),
-                  if (tech != null && tech.ratingCount > 0)
-                    TextSpan(
-                        text: '  (${tech.rating.toStringAsFixed(1)} ★)',
-                        style:
-                            TextStyle(fontSize: 11.5, color: p.textSecondary)),
-                ]),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
               ),
-              const SizedBox(height: 2),
-              Text(serviceTitle,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.primaryBlue)),
-              Text(categoryLabel(booking.category),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(fontSize: 10.5, color: p.textSecondary)),
-            ]),
+              const Spacer(),
+              if (pill != null)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 9,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFEAF0FF),
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.schedule_rounded,
+                        size: 13,
+                        color: AppColors.primaryBlue,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        pill,
+                        style: const TextStyle(
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.primaryBlue,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+            ],
           ),
-        ]),
-        const SizedBox(height: 12),
-        Row(children: [
-          for (var i = 0; i < steps.length; i++)
-            Expanded(
-              child: Text(steps[i],
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: i == 0
-                      ? TextAlign.left
-                      : i == steps.length - 1
-                          ? TextAlign.right
-                          : TextAlign.center,
-                  style: TextStyle(
+          Divider(height: 20, color: p.border),
+          Row(
+            children: [
+              tech != null
+                  ? _avatar(tech, radius: 22)
+                  : CircleAvatar(
+                      radius: 22,
+                      backgroundColor: p.surfaceAlt,
+                      child: const Icon(
+                        Icons.home_repair_service_rounded,
+                        color: AppColors.primaryBlue,
+                        size: 22,
+                      ),
+                    ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text.rich(
+                      TextSpan(
+                        children: [
+                          TextSpan(
+                            text: techName?.isNotEmpty == true
+                                ? techName!
+                                : AppStrings.t('waitingForTechnicianShort'),
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w800,
+                              color: p.textPrimary,
+                            ),
+                          ),
+                          if (tech != null && tech.ratingCount > 0)
+                            TextSpan(
+                              text: '  (${tech.rating.toStringAsFixed(1)} ★)',
+                              style: TextStyle(
+                                fontSize: 11.5,
+                                color: p.textSecondary,
+                              ),
+                            ),
+                        ],
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      serviceTitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.primaryBlue,
+                      ),
+                    ),
+                    Text(
+                      categoryLabel(booking.category),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(fontSize: 10.5, color: p.textSecondary),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              for (var i = 0; i < steps.length; i++)
+                Expanded(
+                  child: Text(
+                    steps[i],
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: i == 0
+                        ? TextAlign.left
+                        : i == steps.length - 1
+                        ? TextAlign.right
+                        : TextAlign.center,
+                    style: TextStyle(
                       fontSize: 10,
-                      fontWeight:
-                          i <= activeStep ? FontWeight.w700 : FontWeight.w500,
+                      fontWeight: i <= activeStep
+                          ? FontWeight.w700
+                          : FontWeight.w500,
                       color: i <= activeStep
                           ? AppColors.primaryBlue
-                          : p.textSecondary)),
-            ),
-        ]),
-        const SizedBox(height: 6),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(999),
-          child: LinearProgressIndicator(
-            value: progress,
-            minHeight: 5,
-            backgroundColor: p.surfaceAlt,
-            valueColor: const AlwaysStoppedAnimation(AppColors.primaryBlue),
+                          : p.textSecondary,
+                    ),
+                  ),
+                ),
+            ],
           ),
-        ),
-        const SizedBox(height: 12),
-        Row(children: [
-          Expanded(
-            child: FilledButton.icon(
-              onPressed: () => Navigator.of(context)
-                  .pushNamed('/booking-tracking', arguments: booking.id),
-              icon: const Icon(Icons.map_rounded, size: 18),
-              label: Text(AppStrings.t('trackLiveMap')),
-              style: FilledButton.styleFrom(
-                minimumSize: const Size.fromHeight(44),
-                backgroundColor: AppColors.primaryBlue,
-                textStyle:
-                    const TextStyle(fontSize: 13, fontWeight: FontWeight.w800),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
-              ),
+          const SizedBox(height: 6),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(999),
+            child: LinearProgressIndicator(
+              value: progress,
+              minHeight: 5,
+              backgroundColor: p.surfaceAlt,
+              valueColor: const AlwaysStoppedAnimation(AppColors.primaryBlue),
             ),
           ),
-          if ((booking.technicianPhone ?? '').isNotEmpty) ...[
-            const SizedBox(width: 8),
-            OutlinedButton(
-              onPressed: () =>
-                  launchUrl(Uri.parse('tel:${booking.technicianPhone}')),
-              style: OutlinedButton.styleFrom(
-                minimumSize: const Size(44, 44),
-                padding: EdgeInsets.zero,
-                side: BorderSide(color: p.border),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
-              ),
-              child: Icon(Icons.call_rounded, size: 18, color: p.textPrimary),
-            ),
-          ],
-          // Real per-booking chat - only once a technician is assigned.
-          if (booking.technicianId != null) ...[
-            const SizedBox(width: 8),
-            OutlinedButton(
-              onPressed: () => Navigator.of(context).pushNamed(
-                '/chat-thread',
-                arguments: ChatThreadArgs(
-                  jobId: booking.id,
-                  name:
-                      booking.technicianName ?? AppStrings.t('technicianLabel'),
-                  category: booking.category,
-                  phone: booking.technicianPhone,
-                  technicianId: booking.technicianId,
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: FilledButton.icon(
+                  onPressed: () => Navigator.of(context)
+                      .pushNamed('/booking-tracking', arguments: booking.id),
+                  icon: const Icon(Icons.map_rounded, size: 18),
+                  label: Text(AppStrings.t('trackLiveMap')),
+                  style: FilledButton.styleFrom(
+                    minimumSize: const Size.fromHeight(44),
+                    backgroundColor: AppColors.primaryBlue,
+                    textStyle: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w800,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
                 ),
               ),
-              style: OutlinedButton.styleFrom(
-                minimumSize: const Size(44, 44),
-                padding: EdgeInsets.zero,
-                side: BorderSide(color: p.border),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
-              ),
-              child: Icon(Icons.chat_rounded, size: 18, color: p.textPrimary),
-            ),
-          ],
-        ]),
-      ]),
+              if ((booking.technicianPhone ?? '').isNotEmpty) ...[
+                const SizedBox(width: 8),
+                OutlinedButton(
+                  onPressed: () =>
+                      launchUrl(Uri.parse('tel:${booking.technicianPhone}')),
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size(44, 44),
+                    padding: EdgeInsets.zero,
+                    side: BorderSide(color: p.border),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: Icon(
+                    Icons.call_rounded,
+                    size: 18,
+                    color: p.textPrimary,
+                  ),
+                ),
+              ],
+              // Real per-booking chat - only once a technician is assigned.
+              if (booking.technicianId != null) ...[
+                const SizedBox(width: 8),
+                OutlinedButton(
+                  onPressed: () => Navigator.of(context).pushNamed(
+                    '/chat-thread',
+                    arguments: ChatThreadArgs(
+                      jobId: booking.id,
+                      name:
+                          booking.technicianName ??
+                          AppStrings.t('technicianLabel'),
+                      category: booking.category,
+                      phone: booking.technicianPhone,
+                      technicianId: booking.technicianId,
+                    ),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size(44, 44),
+                    padding: EdgeInsets.zero,
+                    side: BorderSide(color: p.border),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: Icon(
+                    Icons.chat_rounded,
+                    size: 18,
+                    color: p.textPrimary,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ],
+      ),
     );
   }
 
@@ -951,8 +1136,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
               Positioned(
                 right: -24,
                 bottom: -30,
-                child: Icon(banner.icon,
-                    size: 150, color: AppColors.white.withValues(alpha: 0.10)),
+                child: Icon(
+                  banner.icon,
+                  size: 150,
+                  color: AppColors.white.withValues(alpha: 0.10),
+                ),
               ),
             if (hasPhoto)
               // A technician's own banner photo can contain anything
@@ -983,44 +1171,58 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text(banner.rawTitle ?? AppStrings.t(banner.titleKey),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                                color: AppColors.white,
-                                fontSize: 17,
-                                fontWeight: FontWeight.w800,
-                                height: 1.2,
-                                shadows: hasPhoto
-                                    ? [
-                                        Shadow(
-                                            color: Colors.black
-                                                .withValues(alpha: 0.5),
-                                            blurRadius: 6,
-                                            offset: const Offset(0, 1)),
-                                      ]
-                                    : null)),
+                        Text(
+                          banner.rawTitle ?? AppStrings.t(banner.titleKey),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: AppColors.white,
+                            fontSize: 17,
+                            fontWeight: FontWeight.w800,
+                            height: 1.2,
+                            shadows: hasPhoto
+                                ? [
+                                    Shadow(
+                                      color: Colors.black.withValues(
+                                        alpha: 0.5,
+                                      ),
+                                      blurRadius: 6,
+                                      offset: const Offset(0, 1),
+                                    ),
+                                  ]
+                                : null,
+                          ),
+                        ),
                         const SizedBox(height: 8),
                         ElevatedButton(
                           onPressed: () => banner.provider != null
-                              ? Navigator.of(context).pushNamed('/provider',
-                                  arguments: banner.provider)
+                              ? Navigator.of(context).pushNamed(
+                                  '/provider',
+                                  arguments: banner.provider,
+                                )
                               : banner.category != null
-                                  ? MainShell.of(context)
-                                      ?.openServiceCategory(banner.category!)
-                                  : MainShell.of(context)?.goToTab(1),
+                              ? MainShell.of(context)
+                                    ?.openServiceCategory(banner.category!)
+                              : MainShell.of(context)?.goToTab(1),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.white,
                             foregroundColor: AppColors.primaryBlue,
                             elevation: 0,
                             shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10)),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 18, vertical: 10),
+                              horizontal: 18,
+                              vertical: 10,
+                            ),
                           ),
-                          child: Text(AppStrings.t('bookNow'),
-                              style: const TextStyle(
-                                  fontWeight: FontWeight.w700, fontSize: 13)),
+                          child: Text(
+                            AppStrings.t('bookNow'),
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 13,
+                            ),
+                          ),
                         ),
                       ],
                     ),
@@ -1033,10 +1235,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         color: AppColors.white.withValues(alpha: 0.16),
                         shape: BoxShape.circle,
                         border: Border.all(
-                            color: AppColors.white.withValues(alpha: 0.25)),
+                          color: AppColors.white.withValues(alpha: 0.25),
+                        ),
                       ),
-                      child:
-                          Icon(banner.icon, color: AppColors.white, size: 34),
+                      child: Icon(
+                        banner.icon,
+                        color: AppColors.white,
+                        size: 34,
+                      ),
                     ),
                 ],
               ),
@@ -1054,63 +1260,85 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Widget _serviceTile(_ServiceItem item, {String? subtitle}) {
     final p = context.pal;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final mint = _mintCategories.contains(item.category);
+    final label =
+        (AppSettings.instance.lang == AppLang.en && item.englishLabel != null)
+            ? item.englishLabel!
+            : AppStrings.t(item.labelKey);
+    final sub = item.badge ?? subtitle;
+
     return Container(
       decoration: BoxDecoration(
         color: p.surface,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: p.border),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: isDark ? p.border : p.border.withValues(alpha: 0.28),
+          width: 1,
+        ),
         boxShadow: [
-          BoxShadow(color: p.shadow, blurRadius: 5, offset: const Offset(0, 1)),
+          BoxShadow(
+            color: isDark
+                ? Colors.transparent
+                : Colors.black.withValues(alpha: 0.035),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
         ],
       ),
       child: Material(
         color: Colors.transparent,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(18),
         child: InkWell(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(18),
           onTap: () =>
               MainShell.of(context)?.openServiceCategory(item.category),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Container(
-                  width: 42,
-                  height: 42,
+                  width: 44,
+                  height: 44,
                   decoration: BoxDecoration(
                     color: mint
                         ? const Color(0xFFD4F8F1)
                         : const Color(0xFFE8EBFF),
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(item.icon,
-                      color: mint
-                          ? const Color(0xFF148E89)
-                          : AppColors.primaryBlue,
-                      size: 20),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  AppStrings.t(item.labelKey),
-                  textAlign: TextAlign.center,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 11.5,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.primaryBlue,
+                  child: Icon(
+                    item.icon,
+                    color: mint
+                        ? const Color(0xFF148E89)
+                        : const Color(0xFF3B67FF),
+                    size: 22,
                   ),
                 ),
-                if (subtitle != null) ...[
-                  const SizedBox(height: 1),
+                const SizedBox(height: 7),
+                Text(
+                  label,
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w700,
+                    color: p.textPrimary,
+                  ),
+                ),
+                if (sub != null) ...[
+                  const SizedBox(height: 2),
                   Text(
-                    subtitle,
+                    sub,
                     textAlign: TextAlign.center,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(fontSize: 9.5, color: p.textSecondary),
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w500,
+                      color: p.textSecondary,
+                    ),
                   ),
                 ],
               ],
@@ -1125,6 +1353,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   /// regardless of which tab (Book a service / Active Job / History) is
   /// selected.
   Widget _buildServicesSection() {
+    final p = context.pal;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1135,41 +1364,55 @@ class _DashboardScreenState extends State<DashboardScreen> {
             onSeeAll: () => MainShell.of(context)?.goToTab(1),
           ),
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 12),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: AppLayout.pageGutter),
           child: LayoutBuilder(
             builder: (context, constraints) {
-              final textScale =
-                  MediaQuery.textScalerOf(context).scale(1).clamp(1.0, 2.0);
-              return FutureBuilder<List<ServicePriceInfo>>(
-                future: ServicePricesApi.instance.list(),
-                builder: (context, snapshot) {
-                  final prices = {
-                    for (final price
-                        in snapshot.data ?? const <ServicePriceInfo>[])
-                      price.categoryName: price.startingPrice,
-                  };
-                  return GridView.builder(
+              final textScale = MediaQuery.textScalerOf(context)
+                  .scale(1)
+                  .clamp(1.0, 2.0);
+              return Column(
+                children: [
+                  GridView.builder(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
                     itemCount: _services.length,
                     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 3,
-                      mainAxisSpacing: 10,
-                      crossAxisSpacing: constraints.maxWidth < 300 ? 8 : 10,
-                      mainAxisExtent: 100 + ((textScale - 1) * 24),
+                      mainAxisSpacing: 12,
+                      crossAxisSpacing: constraints.maxWidth < 320 ? 8 : 12,
+                      mainAxisExtent: 108 + ((textScale - 1) * 20),
                     ),
                     itemBuilder: (context, i) {
                       final item = _services[i];
-                      final price = prices[item.category];
-                      return _serviceTile(item,
-                          subtitle: price == null
-                              ? null
-                              : 'From \$${price.toStringAsFixed(0)}');
+                      return _serviceTile(item);
                     },
-                  );
-                },
+                  ),
+                  const SizedBox(height: 14),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        width: 18,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: AppColors.primaryBlue,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                      const SizedBox(width: 5),
+                      Container(
+                        width: 5,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: p.textSecondary.withValues(alpha: 0.25),
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               );
             },
           ),
@@ -1182,247 +1425,343 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget _buildReferenceSections() {
     final p = context.pal;
     final fixes = [
-      (AppStrings.t('leakingPipeRepair'), 'Water network', Icons.water_drop_outlined),
-      (AppStrings.t('acRefrigerantRecharge'), 'Air Conditioner', Icons.ac_unit_rounded),
-      (AppStrings.t('circuitBreakerTripping'), 'Electrical', Icons.bolt_rounded),
-      (AppStrings.t('drainUnclogging'), 'Water network', Icons.plumbing_rounded),
+      (
+        AppStrings.t('leakingPipeRepair'),
+        'Water network',
+        Icons.water_drop_outlined,
+      ),
+      (
+        AppStrings.t('acRefrigerantRecharge'),
+        'Air Conditioner',
+        Icons.ac_unit_rounded,
+      ),
+      (
+        AppStrings.t('circuitBreakerTripping'),
+        'Electrical',
+        Icons.bolt_rounded,
+      ),
+      (
+        AppStrings.t('drainUnclogging'),
+        'Water network',
+        Icons.plumbing_rounded,
+      ),
     ];
     const offerCount = 2;
-    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      const SizedBox(height: 24),
-      Container(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 24),
+        Container(
           color: p.background,
           padding: const EdgeInsets.symmetric(vertical: 20),
-          child: Column(children: [
-            Padding(
+          child: Column(
+            children: [
+              Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: _sectionHeader(AppStrings.t('specialOffersBenefits'),
-                    onSeeAll: () => MainShell.of(context)?.goToTab(1))),
-            const SizedBox(height: 12),
-            SizedBox(
+                child: _sectionHeader(
+                  AppStrings.t('specialOffersBenefits'),
+                  onSeeAll: () => MainShell.of(context)?.goToTab(1),
+                ),
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
                 height: 310,
                 child: ListView.separated(
-                    scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    itemCount: offerCount,
-                    separatorBuilder: (_, i) => const SizedBox(width: 14),
-                    itemBuilder: (context, i) {
-                      final ink = i == 0 ? p.textPrimary : Colors.white;
-                      return Container(
-                          width: 270,
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                              color: i == 0 ? p.surface : AppColors.deepBlue,
-                              borderRadius: BorderRadius.circular(16),
-                              boxShadow: [
-                                BoxShadow(
-                                    color: p.shadow,
-                                    blurRadius: 8,
-                                    offset: const Offset(0, 3))
-                              ]),
-                          child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 8, vertical: 4),
-                                      decoration: BoxDecoration(
-                                        color: i == 0
-                                            ? AppColors.primaryBlue
-                                                .withValues(alpha: 0.1)
-                                            : const Color(0xFF91F3DC)
-                                                .withValues(alpha: 0.18),
-                                        borderRadius: BorderRadius.circular(6),
-                                      ),
-                                      child: Text(
-                                          i == 0
-                                              ? AppStrings.t('seasonalService')
-                                              : AppStrings.t('whyCamFix'),
-                                          style: TextStyle(
-                                              fontSize: 10,
-                                              fontWeight: FontWeight.w800,
-                                              color: i == 0
-                                                  ? AppColors.primaryBlue
-                                                  : const Color(0xFF91F3DC))),
-                                    ),
-                                    Icon(
-                                        i == 0
-                                            ? Icons.ac_unit_rounded
-                                            : Icons.verified_outlined,
-                                        size: 18,
-                                        color: i == 0
-                                            ? AppColors.primaryBlue
-                                            : const Color(0xFF91F3DC)),
-                                  ],
-                                ),
-                                const SizedBox(height: 14),
-                                Text(
-                                    i == 0
-                                        ? AppStrings.t('acInspectionCare')
-                                        : AppStrings.t('builtOnRealReviews'),
-                                    style: TextStyle(
-                                        fontSize: 16,
-                                        color: ink,
-                                        fontWeight: FontWeight.w800)),
-                                const SizedBox(height: 8),
-                                if (i == 0)
-                                  Text(
-                                      AppStrings.t('keepHomeCoolAc'),
-                                      style: TextStyle(
-                                          fontSize: 12,
-                                          height: 1.5,
-                                          color: ink))
-                                else
-                                  Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      _BenefitCheckRow(
-                                          AppStrings.t('techniciansReviewedBefore')),
-                                      _BenefitCheckRow(
-                                          AppStrings.t('ratingsFromRealJobs')),
-                                      _BenefitCheckRow(
-                                          AppStrings.t('trackBookingRealTime')),
-                                    ],
-                                  ),
-                                const Spacer(),
-                                SizedBox(
-                                    width: double.infinity,
-                                    child: FilledButton(
-                                        style: FilledButton.styleFrom(
-                                            backgroundColor: i == 0
-                                                ? AppColors.primaryBlue
-                                                : const Color(0xFF91F3DC),
-                                            foregroundColor: i == 0
-                                                ? Colors.white
-                                                : AppColors.deepBlue,
-                                            shape: RoundedRectangleBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(10))),
-                                        onPressed: () => i == 0
-                                            ? MainShell.of(context)
-                                                ?.openServiceCategory(
-                                                    'Air Conditioner')
-                                            : MainShell.of(context)?.goToTab(1),
-                                        child: Text(
-                                            i == 0
-                                                ? AppStrings.t('findAcSpecialists')
-                                                : AppStrings.t('exploreServices'),
-                                            style: const TextStyle(
-                                                fontSize: 12)))),
-                              ]));
-                    })),
-          ])),
-      Padding(
-          padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
-          child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Only real technician listings - hidden until any exist.
-                if (_popular.isNotEmpty) ...[
-                  _sectionHeader(AppStrings.t('popularServices'),
-                      onSeeAll: () => MainShell.of(context)?.goToTab(1)),
-                  const SizedBox(height: 12),
-                  _buildPopularServicesRow(),
-                  const SizedBox(height: 24),
-                ],
-                Wrap(
-                  alignment: WrapAlignment.spaceBetween,
-                  spacing: 12,
-                  runSpacing: 4,
-                  children: [
-                    Text(AppStrings.t('commonFixesFastBooking'),
-                        style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w800,
-                            color: p.textPrimary)),
-                    Text(AppStrings.t('instantEstimates'),
-                        style: TextStyle(fontSize: 11, color: p.textSecondary)),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                FutureBuilder<List<ServicePriceInfo>>(
-                  future: ServicePricesApi.instance.list(),
-                  builder: (context, snapshot) {
-                    final prices = {
-                      for (final price
-                          in snapshot.data ?? const <ServicePriceInfo>[])
-                        price.categoryName: price.startingPrice,
-                    };
-                    return Column(children: [
-                      for (final fix in fixes)
-                        Container(
-                            margin: const EdgeInsets.only(bottom: 9),
-                            decoration: BoxDecoration(
-                                border: Border.all(color: p.border),
-                                borderRadius: BorderRadius.circular(12)),
-                            child: Material(
-                                color: Colors.transparent,
-                                borderRadius: BorderRadius.circular(12),
-                                child: ListTile(
-                                    contentPadding: const EdgeInsets.symmetric(
-                                        horizontal: 12),
-                                    leading: Container(
-                                        padding: const EdgeInsets.all(9),
-                                        decoration: BoxDecoration(
-                                            color: fix.$2 == 'Water network'
-                                                ? const Color(0xFFD4F8F1)
-                                                : const Color(0xFFE8EBFF),
-                                            borderRadius:
-                                                BorderRadius.circular(10)),
-                                        child: Icon(fix.$3,
-                                            size: 20,
-                                            color: fix.$2 == 'Water network'
-                                                ? const Color(0xFF148E89)
-                                                : AppColors.primaryBlue)),
-                                    title: Text(fix.$1,
-                                        style: const TextStyle(
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.w600)),
-                                    subtitle: Text(
-                                        prices[fix.$2] != null ? '${AppStrings.t('fromPrice')} \$${prices[fix.$2]!.toStringAsFixed(0)}' : AppStrings.t('viewSpecialists'),
-                                        style: const TextStyle(fontSize: 10)),
-                                    trailing: TextButton(style: TextButton.styleFrom(backgroundColor: const Color(0xFFE8EBFF), minimumSize: const Size(44, 32)), onPressed: () => MainShell.of(context)?.openServiceCategory(fix.$2), child: Text(AppStrings.t('book'), style: const TextStyle(fontSize: 10))),
-                                    onTap: () => MainShell.of(context)?.openServiceCategory(fix.$2)))),
-                    ]);
-                  },
-                ),
-                InkWell(
-                  borderRadius: BorderRadius.circular(12),
-                  onTap: () => MainShell.of(context)?.goToTab(1),
-                  child: Container(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  itemCount: offerCount,
+                  separatorBuilder: (_, i) => const SizedBox(width: 14),
+                  itemBuilder: (context, i) {
+                    final ink = i == 0 ? p.textPrimary : Colors.white;
+                    return Container(
+                      width: 270,
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                          color: p.surfaceAlt,
-                          borderRadius: BorderRadius.circular(12)),
-                      child: Row(children: [
-                        const Icon(Icons.verified_user_outlined,
-                            color: Color(0xFF148E89)),
-                        const SizedBox(width: 10),
-                        Expanded(
-                            child: Column(
+                        color: i == 0 ? p.surface : AppColors.deepBlue,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: p.shadow,
+                            blurRadius: 8,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: i == 0
+                                      ? AppColors.primaryBlue.withValues(
+                                          alpha: 0.1,
+                                        )
+                                      : const Color(0xFF91F3DC)
+                                            .withValues(alpha: 0.18),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Text(
+                                  i == 0
+                                      ? AppStrings.t('seasonalService')
+                                      : AppStrings.t('whyCamFix'),
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w800,
+                                    color: i == 0
+                                        ? AppColors.primaryBlue
+                                        : const Color(0xFF91F3DC),
+                                  ),
+                                ),
+                              ),
+                              Icon(
+                                i == 0
+                                    ? Icons.ac_unit_rounded
+                                    : Icons.verified_outlined,
+                                size: 18,
+                                color: i == 0
+                                    ? AppColors.primaryBlue
+                                    : const Color(0xFF91F3DC),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 14),
+                          Text(
+                            i == 0
+                                ? AppStrings.t('acInspectionCare')
+                                : AppStrings.t('builtOnRealReviews'),
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: ink,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          if (i == 0)
+                            Text(
+                              AppStrings.t('keepHomeCoolAc'),
+                              style: TextStyle(
+                                fontSize: 12,
+                                height: 1.5,
+                                color: ink,
+                              ),
+                            )
+                          else
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                _BenefitCheckRow(
+                                  AppStrings.t('techniciansReviewedBefore'),
+                                ),
+                                _BenefitCheckRow(
+                                  AppStrings.t('ratingsFromRealJobs'),
+                                ),
+                                _BenefitCheckRow(
+                                  AppStrings.t('trackBookingRealTime'),
+                                ),
+                              ],
+                            ),
+                          const Spacer(),
+                          SizedBox(
+                            width: double.infinity,
+                            child: FilledButton(
+                              style: FilledButton.styleFrom(
+                                backgroundColor: i == 0
+                                    ? AppColors.primaryBlue
+                                    : const Color(0xFF91F3DC),
+                                foregroundColor: i == 0
+                                    ? Colors.white
+                                    : AppColors.deepBlue,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                              ),
+                              onPressed: () => i == 0
+                                  ? MainShell.of(context)
+                                        ?.openServiceCategory('Air Conditioner')
+                                  : MainShell.of(context)?.goToTab(1),
+                              child: Text(
+                                i == 0
+                                    ? AppStrings.t('findAcSpecialists')
+                                    : AppStrings.t('exploreServices'),
+                                style: const TextStyle(fontSize: 12),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Only real technician listings - hidden until any exist.
+              if (_popular.isNotEmpty) ...[
+                _sectionHeader(
+                  AppStrings.t('popularServices'),
+                  onSeeAll: () => MainShell.of(context)?.goToTab(1),
+                ),
+                const SizedBox(height: 12),
+                _buildPopularServicesRow(),
+                const SizedBox(height: 24),
+              ],
+              Wrap(
+                alignment: WrapAlignment.spaceBetween,
+                spacing: 12,
+                runSpacing: 4,
+                children: [
+                  Text(
+                    AppStrings.t('commonFixesFastBooking'),
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w800,
+                      color: p.textPrimary,
+                    ),
+                  ),
+                  Text(
+                    AppStrings.t('instantEstimates'),
+                    style: TextStyle(fontSize: 11, color: p.textSecondary),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              FutureBuilder<List<ServicePriceInfo>>(
+                future: ServicePricesApi.instance.list(),
+                builder: (context, snapshot) {
+                  final prices = {
+                    for (final price
+                        in snapshot.data ?? const <ServicePriceInfo>[])
+                      price.categoryName: price.startingPrice,
+                  };
+                  return Column(
+                    children: [
+                      for (final fix in fixes)
+                        Container(
+                          margin: const EdgeInsets.only(bottom: 9),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: p.border),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Material(
+                            color: Colors.transparent,
+                            borderRadius: BorderRadius.circular(12),
+                            child: ListTile(
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                              ),
+                              leading: Container(
+                                padding: const EdgeInsets.all(9),
+                                decoration: BoxDecoration(
+                                  color: fix.$2 == 'Water network'
+                                      ? const Color(0xFFD4F8F1)
+                                      : const Color(0xFFE8EBFF),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Icon(
+                                  fix.$3,
+                                  size: 20,
+                                  color: fix.$2 == 'Water network'
+                                      ? const Color(0xFF148E89)
+                                      : AppColors.primaryBlue,
+                                ),
+                              ),
+                              title: Text(
+                                fix.$1,
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              subtitle: Text(
+                                prices[fix.$2] != null
+                                    ? '${AppStrings.t('fromPrice')} \$${prices[fix.$2]!.toStringAsFixed(0)}'
+                                    : AppStrings.t('viewSpecialists'),
+                                style: const TextStyle(fontSize: 10),
+                              ),
+                              trailing: TextButton(
+                                style: TextButton.styleFrom(
+                                  backgroundColor: const Color(0xFFE8EBFF),
+                                  minimumSize: const Size(44, 32),
+                                ),
+                                onPressed: () =>
+                                    MainShell.of(context)
+                                        ?.openServiceCategory(fix.$2),
+                                child: Text(
+                                  AppStrings.t('book'),
+                                  style: const TextStyle(fontSize: 10),
+                                ),
+                              ),
+                              onTap: () =>
+                                  MainShell.of(context)
+                                      ?.openServiceCategory(fix.$2),
+                            ),
+                          ),
+                        ),
+                    ],
+                  );
+                },
+              ),
+              InkWell(
+                borderRadius: BorderRadius.circular(12),
+                onTap: () => MainShell.of(context)?.goToTab(1),
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: p.surfaceAlt,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.verified_user_outlined,
+                        color: Color(0xFF148E89),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(AppStrings.t('verifiedTechniciansTitle'),
-                                style: TextStyle(
-                                    fontSize: 12.5,
-                                    fontWeight: FontWeight.w700,
-                                    color: p.textPrimary)),
                             Text(
-                                AppStrings.t('verifiedTechniciansDesc'),
-                                style: TextStyle(
-                                    fontSize: 10.5, color: p.textSecondary)),
+                              AppStrings.t('verifiedTechniciansTitle'),
+                              style: TextStyle(
+                                fontSize: 12.5,
+                                fontWeight: FontWeight.w700,
+                                color: p.textPrimary,
+                              ),
+                            ),
+                            Text(
+                              AppStrings.t('verifiedTechniciansDesc'),
+                              style: TextStyle(
+                                fontSize: 10.5,
+                                color: p.textSecondary,
+                              ),
+                            ),
                           ],
-                        )),
-                        Icon(Icons.chevron_right, color: p.textSecondary),
-                      ])),
+                        ),
+                      ),
+                      Icon(Icons.chevron_right, color: p.textSecondary),
+                    ],
+                  ),
                 ),
-              ])),
-    ]);
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
   }
 
   Widget _buildPopularServicesRow() {
@@ -1457,132 +1796,183 @@ class _DashboardScreenState extends State<DashboardScreen> {
           border: Border.all(color: p.border),
           boxShadow: [
             BoxShadow(
-                color: p.shadow, blurRadius: 8, offset: const Offset(0, 3)),
+              color: p.shadow,
+              blurRadius: 8,
+              offset: const Offset(0, 3),
+            ),
           ],
         ),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Stack(children: [
-            ClipRRect(
-              borderRadius:
-                  const BorderRadius.vertical(top: Radius.circular(14)),
-              child: SizedBox(
-                height: 88,
-                width: double.infinity,
-                child: photo != null
-                    ? CachedNetworkImage(
-                        imageUrl: '${ApiClient.instance.baseUrl}$photo',
-                        fit: BoxFit.cover,
-                        errorWidget: (_, __, ___) =>
-                            _popularPlaceholder(t.category),
-                      )
-                    : _popularPlaceholder(t.category),
-              ),
-            ),
-            if (t.ratingCount > 0)
-              Positioned(
-                top: 8,
-                left: 8,
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.92),
-                    borderRadius: BorderRadius.circular(999),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Stack(
+              children: [
+                ClipRRect(
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(14),
                   ),
-                  child: Row(mainAxisSize: MainAxisSize.min, children: [
-                    const Icon(Icons.star_rounded,
-                        color: Color(0xFFFFB300), size: 13),
-                    const SizedBox(width: 2),
-                    Text('${t.rating.toStringAsFixed(1)} (${t.ratingCount})',
-                        style: const TextStyle(
-                            fontSize: 10.5,
-                            fontWeight: FontWeight.w800,
-                            color: AppColors.textDark)),
-                  ]),
+                  child: SizedBox(
+                    height: 88,
+                    width: double.infinity,
+                    child: photo != null
+                        ? CachedNetworkImage(
+                            imageUrl: '${ApiClient.instance.baseUrl}$photo',
+                            fit: BoxFit.cover,
+                            errorWidget: (_, __, ___) =>
+                                _popularPlaceholder(t.category),
+                          )
+                        : _popularPlaceholder(t.category),
+                  ),
                 ),
-              ),
-          ]),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
-            child:
-                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(l.title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
+                if (t.ratingCount > 0)
+                  Positioned(
+                    top: 8,
+                    left: 8,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 7,
+                        vertical: 3,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.92),
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.star_rounded,
+                            color: Color(0xFFFFB300),
+                            size: 13,
+                          ),
+                          const SizedBox(width: 2),
+                          Text(
+                            '${t.rating.toStringAsFixed(1)} (${t.ratingCount})',
+                            style: const TextStyle(
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.w800,
+                              color: AppColors.textDark,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    l.title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w800,
-                      color: p.textPrimary)),
-              const SizedBox(height: 4),
-              Row(children: [
-                Icon(Icons.engineering_rounded,
-                    size: 13, color: p.textSecondary),
-                const SizedBox(width: 4),
-                Expanded(
-                  child: Text(
-                      l.completedJobCount > 0
-                          ? '${t.name} • ${l.completedJobCount} done'
-                          : t.name,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(fontSize: 10.5, color: p.textSecondary)),
-                ),
-              ]),
-              const SizedBox(height: 10),
-              Row(children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                      color: p.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
                     children: [
-                      Text(AppStrings.t('startingPrice'),
+                      Icon(
+                        Icons.engineering_rounded,
+                        size: 13,
+                        color: p.textSecondary,
+                      ),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                          l.completedJobCount > 0
+                              ? '${t.name} • ${l.completedJobCount} done'
+                              : t.name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                           style: TextStyle(
-                              fontSize: 9,
-                              fontWeight: FontWeight.w800,
-                              color: p.textSecondary)),
-                      const SizedBox(height: 1),
-                      Text(
-                          '\$${l.price.toStringAsFixed(l.price == l.price.roundToDouble() ? 0 : 2)}',
-                          style: TextStyle(
-                              fontSize: 20,
-                              height: 0.95,
-                              fontWeight: FontWeight.w900,
-                              color: p.textPrimary)),
+                            fontSize: 10.5,
+                            color: p.textSecondary,
+                          ),
+                        ),
+                      ),
                     ],
                   ),
-                ),
-                FilledButton(
-                  onPressed: () => showBookingSheet(context, t, listing: l),
-                  style: FilledButton.styleFrom(
-                    minimumSize: const Size(54, 34),
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    backgroundColor: AppColors.primaryBlue,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10)),
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              AppStrings.t('startingPrice'),
+                              style: TextStyle(
+                                fontSize: 9,
+                                fontWeight: FontWeight.w800,
+                                color: p.textSecondary,
+                              ),
+                            ),
+                            const SizedBox(height: 1),
+                            Text(
+                              '\$${l.price.toStringAsFixed(l.price == l.price.roundToDouble() ? 0 : 2)}',
+                              style: TextStyle(
+                                fontSize: 20,
+                                height: 0.95,
+                                fontWeight: FontWeight.w900,
+                                color: p.textPrimary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      FilledButton(
+                        onPressed: () =>
+                            showBookingSheet(context, t, listing: l),
+                        style: FilledButton.styleFrom(
+                          minimumSize: const Size(54, 34),
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          backgroundColor: AppColors.primaryBlue,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        child: Text(
+                          AppStrings.t('book'),
+                          style: const TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                  child: Text(AppStrings.t('book'),
-                      style:
-                          const TextStyle(fontSize: 11, fontWeight: FontWeight.w800)),
-                ),
-              ]),
-            ]),
-          ),
-        ]),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   Widget _popularPlaceholder(String category) => Container(
-        color: const Color(0xFFE8EBFF),
-        alignment: Alignment.center,
-        child: Icon(_categoryIcon(category),
-            size: 36, color: AppColors.primaryBlue),
-      );
+    color: const Color(0xFFE8EBFF),
+    alignment: Alignment.center,
+    child: Icon(
+      _categoryIcon(category),
+      size: 36,
+      color: AppColors.primaryBlue,
+    ),
+  );
 
   Widget _buildTechniciansSection() {
     final topRated = [..._technicians]
       ..sort((a, b) => b.rating.compareTo(a.rating));
-    final nearby = [..._technicians]..sort((a, b) {
+    final nearby = [..._technicians]
+      ..sort((a, b) {
         if (a.available != b.available) return a.available ? -1 : 1;
         final aDistance = _distanceKm(a);
         final bDistance = _distanceKm(b);
@@ -1625,19 +2015,24 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   padding: EdgeInsets.symmetric(vertical: 20),
                   child: Center(
                     child: SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2)),
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
                   ),
                 )
               else if (_technicians.isEmpty)
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 20),
                   child: Center(
-                    child: Text(AppStrings.t('noTechniciansNearby'),
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                            fontSize: 13, color: context.pal.textSecondary)),
+                    child: Text(
+                      AppStrings.t('noTechniciansNearby'),
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: context.pal.textSecondary,
+                      ),
+                    ),
                   ),
                 )
               else
@@ -1724,18 +2119,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
       return const SizedBox(
         height: 150,
         child: Center(
-            child: SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(strokeWidth: 2))),
+          child: SizedBox(
+            width: 20,
+            height: 20,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+        ),
       );
     }
     if (list.isEmpty) {
       return SizedBox(
         height: 60,
         child: Center(
-          child: Text(AppStrings.t('noTechniciansNearby'),
-              style: TextStyle(fontSize: 13, color: context.pal.textSecondary)),
+          child: Text(
+            AppStrings.t('noTechniciansNearby'),
+            style: TextStyle(fontSize: 13, color: context.pal.textSecondary),
+          ),
         ),
       );
     }
@@ -1756,7 +2155,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final hasPhoto = t.photoUrl != null && t.photoUrl!.isNotEmpty;
     final photoProvider = hasPhoto
         ? CachedNetworkImageProvider(
-            '${ApiClient.instance.baseUrl}${t.photoUrl}')
+            '${ApiClient.instance.baseUrl}${t.photoUrl}',
+          )
         : null;
     return InkWell(
       onTap: () => _openTechnician(t),
@@ -1769,7 +2169,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
           border: Border.all(color: p.border),
           boxShadow: [
             BoxShadow(
-                color: p.shadow, blurRadius: 5, offset: const Offset(0, 1)),
+              color: p.shadow,
+              blurRadius: 5,
+              offset: const Offset(0, 1),
+            ),
           ],
         ),
         child: Stack(
@@ -1779,8 +2182,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 ClipRRect(
-                  borderRadius:
-                      const BorderRadius.vertical(top: Radius.circular(14)),
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(14),
+                  ),
                   child: SizedBox(
                     height: 84,
                     width: double.infinity,
@@ -1788,8 +2192,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         ? Image(image: photoProvider!, fit: BoxFit.cover)
                         : Container(
                             color: p.surfaceAlt,
-                            child: const Icon(Icons.person,
-                                color: AppColors.primaryBlue, size: 36),
+                            child: const Icon(
+                              Icons.person,
+                              color: AppColors.primaryBlue,
+                              size: 36,
+                            ),
                           ),
                   ),
                 ),
@@ -1798,81 +2205,109 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(t.name,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                              fontWeight: FontWeight.w700,
-                              fontSize: 13.5,
-                              color: p.textPrimary)),
-                      Text(categoryLabel(t.category),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                              fontSize: 11.5, color: p.textSecondary)),
+                      Text(
+                        t.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 13.5,
+                          color: p.textPrimary,
+                        ),
+                      ),
+                      Text(
+                        categoryLabel(t.category),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 11.5,
+                          color: p.textSecondary,
+                        ),
+                      ),
                       const SizedBox(height: 6),
                       Row(
                         children: [
-                          const Icon(Icons.star_rounded,
-                              size: 14, color: Color(0xFFFFB300)),
+                          const Icon(
+                            Icons.star_rounded,
+                            size: 14,
+                            color: Color(0xFFFFB300),
+                          ),
                           const SizedBox(width: 2),
-                          Text(t.rating.toStringAsFixed(1),
-                              style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w700,
-                                  color: p.textPrimary)),
+                          Text(
+                            t.rating.toStringAsFixed(1),
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              color: p.textPrimary,
+                            ),
+                          ),
                           const SizedBox(width: 3),
                           Expanded(
-                            child: Text('(${t.ratingCount})',
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                    fontSize: 11, color: p.textSecondary)),
+                            child: Text(
+                              '(${t.ratingCount})',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: p.textSecondary,
+                              ),
+                            ),
                           ),
                         ],
                       ),
                       const SizedBox(height: 4),
-                      Builder(builder: (_) {
-                        final km = _distanceKm(t);
-                        if (km == null) {
-                          return Text(
-                            AppStrings.t(
-                                t.available ? 'available' : 'unavailable'),
-                            style: TextStyle(
+                      Builder(
+                        builder: (_) {
+                          final km = _distanceKm(t);
+                          if (km == null) {
+                            return Text(
+                              AppStrings.t(
+                                t.available ? 'available' : 'unavailable',
+                              ),
+                              style: TextStyle(
                                 fontSize: 10.5,
                                 fontWeight: FontWeight.w600,
                                 color: t.available
                                     ? const Color(0xFF2ECC71)
-                                    : p.textSecondary),
-                          );
-                        }
-                        return Row(
-                          children: [
-                            Icon(Icons.location_on,
-                                size: 11, color: p.textSecondary),
-                            Expanded(
-                              child: Text(
-                                ' ${AppSettings.instance.convertKm(km).toStringAsFixed(1)} '
-                                '${AppStrings.t(AppSettings.instance.distanceUnitKey)}',
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                    fontSize: 10.5, color: p.textSecondary),
+                                    : p.textSecondary,
                               ),
-                            ),
-                            Text(
-                              AppStrings.t(
-                                  t.available ? 'available' : 'unavailable'),
-                              style: TextStyle(
+                            );
+                          }
+                          return Row(
+                            children: [
+                              Icon(
+                                Icons.location_on,
+                                size: 11,
+                                color: p.textSecondary,
+                              ),
+                              Expanded(
+                                child: Text(
+                                  ' ${AppSettings.instance.convertKm(km).toStringAsFixed(1)} '
+                                  '${AppStrings.t(AppSettings.instance.distanceUnitKey)}',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontSize: 10.5,
+                                    color: p.textSecondary,
+                                  ),
+                                ),
+                              ),
+                              Text(
+                                AppStrings.t(
+                                  t.available ? 'available' : 'unavailable',
+                                ),
+                                style: TextStyle(
                                   fontSize: 10.5,
                                   fontWeight: FontWeight.w600,
                                   color: t.available
                                       ? const Color(0xFF2ECC71)
-                                      : p.textSecondary),
-                            ),
-                          ],
-                        );
-                      }),
+                                      : p.textSecondary,
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                      ),
                     ],
                   ),
                 ),
@@ -1892,8 +2327,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   backgroundImage: photoProvider,
                   child: hasPhoto
                       ? null
-                      : const Icon(Icons.person,
-                          color: AppColors.primaryBlue, size: 18),
+                      : const Icon(
+                          Icons.person,
+                          color: AppColors.primaryBlue,
+                          size: 18,
+                        ),
                 ),
               ),
             ),
@@ -1914,8 +2352,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           size: 14,
                           color:
                               FavoritesApi.instance.isFavorite(t.technicianId!)
-                                  ? const Color(0xFFE23D3D)
-                                  : p.textSecondary,
+                              ? const Color(0xFFE23D3D)
+                              : p.textSecondary,
                         ),
                       ),
                     )
@@ -1933,7 +2371,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       (
         Icons.calendar_month_rounded,
         'howItWorksStep2Title',
-        'howItWorksStep2Desc'
+        'howItWorksStep2Desc',
       ),
       (Icons.build_rounded, 'howItWorksStep3Title', 'howItWorksStep3Desc'),
     ];
@@ -1946,8 +2384,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
             child: Padding(
               padding: EdgeInsets.only(right: i < steps.length - 1 ? 8 : 0),
               child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 6, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 6,
+                  vertical: 10,
+                ),
                 decoration: BoxDecoration(
                   color: AppColors.primaryBlue.withValues(alpha: 0.07),
                   borderRadius: BorderRadius.circular(12),
@@ -1967,8 +2407,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               color: AppColors.cyan.withValues(alpha: 0.12),
                               shape: BoxShape.circle,
                             ),
-                            child: Icon(icon,
-                                color: AppColors.primaryBlue, size: 24),
+                            child: Icon(
+                              icon,
+                              color: AppColors.primaryBlue,
+                              size: 24,
+                            ),
                           ),
                           Positioned(
                             left: 0,
@@ -1995,23 +2438,29 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ),
                     ),
                     const SizedBox(height: 6),
-                    Text(AppStrings.t(titleKey),
-                        textAlign: TextAlign.center,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                            fontWeight: FontWeight.w700,
-                            fontSize: 11,
-                            color: context.pal.textPrimary)),
+                    Text(
+                      AppStrings.t(titleKey),
+                      textAlign: TextAlign.center,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 11,
+                        color: context.pal.textPrimary,
+                      ),
+                    ),
                     const SizedBox(height: 3),
-                    Text(AppStrings.t(descKey),
-                        textAlign: TextAlign.center,
-                        maxLines: 3,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                            fontSize: 9.2,
-                            height: 1.25,
-                            color: context.pal.textSecondary)),
+                    Text(
+                      AppStrings.t(descKey),
+                      textAlign: TextAlign.center,
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 9.2,
+                        height: 1.25,
+                        color: context.pal.textSecondary,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -2065,11 +2514,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         borderRadius: BorderRadius.circular(11),
         border: Border.all(color: p.border),
         boxShadow: [
-          BoxShadow(
-            color: p.shadow,
-            blurRadius: 5,
-            offset: const Offset(0, 1),
-          ),
+          BoxShadow(color: p.shadow, blurRadius: 5, offset: const Offset(0, 1)),
         ],
       ),
       child: Column(
@@ -2080,18 +2525,24 @@ class _DashboardScreenState extends State<DashboardScreen> {
               CircleAvatar(
                 radius: 12,
                 backgroundColor: p.surfaceAlt,
-                child: const Icon(Icons.person,
-                    size: 14, color: AppColors.primaryBlue),
+                child: const Icon(
+                  Icons.person,
+                  size: 14,
+                  color: AppColors.primaryBlue,
+                ),
               ),
               const SizedBox(width: 6),
               Expanded(
-                child: Text(name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                        fontSize: 11.5,
-                        fontWeight: FontWeight.w700,
-                        color: p.textPrimary)),
+                child: Text(
+                  name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w700,
+                    color: p.textPrimary,
+                  ),
+                ),
               ),
             ],
           ),
@@ -2099,23 +2550,32 @@ class _DashboardScreenState extends State<DashboardScreen> {
           Row(
             children: List.generate(
               5,
-              (i) => Icon(Icons.star_rounded,
-                  size: 12,
-                  color: i < r.rating ? const Color(0xFFFFB300) : p.border),
+              (i) => Icon(
+                Icons.star_rounded,
+                size: 12,
+                color: i < r.rating ? const Color(0xFFFFB300) : p.border,
+              ),
             ),
           ),
           const SizedBox(height: 4),
           Expanded(
-            child: Text(r.comment ?? '',
-                maxLines: 3,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                    fontSize: 10.3, color: p.textPrimary, height: 1.25)),
+            child: Text(
+              r.comment ?? '',
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 10.3,
+                color: p.textPrimary,
+                height: 1.25,
+              ),
+            ),
           ),
           if (r.createdAt != null) ...[
             const SizedBox(height: 4),
-            Text(_shortDate(r.createdAt!),
-                style: TextStyle(fontSize: 9, color: p.textSecondary)),
+            Text(
+              _shortDate(r.createdAt!),
+              style: TextStyle(fontSize: 9, color: p.textSecondary),
+            ),
           ],
         ],
       ),
@@ -2143,8 +2603,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
               color: AppColors.primaryBlue,
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.verified_user_rounded,
-                color: AppColors.white, size: 22),
+            child: const Icon(
+              Icons.verified_user_rounded,
+              color: AppColors.white,
+              size: 22,
+            ),
           ),
           const SizedBox(width: 10),
           Expanded(
@@ -2174,8 +2637,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
           ),
           const SizedBox(width: 3),
-          const Icon(Icons.chevron_right_rounded,
-              color: AppColors.primaryBlue, size: 18),
+          const Icon(
+            Icons.chevron_right_rounded,
+            color: AppColors.primaryBlue,
+            size: 18,
+          ),
         ],
       ),
     );
@@ -2196,7 +2662,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
           border: Border.all(color: p.border),
           boxShadow: [
             BoxShadow(
-                color: p.shadow, blurRadius: 8, offset: const Offset(0, 2)),
+              color: p.shadow,
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
           ],
         ),
         child: Column(
@@ -2235,8 +2704,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         b.whenLabel,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style:
-                            TextStyle(fontSize: 10.5, color: p.textSecondary),
+                        style: TextStyle(
+                          fontSize: 10.5,
+                          color: p.textSecondary,
+                        ),
                       ),
                     ],
                   ),
@@ -2250,9 +2721,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
               child: ElevatedButton(
                 onPressed: completed
                     ? () =>
-                        MainShell.of(context)?.openServiceCategory(b.category)
-                    : () => Navigator.of(context)
-                        .pushNamed('/booking-tracking', arguments: b.id),
+                          MainShell.of(context)?.openServiceCategory(b.category)
+                    : () =>
+                          Navigator.of(context)
+                              .pushNamed('/booking-tracking', arguments: b.id),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primaryBlue,
                   foregroundColor: AppColors.white,
@@ -2295,13 +2767,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(categoryLabel(b.category),
-                      style: TextStyle(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 13.5,
-                          color: p.textPrimary)),
-                  Text(b.whenLabel,
-                      style: TextStyle(fontSize: 11.5, color: p.textSecondary)),
+                  Text(
+                    categoryLabel(b.category),
+                    style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 13.5,
+                      color: p.textPrimary,
+                    ),
+                  ),
+                  Text(
+                    b.whenLabel,
+                    style: TextStyle(fontSize: 11.5, color: p.textSecondary),
+                  ),
                 ],
               ),
             ),
@@ -2313,28 +2790,37 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   backgroundColor: AppColors.primaryBlue,
                   foregroundColor: AppColors.white,
                   elevation: 0,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
                   shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10)),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
                 ),
-                child: Text(AppStrings.t('bookAgain'),
-                    style: const TextStyle(fontSize: 12)),
+                child: Text(
+                  AppStrings.t('bookAgain'),
+                  style: const TextStyle(fontSize: 12),
+                ),
               )
             else
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: AppColors.primaryBlue.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
-                    AppStrings.t(b.status == 'REQUESTED' ? 'pending' : 'live'),
-                    style: const TextStyle(
-                        color: AppColors.primaryBlue,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 11)),
+                  AppStrings.t(b.status == 'REQUESTED' ? 'pending' : 'live'),
+                  style: const TextStyle(
+                    color: AppColors.primaryBlue,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 11,
+                  ),
+                ),
               ),
           ],
         ),
@@ -2368,8 +2854,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   color: AppColors.white.withValues(alpha: 0.17),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.support_agent_rounded,
-                    color: AppColors.white, size: 18),
+                child: const Icon(
+                  Icons.support_agent_rounded,
+                  color: AppColors.white,
+                  size: 18,
+                ),
               ),
               const SizedBox(width: 8),
               Expanded(
@@ -2435,16 +2924,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
           final copy = Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(AppStrings.t('needEmergencyHelp'),
-                  style: const TextStyle(
-                      color: AppColors.white,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 13.5)),
+              Text(
+                AppStrings.t('needEmergencyHelp'),
+                style: const TextStyle(
+                  color: AppColors.white,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 13.5,
+                ),
+              ),
               const SizedBox(height: 2),
-              Text(_supportPhone,
-                  style: TextStyle(
-                      color: AppColors.white.withValues(alpha: 0.85),
-                      fontSize: 12)),
+              Text(
+                _supportPhone,
+                style: TextStyle(
+                  color: AppColors.white.withValues(alpha: 0.85),
+                  fontSize: 12,
+                ),
+              ),
             ],
           );
           final action = ElevatedButton.icon(
@@ -2454,11 +2949,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
               foregroundColor: AppColors.primaryBlue,
               elevation: 0,
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10)),
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
             icon: const Icon(Icons.call, size: 16),
-            label: Text(AppStrings.t('callSupport'),
-                style: const TextStyle(fontSize: 12.5)),
+            label: Text(
+              AppStrings.t('callSupport'),
+              style: const TextStyle(fontSize: 12.5),
+            ),
           );
 
           if (constraints.maxWidth < 300) {
@@ -2506,7 +3004,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
           border: Border.all(color: p.border),
           boxShadow: [
             BoxShadow(
-                color: p.shadow, blurRadius: 8, offset: const Offset(0, 2)),
+              color: p.shadow,
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
           ],
         ),
         child: Row(
@@ -2521,50 +3022,72 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   Row(
                     children: [
                       Flexible(
-                        child: Text(t.name,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                                fontWeight: FontWeight.w700,
-                                fontSize: 15,
-                                color: p.textPrimary)),
+                        child: Text(
+                          t.name,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 15,
+                            color: p.textPrimary,
+                          ),
+                        ),
                       ),
                       const SizedBox(width: 4),
-                      const Icon(Icons.verified_rounded,
-                          size: 14, color: AppColors.primaryBlue),
+                      const Icon(
+                        Icons.verified_rounded,
+                        size: 14,
+                        color: AppColors.primaryBlue,
+                      ),
                     ],
                   ),
-                  Text(categoryLabel(t.category),
-                      style: TextStyle(color: p.textSecondary, fontSize: 13)),
+                  Text(
+                    categoryLabel(t.category),
+                    style: TextStyle(color: p.textSecondary, fontSize: 13),
+                  ),
                   const SizedBox(height: 3),
                   Row(
                     children: [
-                      const Icon(Icons.star_rounded,
-                          size: 14, color: Color(0xFFFFB300)),
+                      const Icon(
+                        Icons.star_rounded,
+                        size: 14,
+                        color: Color(0xFFFFB300),
+                      ),
                       const SizedBox(width: 2),
-                      Text(t.rating.toStringAsFixed(1),
-                          style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w700,
-                              color: p.textPrimary)),
-                      Text(' (${t.ratingCount})',
-                          style: TextStyle(
-                              fontSize: 11.5, color: p.textSecondary)),
+                      Text(
+                        t.rating.toStringAsFixed(1),
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: p.textPrimary,
+                        ),
+                      ),
+                      Text(
+                        ' (${t.ratingCount})',
+                        style: TextStyle(
+                          fontSize: 11.5,
+                          color: p.textSecondary,
+                        ),
+                      ),
                       const SizedBox(width: 8),
                       Icon(Icons.location_on, size: 13, color: p.textSecondary),
                       Expanded(
-                        child: Builder(builder: (_) {
-                          final km = _distanceKm(t);
-                          return Text(
-                            km != null
-                                ? ' ${AppSettings.instance.convertKm(km).toStringAsFixed(1)} '
-                                    '${AppStrings.t(AppSettings.instance.distanceUnitKey)}'
-                                : ' ${AppStrings.t('locationUnknown')}',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                                fontSize: 11.5, color: p.textSecondary),
-                          );
-                        }),
+                        child: Builder(
+                          builder: (_) {
+                            final km = _distanceKm(t);
+                            return Text(
+                              km != null
+                                  ? ' ${AppSettings.instance.convertKm(km).toStringAsFixed(1)} '
+                                        '${AppStrings.t(AppSettings.instance.distanceUnitKey)}'
+                                  : ' ${AppStrings.t('locationUnknown')}',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 11.5,
+                                color: p.textSecondary,
+                              ),
+                            );
+                          },
+                        ),
                       ),
                     ],
                   ),
@@ -2575,13 +3098,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Text(AppStrings.t(t.available ? 'available' : 'unavailable'),
-                    style: TextStyle(
-                        fontSize: 11.5,
-                        fontWeight: FontWeight.w600,
-                        color: t.available
-                            ? const Color(0xFF2ECC71)
-                            : p.textSecondary)),
+                Text(
+                  AppStrings.t(t.available ? 'available' : 'unavailable'),
+                  style: TextStyle(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w600,
+                    color: t.available
+                        ? const Color(0xFF2ECC71)
+                        : p.textSecondary,
+                  ),
+                ),
                 const SizedBox(height: 6),
                 ElevatedButton(
                   onPressed: () => _openTechnician(t),
@@ -2592,11 +3118,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     minimumSize: const Size(0, 32),
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16)),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
                   ),
-                  child: Text(AppStrings.t('view'),
-                      style: const TextStyle(
-                          fontSize: 12, fontWeight: FontWeight.w600)),
+                  child: Text(
+                    AppStrings.t('view'),
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -2618,40 +3149,55 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _sectionHeader(String title,
-      {VoidCallback? onSeeAll, bool roundButton = false, String? badge}) {
+  Widget _sectionHeader(
+    String title, {
+    VoidCallback? onSeeAll,
+    bool roundButton = false,
+    String? badge,
+  }) {
     final p = context.pal;
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Expanded(
-            child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Flexible(
-                child: Text(title,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: p.textPrimary))),
-            if (badge != null) ...[
-              const SizedBox(width: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF2ECC71).withValues(alpha: 0.14),
-                  borderRadius: BorderRadius.circular(20),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Flexible(
+                child: Text(
+                  title,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: p.textPrimary,
+                  ),
                 ),
-                child: Text(badge,
-                    style: const TextStyle(
-                        fontSize: 10.5,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFF1E9E52))),
               ),
+              if (badge != null) ...[
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 9,
+                    vertical: 3,
+                  ),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF2ECC71).withValues(alpha: 0.14),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    badge,
+                    style: const TextStyle(
+                      fontSize: 10.5,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF1E9E52),
+                    ),
+                  ),
+                ),
+              ],
             ],
-          ],
-        )),
+          ),
+        ),
         if (onSeeAll != null && roundButton)
           InkWell(
             customBorder: const CircleBorder(),
@@ -2663,18 +3209,24 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 shape: BoxShape.circle,
                 border: Border.all(color: p.border),
               ),
-              child: const Icon(Icons.chevron_right_rounded,
-                  size: 20, color: AppColors.primaryBlue),
+              child: const Icon(
+                Icons.chevron_right_rounded,
+                size: 20,
+                color: AppColors.primaryBlue,
+              ),
             ),
           )
         else if (onSeeAll != null)
           GestureDetector(
             onTap: onSeeAll,
-            child: Text(AppStrings.t('seeAll'),
-                style: const TextStyle(
-                    color: AppColors.primaryBlue,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 12.5)),
+            child: Text(
+              AppStrings.t('seeAll'),
+              style: const TextStyle(
+                color: AppColors.primaryBlue,
+                fontWeight: FontWeight.w600,
+                fontSize: 12.5,
+              ),
+            ),
           ),
       ],
     );
@@ -2698,8 +3250,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
               },
               child: Container(
                 padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
-                decoration:
-                    const BoxDecoration(gradient: AppColors.blueGradient),
+                decoration: const BoxDecoration(
+                  gradient: AppColors.blueGradient,
+                ),
                 child: Row(
                   children: [
                     const UserAvatar(radius: 26, bgColor: AppColors.white),
@@ -2713,9 +3266,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
-                                color: AppColors.white,
-                                fontSize: 16,
-                                fontWeight: FontWeight.w700),
+                              color: AppColors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
                           if ((user?.email ?? '').isNotEmpty) ...[
                             const SizedBox(height: 2),
@@ -2724,16 +3278,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
-                                  color:
-                                      AppColors.white.withValues(alpha: 0.85),
-                                  fontSize: 12.5),
+                                color: AppColors.white.withValues(alpha: 0.85),
+                                fontSize: 12.5,
+                              ),
                             ),
                           ],
                         ],
                       ),
                     ),
-                    Icon(Icons.chevron_right,
-                        color: AppColors.white.withValues(alpha: 0.85)),
+                    Icon(
+                      Icons.chevron_right,
+                      color: AppColors.white.withValues(alpha: 0.85),
+                    ),
                   ],
                 ),
               ),
@@ -2799,8 +3355,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                   const SizedBox(height: 8),
                   Center(
-                    child: Text('CAMFIX v$_appVersion',
-                        style: TextStyle(fontSize: 11, color: p.textSecondary)),
+                    child: Text(
+                      'CAMFIX v$_appVersion',
+                      style: TextStyle(fontSize: 11, color: p.textSecondary),
+                    ),
                   ),
                 ],
               ),
@@ -2840,8 +3398,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final tint = color ?? p.textPrimary;
     return ListTile(
       leading: Icon(icon, color: tint),
-      title: Text(label,
-          style: TextStyle(color: tint, fontWeight: FontWeight.w600)),
+      title: Text(
+        label,
+        style: TextStyle(color: tint, fontWeight: FontWeight.w600),
+      ),
       onTap: onTap,
     );
   }
@@ -2854,9 +3414,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
           Icon(Icons.translate_rounded, color: p.textPrimary),
           const SizedBox(width: 32),
           Expanded(
-            child: Text(AppStrings.t('language'),
-                style: TextStyle(
-                    color: p.textPrimary, fontWeight: FontWeight.w600)),
+            child: Text(
+              AppStrings.t('language'),
+              style: TextStyle(
+                color: p.textPrimary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ),
           _langChip(p, AppLang.en, 'EN'),
           const SizedBox(width: 6),
@@ -2882,11 +3446,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
               : AppColors.primaryBlue.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(20),
         ),
-        child: Text(label,
-            style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                color: active ? AppColors.white : AppColors.primaryBlue)),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+            color: active ? AppColors.white : AppColors.primaryBlue,
+          ),
+        ),
       ),
     );
   }
@@ -2899,9 +3466,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
           Icon(Icons.dark_mode_outlined, color: p.textPrimary),
           const SizedBox(width: 12),
           Expanded(
-            child: Text(AppStrings.t('darkMode'),
-                style: TextStyle(
-                    color: p.textPrimary, fontWeight: FontWeight.w600)),
+            child: Text(
+              AppStrings.t('darkMode'),
+              style: TextStyle(
+                color: p.textPrimary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ),
           Switch(
             value: AppSettings.instance.isDark,
@@ -2928,8 +3499,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(true),
-            style:
-                TextButton.styleFrom(foregroundColor: const Color(0xFFE5484D)),
+            style: TextButton.styleFrom(
+              foregroundColor: const Color(0xFFE5484D),
+            ),
             child: Text(AppStrings.t('logout')),
           ),
         ],

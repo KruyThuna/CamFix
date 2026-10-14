@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../l10n/app_strings.dart';
 import '../services/api_client.dart';
 import '../services/api_config.dart';
-import '../services/app_updater.dart';
+import '../services/app_update_service.dart';
 import '../services/auth_api.dart';
 import '../theme/app_theme.dart';
 import '../widgets/app_buttons.dart';
@@ -30,7 +30,7 @@ class _LoginScreenState extends State<LoginScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      AppUpdater.check(context);
+      AppUpdateService.instance.checkOnStart(context);
     });
   }
 

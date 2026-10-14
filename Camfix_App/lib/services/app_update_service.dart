@@ -50,9 +50,9 @@ class AppUpdateService {
   AppUpdateService._();
   static final AppUpdateService instance = AppUpdateService._();
 
-  /// Current compiled app version & build (matches pubspec.yaml: 1.3.1+21)
-  static const String currentVersion = '1.3.1';
-  static const int currentBuildNumber = 21;
+  /// Current compiled app version & build (matches pubspec.yaml: 1.3.3+23)
+  static const String currentVersion = '1.3.3';
+  static const int currentBuildNumber = 23;
 
   bool _checkedThisSession = false;
 
