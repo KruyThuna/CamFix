@@ -33,7 +33,7 @@ if (-not $tunnelProc) {
     Write-Host "  Launching Cloudflare Tunnel for api.camonline.store..." -ForegroundColor Gray
     Start-Process `
         -FilePath $cloudflaredExe `
-        -ArgumentList "tunnel", "--config", $cloudflaredConfig, "run", "camfix" `
+        -ArgumentList "tunnel", "--config", $cloudflaredConfig, "run", "CamApp" `
         -WorkingDirectory $repoRoot `
         -WindowStyle Hidden
     Start-Sleep -Seconds 4

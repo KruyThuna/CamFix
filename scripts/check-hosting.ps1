@@ -10,7 +10,7 @@ catch {
 }
 
 Write-Host 'Cloudflare tunnel:'
-cloudflared tunnel info camfix
+cloudflared tunnel info CamApp
 
 Write-Host 'Public DNS:'
 try {
