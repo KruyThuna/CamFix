@@ -50,12 +50,8 @@ public class SwaggerConfig {
                 return http.build();
         }
 
-        /**
-         * Dev CORS: allow the Flutter web build / Vite to call the API from
-         * another localhost port. Native mobile builds don't use CORS.
-         */
         @Bean
-                public OpenAPI customOpenAPI() {
+        public OpenAPI customOpenAPI() {
                 return new OpenAPI()
                                 .info(new Info()
                                                 .title("CamFix API Documentation")
@@ -68,6 +64,12 @@ public class SwaggerConfig {
                                                 new Server().url("https://api.camonline.store").description("Production Server (Cloudflare)"),
                                                 new Server().url("http://localhost:8081").description("Local Development Server")))
                                 .tags(List.of(
+                                                // Primary CRUD Action Tags
+                                                new Tag().name("Create").description("Create & insert new records (POST)"),
+                                                new Tag().name("Read").description("Retrieve & query records (GET)"),
+                                                new Tag().name("Update").description("Update & modify existing records (PUT / PATCH)"),
+                                                new Tag().name("Delete").description("Remove & delete records (DELETE)"),
+                                                // Feature & Resource CRUD Tags
                                                 new Tag().name("Technician CRUD").description("Technician registration, profile management, and CRUD operations"),
                                                 new Tag().name("Booking CRUD").description("Customer bookings, service scheduling, and order CRUD operations"),
                                                 new Tag().name("User CRUD").description("User accounts, customer profiles, and address CRUD operations"),
@@ -79,6 +81,10 @@ public class SwaggerConfig {
                                                 new Tag().name("App Version").description("Mobile app versioning and APK download")));
         }
 
+        /**
+         * Dev CORS: allow the Flutter web build / Vite to call the API from
+         * another localhost port. Native mobile builds don't use CORS.
+         */
         @Bean
         public CorsConfigurationSource corsConfigurationSource() {
                 CorsConfiguration cfg = new CorsConfiguration();
