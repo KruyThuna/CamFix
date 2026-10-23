@@ -1,5 +1,7 @@
 package com.api.controller;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import com.api.service.UserManagementService;
 import com.api.service.UserManagementService.*;
 import java.util.List;
@@ -7,6 +9,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+@Tag(name = "User CRUD", description = "User accounts, customer profiles, and admin user management")
 @RestController
 @RequestMapping("/api/admin/users")
 public class UserManagementController {

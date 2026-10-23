@@ -1,5 +1,7 @@
 package com.api.controller;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import java.util.List;
 import java.util.Map;
 
@@ -20,6 +22,7 @@ import com.api.dto.auth.SetPasswordRequest;
 import com.api.dto.auth.UpdateProfileRequest;
 import com.api.dto.auth.UserResponse;
 
+@Tag(name = "Authentication", description = "Authentication, registration, phone OTP, and token management")
 @RestController
 @RequestMapping("/api/auth")
 @CrossOrigin(origins = "http://localhost:5173")

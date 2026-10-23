@@ -1,5 +1,7 @@
 package com.api.controller;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import java.util.List;
 
 import org.springframework.http.HttpStatus;
@@ -17,6 +19,7 @@ import com.api.service.UserAddressService;
 import com.api.dto.request.UserAddressRequest;
 import com.api.dto.response.UserAddressResponse;
 
+@Tag(name = "User CRUD", description = "Customer address book CRUD operations")
 @RestController
 @RequestMapping("/api/v1/addresses")
 public class UserAddressController {

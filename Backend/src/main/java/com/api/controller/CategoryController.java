@@ -1,5 +1,7 @@
 package com.api.controller;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import java.util.List;
 
 import org.springframework.web.bind.annotation.*;
@@ -7,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import com.api.entity.Category;
 import com.api.service.CategoryService;
 
+@Tag(name = "Category CRUD", description = "Service categories catalog CRUD operations")
 @RestController
 @RequestMapping("/api/category")
 public class CategoryController {

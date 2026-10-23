@@ -1,5 +1,7 @@
 package com.api.controller;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import java.util.List;
 
 import org.springframework.web.bind.annotation.GetMapping;
@@ -11,6 +13,7 @@ import com.api.service.ReviewService;
 import com.api.dto.booking.ReviewResponse;
 
 /** Public read of a technician's reviews (for their provider profile page). */
+@Tag(name = "Review CRUD", description = "Technician reviews and customer feedback CRUD operations")
 @RestController
 @RequestMapping("/api/technicians")
 public class ReviewController {

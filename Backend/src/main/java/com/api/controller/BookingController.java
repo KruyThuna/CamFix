@@ -1,5 +1,7 @@
 package com.api.controller;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import java.util.List;
 
 import org.springframework.http.HttpStatus;
@@ -26,6 +28,7 @@ import com.api.dto.booking.ServiceQuoteResponse;
 import com.api.dto.booking.SubmitReviewRequest;
 
 /** Customer bookings. Each booking becomes a {@code job} the admin console can see. */
+@Tag(name = "Booking CRUD", description = "Customer service bookings and scheduling CRUD operations")
 @RestController
 @RequestMapping("/api/bookings")
 public class BookingController {

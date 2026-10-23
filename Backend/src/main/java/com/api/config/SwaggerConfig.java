@@ -11,6 +11,12 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.info.Contact;
+import io.swagger.v3.oas.models.info.Info;
+import io.swagger.v3.oas.models.servers.Server;
+import io.swagger.v3.oas.models.tags.Tag;
+
 @Configuration
 public class SwaggerConfig {
 
@@ -48,6 +54,31 @@ public class SwaggerConfig {
          * Dev CORS: allow the Flutter web build / Vite to call the API from
          * another localhost port. Native mobile builds don't use CORS.
          */
+        @Bean
+                public OpenAPI customOpenAPI() {
+                return new OpenAPI()
+                                .info(new Info()
+                                                .title("CamFix API Documentation")
+                                                .version("1.0.0")
+                                                .description("CamFix Platform REST API and CRUD operations")
+                                                .contact(new Contact()
+                                                                .name("CamFix Team")
+                                                                .url("https://camonline.store")))
+                                .servers(List.of(
+                                                new Server().url("https://api.camonline.store").description("Production Server (Cloudflare)"),
+                                                new Server().url("http://localhost:8081").description("Local Development Server")))
+                                .tags(List.of(
+                                                new Tag().name("Technician CRUD").description("Technician registration, profile management, and CRUD operations"),
+                                                new Tag().name("Booking CRUD").description("Customer bookings, service scheduling, and order CRUD operations"),
+                                                new Tag().name("User CRUD").description("User accounts, customer profiles, and address CRUD operations"),
+                                                new Tag().name("Category CRUD").description("Service categories and pricing catalog CRUD operations"),
+                                                new Tag().name("Review CRUD").description("Technician ratings and customer review CRUD operations"),
+                                                new Tag().name("Authentication").description("Login, register, phone OTP, and JWT authentication"),
+                                                new Tag().name("Notification").description("In-app notifications and customer alerts"),
+                                                new Tag().name("Chat & Call").description("In-app messaging and call signaling"),
+                                                new Tag().name("App Version").description("Mobile app versioning and APK download")));
+        }
+
         @Bean
         public CorsConfigurationSource corsConfigurationSource() {
                 CorsConfiguration cfg = new CorsConfiguration();

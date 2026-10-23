@@ -1,5 +1,7 @@
 package com.api.controller;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -21,6 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
  * Mobile clients query /api/app/version on startup to determine if a new APK has
  * been released, and can download it directly from /api/app/download.
  */
+@Tag(name = "App Version", description = "In-app versioning and APK download APIs")
 @RestController
 @RequestMapping("/api/app")
 public class AppVersionController {
