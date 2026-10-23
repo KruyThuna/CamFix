@@ -9,7 +9,7 @@ void main() {
         'version': '1.3.1',
         'buildNumber': 21,
         'minSupportedBuild': 1,
-        'downloadUrl': 'https://api.camapp.store/api/app/download',
+        'downloadUrl': 'https://api.camonline.store/api/app/download',
         'fileSizeMb': 61.4,
         'forceUpdate': false,
         'releaseNotesKm': '• កែលម្អប្រព័ន្ធទូទាត់ប្រាក់',

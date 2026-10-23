@@ -34,7 +34,7 @@ class AppUpdateInfo {
       buildNumber: (json['buildNumber'] as num?)?.toInt() ?? 20,
       minSupportedBuild: (json['minSupportedBuild'] as num?)?.toInt() ?? 1,
       downloadUrl: json['downloadUrl'] as String? ??
-          'https://api.camapp.store/api/app/download',
+          'https://api.camonline.store/api/app/download',
       fileSizeMb: (json['fileSizeMb'] as num?)?.toDouble() ?? 61.4,
       forceUpdate: json['forceUpdate'] as bool? ?? false,
       releaseNotesKm: json['releaseNotesKm'] as String? ?? '',

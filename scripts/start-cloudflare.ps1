@@ -30,7 +30,7 @@ if (-not $backendListener) {
 Write-Host "`n[2/3] Checking Cloudflare Tunnel..." -ForegroundColor Yellow
 $tunnelProc = Get-Process cloudflared -ErrorAction SilentlyContinue
 if (-not $tunnelProc) {
-    Write-Host "  Launching Cloudflare Tunnel for api.camapp.store..." -ForegroundColor Gray
+    Write-Host "  Launching Cloudflare Tunnel for api.camonline.store..." -ForegroundColor Gray
     Start-Process `
         -FilePath $cloudflaredExe `
         -ArgumentList "tunnel", "--config", $cloudflaredConfig, "run", "camfix" `
@@ -48,9 +48,9 @@ $connected = $false
 $maxAttempts = 8
 for ($i = 1; $i -le $maxAttempts; $i++) {
     try {
-        $res = Invoke-WebRequest -Uri "https://api.camapp.store/api/technicians" -TimeoutSec 6 -UseBasicParsing
+        $res = Invoke-WebRequest -Uri "https://api.camonline.store/api/technicians" -TimeoutSec 6 -UseBasicParsing
         if ($res.StatusCode -eq 200) {
-            Write-Host "  SUCCESS! https://api.camapp.store is LIVE and responding HTTP 200 OK." -ForegroundColor Green
+            Write-Host "  SUCCESS! https://api.camonline.store is LIVE and responding HTTP 200 OK." -ForegroundColor Green
             $connected = $true
             break
         }
@@ -65,6 +65,6 @@ if (-not $connected) {
 }
 
 Write-Host "`n========================================" -ForegroundColor Cyan
-Write-Host "Public API: https://api.camapp.store" -ForegroundColor Green
+Write-Host "Public API: https://api.camonline.store" -ForegroundColor Green
 Write-Host "Admin Panel: https://kruythuna.github.io/CamFix/" -ForegroundColor Green
 Write-Host "========================================`n" -ForegroundColor Cyan

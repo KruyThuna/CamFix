@@ -50,11 +50,11 @@ instructions (local MySQL, running `gradlew bootRun` directly, etc.).
 
 The Android APK is installed on devices; Cloudflare Tunnel publishes the
 Spring Boot API used by the app. The release app connects to
-`https://api.camapp.store`.
+`https://api.camonline.store`.
 
 Prerequisites:
 
-1. Delegate `camapp.store` to the two nameservers assigned on the Cloudflare
+1. Delegate `camonline.store` to the two nameservers assigned on the Cloudflare
    Overview page.
 2. In Cloudflare DNS, keep a proxied `CNAME` named `api` targeting
    `dbdca579-55cf-4120-9396-37bd0ef1f2ad.cfargotunnel.com`.

@@ -14,17 +14,17 @@ cloudflared tunnel info camfix
 
 Write-Host 'Public DNS:'
 try {
-    Resolve-DnsName 'api.camapp.store' -Server '1.1.1.1' -ErrorAction Stop |
+    Resolve-DnsName 'api.camonline.store' -Server '1.1.1.1' -ErrorAction Stop |
         Select-Object Name, Type, NameHost, IPAddress |
         Format-Table
 }
 catch {
-    Write-Host '  FAILED: api.camapp.store does not resolve publicly.'
+    Write-Host '  FAILED: api.camonline.store does not resolve publicly.'
 }
 
 Write-Host 'Public API:'
 try {
-    $public = Invoke-WebRequest -Uri 'https://api.camapp.store/api/technicians' -UseBasicParsing -TimeoutSec 20
+    $public = Invoke-WebRequest -Uri 'https://api.camonline.store/api/technicians' -UseBasicParsing -TimeoutSec 20
     Write-Host "  HTTP $($public.StatusCode)"
 }
 catch {

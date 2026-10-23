@@ -35,7 +35,7 @@ public class AppVersionController {
         res.put("version", LATEST_VERSION);
         res.put("buildNumber", LATEST_BUILD_NUMBER);
         res.put("minSupportedBuild", MIN_SUPPORTED_BUILD);
-        res.put("downloadUrl", "https://api.camapp.store/api/app/download");
+        res.put("downloadUrl", "https://api.camonline.store/api/app/download");
         res.put("fileSizeMb", getApkSizeMb());
         res.put("forceUpdate", false);
         res.put("releaseNotesKm", "• កែលម្អផ្ទាំងទូទាត់ប្រាក់ KHQR Bakong Standee ផ្លូវការ\n• បន្ថែមផ្ទាំងជ្រើសរើសវិធីសាស្ត្រទូទាត់ និងគណនីដែលបានភ្ជាប់ (Bound Asset)\n• បង្ហាញកំណត់ត្រាប្រតិបត្តិការផ្ទាល់ (Live Service Progress SLA)");

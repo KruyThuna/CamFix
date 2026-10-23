@@ -125,7 +125,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 ActionChip(
                   label: const Text(
-                    'api.camapp.store',
+                    'api.camonline.store',
                     style: TextStyle(fontSize: 11),
                   ),
                   onPressed: () => controller.text = ApiConfig.domainUrl,

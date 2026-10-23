@@ -16,7 +16,7 @@ abstract final class ApiConfig {
   );
 
   /// Custom domain configured for production
-  static const String domainUrl = 'https://api.camapp.store';
+  static const String domainUrl = 'https://api.camonline.store';
 
   /// Public API exposed through the named Cloudflare tunnel.
   static const String liveTunnelUrl = domainUrl;
