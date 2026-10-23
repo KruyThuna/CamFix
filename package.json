@@ -1,0 +1,7 @@
+{
+  "name": "camfix",
+  "private": true,
+  "scripts": {
+    "build": "cd admin && npm install && npm run build"
+  }
+}
