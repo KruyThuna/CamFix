@@ -13,6 +13,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.api.entity.Job;
@@ -563,5 +564,40 @@ public class BookingService {
 
     private static long nz(Long v) {
         return v == null ? 0L : v;
+    }
+
+    private static final long MAX_PHOTO_BYTES = 10L * 1024 * 1024;
+
+    public BookingResponse uploadPhoto(String auth, Long jobId, MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+            throw new IllegalArgumentException("photo file is required");
+        }
+        if (file.getSize() > MAX_PHOTO_BYTES) {
+            throw new IllegalArgumentException("photo must be 10MB or smaller");
+        }
+        String contentType = file.getContentType();
+        if (contentType == null || !contentType.toLowerCase(Locale.ROOT).startsWith("image/")) {
+            throw new IllegalArgumentException("photo must be an image file");
+        }
+        Job job = jobRepository.findById(jobId)
+                .orElseThrow(() -> new NoSuchElementException("Job not found: " + jobId));
+        try {
+            job.setPhoto(file.getBytes());
+        } catch (java.io.IOException e) {
+            throw new IllegalArgumentException("Could not read uploaded photo");
+        }
+        job.setPhotoContentType(contentType);
+        job.setPhotoUrl("/api/bookings/" + jobId + "/photo");
+        return toResponse(jobRepository.save(job));
+    }
+
+    @Transactional(readOnly = true)
+    public Job photoOwner(Long jobId) {
+        Job job = jobRepository.findById(jobId)
+                .orElseThrow(() -> new NoSuchElementException("Job not found: " + jobId));
+        if (job.getPhoto() == null || job.getPhoto().length == 0) {
+            throw new NoSuchElementException("No photo attached for job " + jobId);
+        }
+        return job;
     }
 }

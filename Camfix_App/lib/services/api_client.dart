@@ -59,6 +59,62 @@ class ApiClient {
 
   /// GET a JSON *array* endpoint. Non-2xx throws [ApiException] with the
   /// backend's `{"message": ...}` when present.
+
+  /// POST a multipart/form-data file upload (e.g. problem photo).
+  Future<Map<String, dynamic>> postMultipart(
+    String path, {
+    required String fieldName,
+    required List<int> bytes,
+    required String filename,
+    String? contentType,
+    Map<String, String>? fields,
+  }) async {
+    final uri = Uri.parse('$baseUrl$path');
+    final token = await TokenStore.instance.read();
+    final request = http.MultipartRequest('POST', uri);
+    if (token != null && token.isNotEmpty) {
+      request.headers['Authorization'] = 'Bearer $token';
+    }
+    if (fields != null) request.fields.addAll(fields);
+    request.files.add(
+      http.MultipartFile.fromBytes(
+        fieldName,
+        bytes,
+        filename: filename,
+        contentType: contentType == null
+            ? null
+            : http.MediaType.parse(contentType),
+      ),
+    );
+
+    final http.StreamedResponse streamed;
+    try {
+      streamed = await _http.send(request).timeout(const Duration(seconds: 30));
+    } on TimeoutException {
+      throw ApiException(0, 'The server at $baseUrl did not respond.');
+    } catch (e) {
+      throw ApiException(0, 'Cannot reach the server at $baseUrl. $e');
+    }
+    final res = await http.Response.fromStream(streamed);
+
+    Map<String, dynamic> json = const {};
+    if (res.body.isNotEmpty) {
+      try {
+        final decoded = jsonDecode(res.body);
+        if (decoded is Map<String, dynamic>) json = decoded;
+      } catch (_) {}
+    }
+
+    if (res.statusCode >= 200 && res.statusCode < 300) return json;
+
+    var msg = 'Request failed (${res.statusCode})';
+    try {
+      final j = jsonDecode(res.body);
+      if (j is Map && j['message'] != null) msg = j['message'].toString();
+    } catch (_) {}
+    throw ApiException(res.statusCode, msg);
+  }
+
   Future<List<dynamic>> getJsonList(String path, {bool withAuth = true}) async {
     final uri = Uri.parse('$baseUrl$path');
     final headers = await _headers(withAuth: withAuth);

@@ -5,6 +5,10 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
+import com.api.entity.Job;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -63,6 +67,29 @@ public class BookingController {
     @GetMapping("/payments/mine")
     public MySpendResponse myTotalSpend(@RequestHeader(value = AUTH, required = false) String auth) {
         return bookingService.myTotalSpend(auth);
+    }
+
+
+    @PostMapping("/{id}/photo")
+    public ResponseEntity<BookingResponse> uploadPhoto(
+            @RequestHeader(value = AUTH, required = false) String auth,
+            @PathVariable Long id,
+            @RequestParam("file") MultipartFile file) {
+        return ResponseEntity.ok(bookingService.uploadPhoto(auth, id, file));
+    }
+
+    @GetMapping("/{id}/photo")
+    public ResponseEntity<byte[]> getPhoto(@PathVariable Long id) {
+        Job job = bookingService.photoOwner(id);
+        MediaType type;
+        try {
+            type = MediaType.parseMediaType(job.getPhotoContentType());
+        } catch (Exception e) {
+            type = MediaType.IMAGE_JPEG;
+        }
+        return ResponseEntity.ok()
+                .contentType(type)
+                .body(job.getPhoto());
     }
 
     @GetMapping("/{id}")

@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:typed_data';
+import 'package:image_picker/image_picker.dart';
 
 import 'package:flutter/material.dart';
 import 'package:latlong2/latlong.dart';
@@ -14,6 +16,7 @@ import '../services/device_location.dart';
 import '../services/notifications_store.dart';
 import '../services/service_prices_api.dart';
 import '../theme/app_theme.dart';
+import '../theme/app_images.dart';
 import '../widgets/app_buttons.dart';
 import 'services_screen.dart' show categoryLabel;
 
@@ -92,6 +95,9 @@ class _BookingSheetState extends State<_BookingSheet> {
   ];
 
   final _note = TextEditingController();
+  String? _photoName;
+  String? _photoMimeType;
+  Uint8List? _attachedPhotoBytes;
   String _service = _services.first;
   bool _scheduled = true; // false = book now (Immediate), true = pick a time
   bool _selfDrop = false;
@@ -274,6 +280,19 @@ class _BookingSheetState extends State<_BookingSheet> {
     unawaited(NotificationsStore.instance.refresh());
 
     final jobId = (response['id'] as num?)?.toInt();
+    if (jobId != null && _attachedPhotoBytes != null) {
+      try {
+        await ApiClient.instance.postMultipart(
+          '/api/bookings/$jobId/photo',
+          fieldName: 'file',
+          bytes: _attachedPhotoBytes!,
+          filename: (_photoName != null && _photoName!.isNotEmpty) ? _photoName! : 'issue.jpg',
+          contentType: _photoMimeType ?? 'image/jpeg',
+        );
+      } catch (e) {
+        debugPrint('Failed to upload booking photo: $e');
+      }
+    }
     final navigator = Navigator.of(context);
     navigator.pop(); // close the sheet
     final track = await showDialog<bool>(
@@ -423,6 +442,8 @@ class _BookingSheetState extends State<_BookingSheet> {
                         borderSide: BorderSide(color: p.border))),
               ),
               const SizedBox(height: 12),
+              _photoAttachmentCard(p),
+              const SizedBox(height: 12),
               Row(children: [
                 Icon(Icons.info_outline_rounded,
                     size: 15, color: p.textSecondary),
@@ -437,6 +458,211 @@ class _BookingSheetState extends State<_BookingSheet> {
         ),
       ),
       bottomNavigationBar: _bottomBar(p),
+    );
+  }
+
+
+  Future<void> _pickPhoto() async {
+    final choice = await showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        final p = ctx.pal;
+        return Container(
+          decoration: BoxDecoration(
+            color: p.surface,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                AppStrings.t('attachPhoto'),
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: p.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 16),
+              ListTile(
+                leading: const Icon(Icons.camera_alt_rounded, color: AppColors.primaryBlue),
+                title: Text(AppStrings.t('takePhoto'), style: TextStyle(color: p.textPrimary)),
+                onTap: () => Navigator.of(ctx).pop('camera'),
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_library_rounded, color: AppColors.primaryBlue),
+                title: Text(AppStrings.t('chooseGallery'), style: TextStyle(color: p.textPrimary)),
+                onTap: () => Navigator.of(ctx).pop('gallery'),
+              ),
+              if (_attachedPhotoBytes != null)
+                ListTile(
+                  leading: const Icon(Icons.delete_outline_rounded, color: Colors.red),
+                  title: Text(AppStrings.t('removePhoto'), style: const TextStyle(color: Colors.red)),
+                  onTap: () => Navigator.of(ctx).pop('remove'),
+                ),
+            ],
+          ),
+        );
+      },
+    );
+
+    if (choice == null || !mounted) return;
+    if (choice == 'remove') {
+      setState(() {
+        _photoName = null; _photoMimeType = null;
+        _attachedPhotoBytes = null;
+      });
+      return;
+    }
+
+    try {
+      final picker = ImagePicker();
+      final picked = await picker.pickImage(
+        source: choice == 'camera' ? ImageSource.camera : ImageSource.gallery,
+        maxWidth: 1600,
+        maxHeight: 1600,
+        imageQuality: 85,
+      );
+      if (picked != null) {
+        final bytes = await picked.readAsBytes();
+        if (mounted) {
+          setState(() {
+            _photoName = picked.name; _photoMimeType = picked.mimeType;
+            _attachedPhotoBytes = bytes;
+          });
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Could not pick photo: $e')),
+        );
+      }
+    }
+  }
+
+  Widget _photoAttachmentCard(AppPalette p) {
+    if (_attachedPhotoBytes != null) {
+      return Container(
+        decoration: BoxDecoration(
+          color: p.surface,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: p.border),
+        ),
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.photo_camera_rounded, size: 18, color: AppColors.primaryBlue),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    AppStrings.t('photoAttached'),
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: p.textPrimary,
+                    ),
+                  ),
+                ),
+                TextButton.icon(
+                  onPressed: _pickPhoto,
+                  icon: const Icon(Icons.edit_outlined, size: 16),
+                  label: const Text('Change', style: TextStyle(fontSize: 12)),
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Stack(
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
+                  child: Image.memory(
+                    _attachedPhotoBytes!,
+                    height: 140,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+                Positioned(
+                  top: 6,
+                  right: 6,
+                  child: InkWell(
+                    onTap: () => setState(() {
+                      _photoName = null; _photoMimeType = null;
+                      _attachedPhotoBytes = null;
+                    }),
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: const BoxDecoration(
+                        color: Colors.black54,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.close, size: 16, color: Colors.white),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
+    }
+
+    return InkWell(
+      onTap: _pickPhoto,
+      borderRadius: BorderRadius.circular(14),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: p.surface,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: p.border),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppColors.primaryBlue.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(Icons.add_a_photo_outlined, size: 20, color: AppColors.primaryBlue),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    AppStrings.t('attachPhoto'),
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: p.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'Upload a photo of the damaged or broken item',
+                    style: TextStyle(fontSize: 11.5, color: p.textSecondary),
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right_rounded, color: p.textSecondary),
+          ],
+        ),
+      ),
     );
   }
 
@@ -661,13 +887,9 @@ class _BookingSheetState extends State<_BookingSheet> {
                 errorBuilder: (_, __, ___) =>
                     Container(color: AppColors.primaryBlue))
           else
-            Container(
-              decoration: const BoxDecoration(gradient: AppColors.blueGradient),
-              child: const Align(
-                alignment: Alignment(0.8, 0),
-                child: Icon(Icons.storefront_rounded,
-                    size: 90, color: Colors.white24),
-              ),
+            Image.asset(
+              AppImages.storePlaceholder,
+              fit: BoxFit.cover,
             ),
           const DecoratedBox(
             decoration: BoxDecoration(

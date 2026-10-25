@@ -183,6 +183,14 @@ export function JobDetailPage() {
               <dd>{j.address ?? '—'}</dd>
               <dt>Notes</dt>
               <dd>{j.notes ?? '—'}</dd>
+              <dt>Photo Attachment</dt>
+              <dd>
+                {j.photoUrl ? (
+                  <a href={j.photoUrl} target="_blank" rel="noopener noreferrer">
+                    <img src={j.photoUrl} alt="Issue photo" style={{ maxWidth: 300, maxHeight: 200, borderRadius: 8, display: 'block', marginTop: 4, border: '1px solid #ddd' }} />
+                  </a>
+                ) : '�'}
+              </dd>
               <dt>Created</dt>
               <dd>{fmtDate(j.createdAt)}</dd>
               <dt>Scheduled</dt>

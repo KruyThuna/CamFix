@@ -36,6 +36,7 @@ class Booking {
     this.technicianLat,
     this.technicianLng,
     this.technicianLocationAt,
+    this.photoUrl,
   });
 
   final int id;
@@ -68,6 +69,7 @@ class Booking {
   final double? technicianLat;
   final double? technicianLng;
   final DateTime? technicianLocationAt;
+  final String? photoUrl;
 
   bool get isOpen => _openStatuses.contains(status);
   bool get isCancellable => const {
@@ -121,6 +123,7 @@ class Booking {
         technicianLat: (j['technicianLat'] as num?)?.toDouble(),
         technicianLng: (j['technicianLng'] as num?)?.toDouble(),
         technicianLocationAt: _date(j['technicianLocationAt']),
+        photoUrl: j['photoUrl']?.toString(),
       );
 }
 

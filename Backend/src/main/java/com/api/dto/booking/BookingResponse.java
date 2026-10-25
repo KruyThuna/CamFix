@@ -29,6 +29,7 @@ public class BookingResponse {
     private Double technicianLat;
     private Double technicianLng;
     private String technicianLocationAt;
+    private String photoUrl;
 
     public static BookingResponse of(Job job, String technicianName, String technicianPhone,
             Double technicianLat, Double technicianLng, String technicianLocationAt) {
@@ -53,8 +54,11 @@ public class BookingResponse {
         r.technicianLat = technicianLat;
         r.technicianLng = technicianLng;
         r.technicianLocationAt = technicianLocationAt;
+        r.photoUrl = job.getPhoto() != null && job.getPhoto().length > 0 ? "/api/bookings/" + job.getId() + "/photo" : null;
         return r;
     }
+
+    public String getPhotoUrl() { return photoUrl; }
 
     public Long getId() {
         return id;

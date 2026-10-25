@@ -534,6 +534,7 @@ public class AdminService {
         r.setAssignedAt(str(j.getAssignedAt()));
         r.setCompletedAt(str(j.getCompletedAt()));
         r.setNotes(j.getNotes());
+        r.setPhotoUrl(j.getPhoto() != null && j.getPhoto().length > 0 ? "/api/bookings/" + j.getId() + "/photo" : null);
 
         if (j.getTechnicianId() != null) {
             technicianRepository.findById(j.getTechnicianId()).ifPresent(t -> {

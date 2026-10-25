@@ -95,6 +95,22 @@ public class Job {
     @Column(length = 2000)
     private String notes;
 
+    @Column(name = "photo", columnDefinition = "LONGBLOB")
+    private byte[] photo;
+
+    @Column(name = "photo_content_type", length = 100)
+    private String photoContentType;
+
+    @Column(name = "photo_url", length = 500)
+    private String photoUrl;
+
+    public byte[] getPhoto() { return photo; }
+    public void setPhoto(byte[] photo) { this.photo = photo; }
+    public String getPhotoContentType() { return photoContentType; }
+    public void setPhotoContentType(String photoContentType) { this.photoContentType = photoContentType; }
+    public String getPhotoUrl() { return photoUrl; }
+    public void setPhotoUrl(String photoUrl) { this.photoUrl = photoUrl; }
+
     public Job() {}
     public Long getId(){return id;} public void setId(Long v){id=v;}
     public String getCustomerName(){return customerName;} public void setCustomerName(String v){customerName=v;}

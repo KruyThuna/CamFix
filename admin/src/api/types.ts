@@ -82,6 +82,7 @@ export interface Job {
   assignedAt: string | null;
   completedAt: string | null;
   notes: string | null;
+  photoUrl?: string | null;
 }
 
 export interface JobInput {

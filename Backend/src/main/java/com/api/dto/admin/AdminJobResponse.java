@@ -26,4 +26,5 @@ public class AdminJobResponse {
     private String assignedAt;
     private String completedAt;
     private String notes;
+    private String photoUrl;
 }
