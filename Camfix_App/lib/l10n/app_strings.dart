@@ -29,6 +29,19 @@ class AppStrings {
       AppLang.km: 'មិនអាចផ្ទុកប្រវត្តិការងារបានទេ។'
     },
     'workHistoryMore': {AppLang.en: 'Load more', AppLang.km: 'ផ្ទុកបន្ថែម'},
+    'completedWorkDetails': {
+      AppLang.en: 'Completed job details',
+      AppLang.km: 'ព័ត៌មានលម្អិតការងារដែលបានបញ្ចប់'
+    },
+    'customer': {AppLang.en: 'Customer', AppLang.km: 'អតិថិជន'},
+    'viewDetails': {
+      AppLang.en: 'View details',
+      AppLang.km: 'មើលលម្អិត'
+    },
+    'moreViews': {
+      AppLang.en: 'More views',
+      AppLang.km: 'មើលបន្ថែម'
+    },
     // --- Language screen -------------------------------------------------
     'chooseLanguage': {
       AppLang.en: 'Choose language',

@@ -1083,37 +1083,250 @@ class _ProviderDetailScreenState extends State<ProviderDetailScreen> {
     );
   }
 
-  void _showCustomerProfile(CompletedWork work) {
+  void _showCustomerProfile(CompletedWork work) => _showWorkDetails(work);
+
+  void _showWorkDetails(CompletedWork work) {
+    final hasPhoto = work.photoUrl != null && work.photoUrl!.isNotEmpty;
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      builder: (context) => SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Row(children: [
-                Expanded(
-                    child: Text(AppStrings.t('profile'),
-                        style: Theme.of(context).textTheme.titleLarge)),
-                CloseButton(onPressed: () => Navigator.pop(context)),
-              ]),
-              const CircleAvatar(
-                  radius: 36, child: Icon(Icons.person_outline, size: 40)),
-              const SizedBox(height: 12),
-              Text(work.customerName,
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.titleLarge),
-              const SizedBox(height: 24),
-              ListTile(
-                leading: const Icon(Icons.task_alt_rounded, color: _green),
-                title: Text(categoryLabel(work.category)),
-                subtitle: Text(work.completedAt == null
-                    ? AppStrings.t('done')
-                    : '${AppStrings.t('done')} · ${_dateLabel(work.completedAt!)}'),
-              ),
-            ],
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        decoration: BoxDecoration(
+          color: _surface,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: _line,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        AppStrings.t('completedWorkDetails'),
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                          color: _text,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.close_rounded, color: _text),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                if (hasPhoto) ...[
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: Container(
+                      height: 220,
+                      width: double.infinity,
+                      color: _alt,
+                      child: CachedNetworkImage(
+                        imageUrl: '${ApiClient.instance.baseUrl}${work.photoUrl}',
+                        fit: BoxFit.cover,
+                        placeholder: (_, __) => const Center(
+                          child: CircularProgressIndicator(),
+                        ),
+                        errorWidget: (_, __, ___) => Center(
+                          child: Icon(Icons.broken_image_outlined,
+                              size: 48, color: _muted),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: _alt,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: _line),
+                  ),
+                  child: Column(
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: _green.withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: const Icon(Icons.task_alt_rounded,
+                                color: _green, size: 22),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  categoryLabel(work.category),
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                      color: _text),
+                                ),
+                                Text(
+                                  'ID: #${work.id}',
+                                  style: TextStyle(fontSize: 12, color: _muted),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: _green.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              AppStrings.t('done'),
+                              style: const TextStyle(
+                                  color: _green,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12),
+                            ),
+                          ),
+                        ],
+                      ),
+                      Divider(height: 24, color: _line),
+                      Row(
+                        children: [
+                          Icon(Icons.person_outline_rounded,
+                              size: 18, color: _muted),
+                          const SizedBox(width: 8),
+                          Text('${AppStrings.t('customer')}: ',
+                              style: TextStyle(color: _muted, fontSize: 13)),
+                          Expanded(
+                            child: Text(
+                              work.customerName.isEmpty
+                                  ? AppStrings.t('camfixUser')
+                                  : work.customerName,
+                              style: TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 13,
+                                  color: _text),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Icon(Icons.calendar_today_outlined,
+                              size: 18, color: _muted),
+                          const SizedBox(width: 8),
+                          Text('${AppStrings.t('completed')}: ',
+                              style: TextStyle(color: _muted, fontSize: 13)),
+                          Expanded(
+                            child: Text(
+                              work.completedAt == null
+                                  ? '—'
+                                  : _dateLabel(work.completedAt!),
+                              style: TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 13,
+                                  color: _text),
+                            ),
+                          ),
+                        ],
+                      ),
+                      if (work.address.isNotEmpty) ...[
+                        const SizedBox(height: 8),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Icon(Icons.location_on_outlined,
+                                size: 18, color: _muted),
+                            const SizedBox(width: 8),
+                            Text('${AppStrings.t('address')}: ',
+                                style: TextStyle(color: _muted, fontSize: 13)),
+                            Expanded(
+                              child: Text(
+                                work.address,
+                                style: TextStyle(fontSize: 13, color: _text),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                      if (work.description.isNotEmpty) ...[
+                        const SizedBox(height: 8),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Icon(Icons.description_outlined,
+                                size: 18, color: _muted),
+                            const SizedBox(width: 8),
+                            Text('${AppStrings.t('descriptionLabel')}: ',
+                                style: TextStyle(color: _muted, fontSize: 13)),
+                            Expanded(
+                              child: Text(
+                                work.description,
+                                style: TextStyle(fontSize: 13, color: _text),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 20),
+                SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      final p = _provider;
+                      if (p != null) {
+                        showBookingSheet(context, p);
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primaryBlue,
+                      foregroundColor: AppColors.white,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14)),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.calendar_month_rounded, size: 18),
+                        const SizedBox(width: 8),
+                        Text(AppStrings.t('bookNow'),
+                            style: const TextStyle(fontWeight: FontWeight.bold)),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+              ],
+            ),
           ),
         ),
       ),
@@ -1135,31 +1348,107 @@ class _ProviderDetailScreenState extends State<ProviderDetailScreen> {
         for (final work in _completedWork)
           Card(
             color: _surface,
-            child: ListTile(
-              leading: const Icon(Icons.task_alt_rounded, color: _green),
-              title: Text(categoryLabel(work.category)),
-              onTap: work.customerName.isEmpty
-                  ? null
-                  : () => _showCustomerProfile(work),
-              trailing: work.customerName.isEmpty
-                  ? null
-                  : IconButton(
-                      tooltip: AppStrings.t('viewProfile'),
-                      icon: const Icon(Icons.person_outline),
-                      onPressed: () => _showCustomerProfile(work),
+            margin: const EdgeInsets.only(bottom: 10),
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+              side: BorderSide(color: _line),
+            ),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(16),
+              onTap: () => _showWorkDetails(work),
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Row(
+                  children: [
+                    if (work.photoUrl != null && work.photoUrl!.isNotEmpty)
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: CachedNetworkImage(
+                          imageUrl: '${ApiClient.instance.baseUrl}${work.photoUrl}',
+                          width: 52,
+                          height: 52,
+                          fit: BoxFit.cover,
+                          placeholder: (_, __) => Container(
+                            width: 52,
+                            height: 52,
+                            color: _alt,
+                            child: const Icon(Icons.photo_outlined, size: 20, color: Colors.grey),
+                          ),
+                          errorWidget: (_, __, ___) => Container(
+                            width: 52,
+                            height: 52,
+                            color: _green.withValues(alpha: 0.12),
+                            child: const Icon(Icons.task_alt_rounded, color: _green, size: 26),
+                          ),
+                        ),
+                      )
+                    else
+                      Container(
+                        width: 52,
+                        height: 52,
+                        decoration: BoxDecoration(
+                          color: _green.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(Icons.task_alt_rounded, color: _green, size: 26),
+                      ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            categoryLabel(work.category),
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15,
+                              color: _text,
+                            ),
+                          ),
+                          const SizedBox(height: 3),
+                          Text(
+                            work.customerName.isEmpty
+                                ? AppStrings.t('camfixUser')
+                                : work.customerName,
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 13,
+                              color: _text,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            work.completedAt == null
+                                ? AppStrings.t('done')
+                                : '${AppStrings.t('done')} · ${_dateLabel(work.completedAt!)}',
+                            style: TextStyle(fontSize: 12, color: _muted),
+                          ),
+                        ],
+                      ),
                     ),
-              subtitle: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                      work.customerName.isEmpty
-                          ? AppStrings.t('camfixUser')
-                          : work.customerName,
-                      style: const TextStyle(fontWeight: FontWeight.w600)),
-                  Text(work.completedAt == null
-                      ? AppStrings.t('done')
-                      : '${AppStrings.t('done')} · ${_dateLabel(work.completedAt!)}'),
-                ],
+                    const SizedBox(width: 8),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          AppStrings.t('moreViews'),
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.primaryBlue,
+                          ),
+                        ),
+                        const SizedBox(width: 3),
+                        const Icon(
+                          Icons.arrow_forward_ios_rounded,
+                          size: 13,
+                          color: AppColors.primaryBlue,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -1179,13 +1468,32 @@ class _ProviderDetailScreenState extends State<ProviderDetailScreen> {
           Text(AppStrings.t('noJobsCompletedYet'),
               style: TextStyle(color: _muted)),
         if (_moreWork && !_loadingWork && !_workError)
-          TextButton(
-            onPressed: () => _loadWork(more: true),
-            child: Text(AppStrings.t('workHistoryMore')),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Center(
+              child: OutlinedButton.icon(
+                onPressed: () => _loadWork(more: true),
+                icon: const Icon(Icons.arrow_downward_rounded, size: 16),
+                label: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(AppStrings.t('workHistoryMore')),
+                    const SizedBox(width: 4),
+                    const Icon(Icons.arrow_forward_rounded, size: 14),
+                  ],
+                ),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppColors.primaryBlue,
+                  side: const BorderSide(color: AppColors.primaryBlue),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                ),
+              ),
+            ),
           ),
       ],
     );
   }
+
 
   /// Glowing pill: one real listing and its real completed-job count.
   Widget _skillPill(ServiceProvider p, TechnicianServiceListing listing) {
