@@ -162,7 +162,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     ),
     _ServiceItem(
       'svcCar',
-      Icons.directions_car_filled_rounded,
+      Icons.car_repair_rounded,
       'Car',
       badge: '24/7 Available',
       englishLabel: 'Car',
@@ -540,12 +540,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         MediaQuery.of(context).size.height -
                         MediaQuery.of(context).padding.top,
                   ),
-                  decoration: BoxDecoration(
-                    color: p.surface,
-                    borderRadius: const BorderRadius.vertical(
-                      top: Radius.circular(28),
-                    ),
-                  ),
+                  
                   padding: EdgeInsets.only(top: 4, bottom: 110 + bottomInset),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -661,7 +656,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 hintStyle: TextStyle(fontSize: 12, color: p.textSecondary),
                 prefixIcon: const Icon(Icons.search_rounded, size: 20),
                 filled: true,
-                fillColor: p.surface,
+                fillColor: p.surfaceAlt,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide.none,
@@ -1258,10 +1253,30 @@ class _DashboardScreenState extends State<DashboardScreen> {
   /// "Common Fixes" icon badges below.
   static const _mintCategories = {'Water network', 'Car'};
 
+  Widget _buildCategoryIcon(_ServiceItem item, Color color) {
+    if (item.category == 'Motorcycle') {
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.build_rounded, size: 11, color: color),
+          const SizedBox(height: 1),
+          Icon(Icons.two_wheeler_rounded, size: 19, color: color),
+        ],
+      );
+    }
+    return Icon(
+      item.icon,
+      color: color,
+      size: 24,
+    );
+  }
+
   Widget _serviceTile(_ServiceItem item, {String? subtitle}) {
     final p = context.pal;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final mint = _mintCategories.contains(item.category);
+    final iconColor = mint ? const Color(0xFF009B72) : const Color(0xFF3B67FF);
     final label =
         (AppSettings.instance.lang == AppLang.en && item.englishLabel != null)
             ? item.englishLabel!
@@ -1271,58 +1286,51 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return Container(
       decoration: BoxDecoration(
         color: p.surface,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: isDark ? p.border : p.border.withValues(alpha: 0.28),
-          width: 1,
-        ),
+        borderRadius: BorderRadius.circular(16),
+        border: isDark ? Border.all(color: p.border) : null,
         boxShadow: [
           BoxShadow(
             color: isDark
                 ? Colors.transparent
-                : Colors.black.withValues(alpha: 0.035),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
+                : Colors.black.withValues(alpha: 0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
       child: Material(
         color: Colors.transparent,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(16),
         child: InkWell(
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(16),
           onTap: () =>
               MainShell.of(context)?.openServiceCategory(item.category),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Container(
-                  width: 44,
-                  height: 44,
+                  width: 50,
+                  height: 50,
                   decoration: BoxDecoration(
                     color: mint
                         ? const Color(0xFFD4F8F1)
                         : const Color(0xFFE8EBFF),
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(
-                    item.icon,
-                    color: mint
-                        ? const Color(0xFF148E89)
-                        : const Color(0xFF3B67FF),
-                    size: 22,
+                  child: Center(
+                    child: _buildCategoryIcon(item, iconColor),
                   ),
                 ),
-                const SizedBox(height: 7),
+                const SizedBox(height: 8),
                 Text(
                   label,
                   textAlign: TextAlign.center,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    fontSize: 12.5,
+                    fontSize: 12,
                     fontWeight: FontWeight.w700,
                     color: p.textPrimary,
                   ),
@@ -1349,25 +1357,36 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  /// "Services" header + grid - always visible above the tab switcher,
-  /// regardless of which tab (Book a service / Active Job / History) is
-  /// selected.
+
+  /// "Services" header + grid matching Figma card design.
   Widget _buildServicesSection() {
     final p = context.pal;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(20, 4, 20, 0),
-          child: _sectionHeader(
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
+      decoration: BoxDecoration(
+        color: p.surface,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: isDark
+                ? Colors.transparent
+                : Colors.black.withValues(alpha: 0.04),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _sectionHeader(
             AppStrings.t('categories'),
             onSeeAll: () => MainShell.of(context)?.goToTab(1),
           ),
-        ),
-        const SizedBox(height: 12),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: AppLayout.pageGutter),
-          child: LayoutBuilder(
+          const SizedBox(height: 14),
+          LayoutBuilder(
             builder: (context, constraints) {
               final textScale = MediaQuery.textScalerOf(context)
                   .scale(1)
@@ -1382,32 +1401,32 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       crossAxisCount: 3,
                       mainAxisSpacing: 12,
                       crossAxisSpacing: constraints.maxWidth < 320 ? 8 : 12,
-                      mainAxisExtent: 108 + ((textScale - 1) * 20),
+                      mainAxisExtent: 110 + ((textScale - 1) * 20),
                     ),
                     itemBuilder: (context, i) {
                       final item = _services[i];
                       return _serviceTile(item);
                     },
                   ),
-                  const SizedBox(height: 14),
+                  const SizedBox(height: 16),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Container(
-                        width: 18,
-                        height: 4,
+                        width: 22,
+                        height: 5,
                         decoration: BoxDecoration(
                           color: AppColors.primaryBlue,
-                          borderRadius: BorderRadius.circular(2),
+                          borderRadius: BorderRadius.circular(3),
                         ),
                       ),
                       const SizedBox(width: 5),
                       Container(
-                        width: 5,
-                        height: 4,
+                        width: 6,
+                        height: 5,
                         decoration: BoxDecoration(
-                          color: p.textSecondary.withValues(alpha: 0.25),
-                          borderRadius: BorderRadius.circular(2),
+                          color: const Color(0xFFD6E0FB),
+                          borderRadius: BorderRadius.circular(3),
                         ),
                       ),
                     ],
@@ -1416,8 +1435,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
               );
             },
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 

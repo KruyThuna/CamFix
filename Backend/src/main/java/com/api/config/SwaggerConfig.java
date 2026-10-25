@@ -94,7 +94,8 @@ public class SwaggerConfig {
                                 "https://camonline.store",
                                 "https://*.camonline.store",
                                 "http://camonline.store",
-                                "http://*.camonline.store"));
+                                "http://*.camonline.store",
+                                "https://*.github.io"));
                 cfg.setAllowedMethods(List.of(
                                 "GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
                 cfg.setAllowedHeaders(List.of("*"));
