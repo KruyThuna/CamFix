@@ -148,7 +148,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     ),
     _ServiceItem(
       'svcAirConditioner',
-      Icons.toys_rounded,
+      Icons.toys_outlined,
       'Air Conditioner',
       badge: 'Fast 15m',
       englishLabel: 'Air Conditioner',
@@ -257,7 +257,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       case 'Water network':
         return Icons.plumbing_rounded;
       default:
-        return Icons.ac_unit_rounded;
+        return Icons.toys_outlined;
     }
   }
 

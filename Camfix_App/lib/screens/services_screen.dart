@@ -309,11 +309,11 @@ class _ServicesScreenState extends State<ServicesScreen> {
 
   static const _categoryIcons = {
     'All': Icons.apps_rounded,
-    'Air Conditioner': Icons.ac_unit_rounded,
-    'Electrical': Icons.electrical_services_rounded,
-    'Appliance Repair': Icons.handyman_rounded,
+    'Air Conditioner': Icons.toys_outlined,
+    'Electrical': Icons.bolt_rounded,
+    'Appliance Repair': Icons.kitchen_outlined,
     'Motorcycle': Icons.two_wheeler_rounded,
-    'Car': Icons.directions_car_filled_rounded,
+    'Car': Icons.car_repair_rounded,
     'Water network': Icons.plumbing_rounded,
   };
 
