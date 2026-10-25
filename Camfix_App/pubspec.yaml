@@ -42,7 +42,7 @@ flutter:
   uses-material-design: true
   assets:
     - assets/images/
-    - assets/images/branding/
-    - assets/images/banners/
-    - assets/images/payments/
-    - assets/images/client/
+    - assets/images/banner/
+    - assets/images/logo/
+    - assets/images/qr_code/
+    - assets/images/service/
