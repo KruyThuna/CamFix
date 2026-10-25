@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Resolves the single backend base URL used by every app role.
@@ -45,6 +46,10 @@ abstract final class ApiConfig {
     if (_override.isNotEmpty) return _override;
 
     // 3. All builds use the public API unless explicitly overridden.
+    if (kDebugMode && kIsWeb) {
+      return 'http://127.0.0.1:8081';
+    }
+
     return defaultProductionUrl;
   }
 
