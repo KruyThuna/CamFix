@@ -121,6 +121,18 @@ class _LoginScreenState extends State<LoginScreen> {
                     'Live Tunnel',
                     style: TextStyle(fontSize: 11),
                   ),
+                  onPressed: () => controller.text = 'http://127.0.0.1:8081',
+                ),
+                ActionChip(
+                  label: const Text('Wi-Fi (192.168.100.35)', style: TextStyle(fontSize: 11)),
+                  onPressed: () => controller.text = 'http://192.168.100.35:8081',
+                ),
+                ActionChip(
+                  label: const Text('Emulator (10.0.2.2)', style: TextStyle(fontSize: 11)),
+                  onPressed: () => controller.text = 'http://10.0.2.2:8081',
+                ),
+                ActionChip(
+                  label: const Text('Live Tunnel', style: TextStyle(fontSize: 11)),
                   onPressed: () => controller.text = ApiConfig.liveTunnelUrl,
                 ),
                 ActionChip(
