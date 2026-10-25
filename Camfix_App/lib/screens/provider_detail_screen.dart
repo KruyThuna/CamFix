@@ -166,6 +166,10 @@ class _ProviderDetailScreenState extends State<ProviderDetailScreen> {
   /// screen's list was loaded (dashboard/services - which can stay alive in
   /// memory for a long time) still show up here instead of stale nav-arg data.
   ServiceProvider? _freshProvider;
+  ServiceProvider get _currentProvider =>
+      _freshProvider ??
+      (ModalRoute.of(context)?.settings.arguments as ServiceProvider? ??
+          _fallback);
 
   /// Real "starting from" price for this technician's whole category (the
   /// same catalog price shown elsewhere in the app) - there's no real
@@ -995,7 +999,7 @@ class _ProviderDetailScreenState extends State<ProviderDetailScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildWorkHistory(),
+        _buildWorkHistory(p),
         const SizedBox(height: 20),
         Text('${categoryLabel(p.category)} ${_roleLabel(p.role)}',
             style: TextStyle(
@@ -1083,9 +1087,10 @@ class _ProviderDetailScreenState extends State<ProviderDetailScreen> {
     );
   }
 
-  void _showCustomerProfile(CompletedWork work) => _showWorkDetails(work);
+  void _showCustomerProfile(CompletedWork work, [ServiceProvider? p]) =>
+      _showWorkDetails(work, p);
 
-  void _showWorkDetails(CompletedWork work) {
+  void _showWorkDetails(CompletedWork work, [ServiceProvider? p]) {
     final hasPhoto = work.photoUrl != null && work.photoUrl!.isNotEmpty;
     showModalBottomSheet<void>(
       context: context,
@@ -1301,10 +1306,8 @@ class _ProviderDetailScreenState extends State<ProviderDetailScreen> {
                   child: ElevatedButton(
                     onPressed: () {
                       Navigator.pop(context);
-                      final p = _provider;
-                      if (p != null) {
-                        showBookingSheet(context, p);
-                      }
+                      final provider = p ?? _currentProvider;
+                      showBookingSheet(context, provider);
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primaryBlue,
@@ -1333,7 +1336,7 @@ class _ProviderDetailScreenState extends State<ProviderDetailScreen> {
     );
   }
 
-  Widget _buildWorkHistory() {
+  Widget _buildWorkHistory([ServiceProvider? p]) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1356,7 +1359,7 @@ class _ProviderDetailScreenState extends State<ProviderDetailScreen> {
             ),
             child: InkWell(
               borderRadius: BorderRadius.circular(16),
-              onTap: () => _showWorkDetails(work),
+              onTap: () => _showWorkDetails(work, p),
               child: Padding(
                 padding: const EdgeInsets.all(12),
                 child: Row(
