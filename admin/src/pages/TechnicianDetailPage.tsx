@@ -15,7 +15,7 @@ import { errorMessage } from '../api/client';
 import { AccountBadge, ApprovalBadge, Badge } from '../components/StatusBadge';
 import { TechnicianForm } from '../components/TechnicianForm';
 import { TechnicianIdCard } from '../components/TechnicianIdCard';
-import { fmtDate, fmtRelative } from '../lib/format';
+import { fmtDate, fmtEmail, fmtRelative } from '../lib/format';
 
 export function TechnicianDetailPage() {
   const { id } = useParams();
@@ -223,7 +223,7 @@ export function TechnicianDetailPage() {
             <h2 style={{ marginBottom: 14 }}>Profile</h2>
             <dl className="kv">
               <dt>Email</dt>
-              <dd>{t.email}</dd>
+              <dd>{fmtEmail(t.email)}</dd>
               <dt>Phone</dt>
               <dd>{t.phoneNumber}</dd>
               <dt>Category</dt>

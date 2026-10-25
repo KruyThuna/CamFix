@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api, errorMessage } from '../api/client';
 import type { UserInfo } from '../api/types';
 import { useAuth } from '../auth/AuthContext';
+import { fmtEmail } from '../lib/format';
 
 const blank = { firstName: '', lastName: '', email: '', phoneNumber: '', password: '' };
 
@@ -34,8 +35,11 @@ export function UsersPage() {
     onError: (e) => setError(errorMessage(e)),
   });
   const submit = (e: FormEvent) => { e.preventDefault(); setError(null); save.mutate(); };
-  const users = (query.data ?? []).filter(u =>
-    `${u.firstName} ${u.lastName} ${u.email} ${u.phoneNumber} ${u.role}`.toLowerCase().includes(search.toLowerCase()));
+  const users = (query.data ?? []).filter(u => {
+    const displayMail = fmtEmail(u.email);
+    const searchableEmail = displayMail === 'N/A' ? '' : displayMail;
+    return `${u.firstName} ${u.lastName} ${searchableEmail} ${u.phoneNumber} ${u.role}`.toLowerCase().includes(search.toLowerCase());
+  });
   return <>
     <div className="page-head"><div><h1>Users</h1>
       <p className="sub">Manage customer and technician accounts.</p></div>
@@ -73,13 +77,15 @@ export function UsersPage() {
       <th>Name</th><th>Email</th><th>Phone</th><th>Role</th><th>Status</th><th>Actions</th>
     </tr></thead><tbody>{users.map(u => {
       const editable = u.id !== user?.id && u.role !== 'MAIN_ADMIN' && (mainAdmin || ['CUSTOMER', 'TECHNICIAN'].includes(u.role));
-      return <tr key={u.id}><td>{u.firstName} {u.lastName}</td><td>{u.email}</td><td>{u.phoneNumber}</td>
+      return <tr key={u.id}><td>{u.firstName} {u.lastName}</td><td>{fmtEmail(u.email)}</td><td>{u.phoneNumber}</td>
         <td>{u.role.replace(/_/g, ' ')}</td><td>{u.status}</td><td>{editable ? <div className="inline">
           <button disabled={save.isPending || remove.isPending} onClick={() => {
-            setEditing(u); setCreating(false); setForm({ ...blank, ...u }); setError(null);
+            setEditing(u); setCreating(false); setForm({ ...blank, ...u, email: fmtEmail(u.email) === 'N/A' ? '' : (u.email ?? '') }); setError(null);
           }}>Edit</button>
           <button className="danger" disabled={remove.isPending || save.isPending} onClick={() => {
-            if (window.confirm(`Permanently delete ${u.firstName} ${u.lastName} (${u.email})? Accounts with linked records cannot be deleted.`)) {
+            const emailInfo = fmtEmail(u.email);
+            const emailLabel = emailInfo !== 'N/A' ? ` (${emailInfo})` : '';
+            if (window.confirm(`Permanently delete ${u.firstName} ${u.lastName}${emailLabel}? Accounts with linked records cannot be deleted.`)) {
               setError(null); remove.mutate(u.id);
             }
           }}>Delete</button></div> : <span className="muted">Protected</span>}</td></tr>;

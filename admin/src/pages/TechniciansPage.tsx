@@ -15,7 +15,7 @@ import { SERVICE_CATEGORIES, type Technician } from '../api/types';
 import { AccountBadge, ApprovalBadge } from '../components/StatusBadge';
 import { Modal } from '../components/Modal';
 import { TechnicianForm } from '../components/TechnicianForm';
-import { fmtDate } from '../lib/format';
+import { fmtDate, fmtEmail } from '../lib/format';
 
 export function TechniciansPage() {
   const [params, setParams] = useSearchParams();
@@ -186,7 +186,7 @@ function Row({
           {t.firstName} {t.lastName}
         </Link>
         <div className="muted" style={{ fontSize: 12 }}>
-          {t.email}
+          {fmtEmail(t.email)}
         </div>
       </td>
       <td>{t.category}</td>

@@ -141,7 +141,11 @@ public class UserManagementService {
     }
 
     private static UserView view(Users u) {
-        return new UserView(u.getUserId(), u.getFirstName(), u.getLastName(), u.getEmail(),
+        String email = u.getEmail();
+        if (email != null && email.toLowerCase(Locale.ROOT).endsWith("@phone.camfix.local")) {
+            email = null;
+        }
+        return new UserView(u.getUserId(), u.getFirstName(), u.getLastName(), email,
                 u.getPhoneNumber(), u.getRole(), u.getStatus());
     }
 }

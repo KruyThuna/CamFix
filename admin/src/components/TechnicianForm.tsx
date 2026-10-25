@@ -55,7 +55,7 @@ export function TechnicianForm({ initial, submitting, error, onSubmit, onCancel 
           <input
             type="email"
             required
-            value={f.email}
+            value={f.email ?? ''}
             onChange={(e) => set('email', e.target.value)}
           />
         </div>

@@ -487,7 +487,11 @@ public class AdminService {
         r.setId(t.getTechnicianId());
         r.setFirstName(u == null ? "" : nullToEmpty(u.getFirstName()));
         r.setLastName(u == null ? "" : nullToEmpty(u.getLastName()));
-        r.setEmail(u == null ? null : u.getEmail());
+        String email = u == null ? null : u.getEmail();
+        if (email != null && email.toLowerCase(Locale.ROOT).endsWith("@phone.camfix.local")) {
+            email = null;
+        }
+        r.setEmail(email);
         r.setPhoneNumber(u == null ? null : u.getPhoneNumber());
         r.setCategory(t.getCategory() == null ? null : t.getCategory().getCategoryName());
         r.setServiceArea(t.getServiceArea());

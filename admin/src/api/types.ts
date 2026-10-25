@@ -20,7 +20,7 @@ export interface Technician {
   id: number;
   firstName: string;
   lastName: string;
-  email: string;
+  email: string | null;
   phoneNumber: string;
   category: string;
   serviceArea: string;
@@ -53,7 +53,7 @@ export interface TechnicianLocation {
 export interface TechnicianInput {
   firstName: string;
   lastName: string;
-  email: string;
+  email?: string | null;
   phoneNumber: string;
   category: string;
   serviceArea: string;
@@ -110,7 +110,7 @@ export interface UserInfo {
   id: number;
   firstName: string;
   lastName: string;
-  email: string;
+  email: string | null;
   phoneNumber: string;
   role: string;
   status: string;

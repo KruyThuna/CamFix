@@ -21,3 +21,12 @@ export function fmtRelative(iso: string | null | undefined): string {
   if (hr < 24) return `${hr} h ago`;
   return `${Math.round(hr / 24)} d ago`;
 }
+
+export function isSyntheticEmail(email: string | null | undefined): boolean {
+  if (!email || email.trim() === '') return true;
+  return email.toLowerCase().endsWith('@phone.camfix.local');
+}
+
+export function fmtEmail(email: string | null | undefined): string {
+  return isSyntheticEmail(email) ? 'N/A' : (email ?? 'N/A');
+}
