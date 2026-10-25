@@ -124,6 +124,7 @@ class _ProviderDetailScreenState extends State<ProviderDetailScreen> {
   bool _loadingWork = false;
   bool _workError = false;
   bool _moreWork = false;
+  bool _showAllWork = false;
   int _workPage = 0;
 
   Future<void> _loadWork({bool more = false}) async {
@@ -1337,18 +1338,46 @@ class _ProviderDetailScreenState extends State<ProviderDetailScreen> {
   }
 
   Widget _buildWorkHistory([ServiceProvider? p]) {
+    final displayedWork = _showAllWork ? _completedWork : _completedWork.take(3);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(children: [
           Expanded(child: _sectionTitle(AppStrings.t('completedWorkHistory'))),
+          if (_completedWork.length > 3)
+            TextButton(
+              onPressed: () => setState(() => _showAllWork = !_showAllWork),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    _showAllWork
+                        ? AppStrings.t('showLess')
+                        : AppStrings.t('seeAll'),
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.primaryBlue,
+                    ),
+                  ),
+                  const SizedBox(width: 2),
+                  Icon(
+                    _showAllWork
+                        ? Icons.keyboard_arrow_up_rounded
+                        : Icons.chevron_right_rounded,
+                    size: 16,
+                    color: AppColors.primaryBlue,
+                  ),
+                ],
+              ),
+            ),
           IconButton(
             tooltip: AppStrings.t('retry'),
             onPressed: _loadingWork ? null : () => _loadWork(),
             icon: const Icon(Icons.refresh_rounded),
           ),
         ]),
-        for (final work in _completedWork)
+        for (final work in displayedWork)
           Card(
             color: _surface,
             margin: const EdgeInsets.only(bottom: 10),
@@ -1369,34 +1398,34 @@ class _ProviderDetailScreenState extends State<ProviderDetailScreen> {
                         borderRadius: BorderRadius.circular(12),
                         child: CachedNetworkImage(
                           imageUrl: '${ApiClient.instance.baseUrl}${work.photoUrl}',
-                          width: 52,
-                          height: 52,
+                          width: 48,
+                          height: 48,
                           fit: BoxFit.cover,
                           placeholder: (_, __) => Container(
-                            width: 52,
-                            height: 52,
+                            width: 48,
+                            height: 48,
                             color: _alt,
                             child: const Icon(Icons.photo_outlined, size: 20, color: Colors.grey),
                           ),
                           errorWidget: (_, __, ___) => Container(
-                            width: 52,
-                            height: 52,
+                            width: 48,
+                            height: 48,
                             color: _green.withValues(alpha: 0.12),
-                            child: const Icon(Icons.task_alt_rounded, color: _green, size: 26),
+                            child: const Icon(Icons.task_alt_rounded, color: _green, size: 24),
                           ),
                         ),
                       )
                     else
                       Container(
-                        width: 52,
-                        height: 52,
+                        width: 48,
+                        height: 48,
                         decoration: BoxDecoration(
                           color: _green.withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: const Icon(Icons.task_alt_rounded, color: _green, size: 26),
+                        child: const Icon(Icons.task_alt_rounded, color: _green, size: 24),
                       ),
-                    const SizedBox(width: 14),
+                    const SizedBox(width: 12),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1431,24 +1460,51 @@ class _ProviderDetailScreenState extends State<ProviderDetailScreen> {
                       ),
                     ),
                     const SizedBox(width: 8),
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          AppStrings.t('moreViews'),
-                          style: const TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.primaryBlue,
-                          ),
-                        ),
-                        const SizedBox(width: 3),
-                        const Icon(
-                          Icons.arrow_forward_ios_rounded,
-                          size: 13,
-                          color: AppColors.primaryBlue,
-                        ),
-                      ],
+                    const Icon(
+                      Icons.chevron_right_rounded,
+                      size: 22,
+                      color: AppColors.primaryBlue,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        if (_completedWork.length > 3)
+          Padding(
+            padding: const EdgeInsets.only(top: 4, bottom: 8),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(16),
+              onTap: () => setState(() => _showAllWork = !_showAllWork),
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 11, horizontal: 16),
+                decoration: BoxDecoration(
+                  color: AppColors.primaryBlue.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: AppColors.primaryBlue.withValues(alpha: 0.2),
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      _showAllWork
+                          ? AppStrings.t('showLess')
+                          : '${AppStrings.t('moreViews')} (${_completedWork.length})',
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.primaryBlue,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Icon(
+                      _showAllWork
+                          ? Icons.keyboard_arrow_up_rounded
+                          : Icons.arrow_forward_rounded,
+                      size: 16,
+                      color: AppColors.primaryBlue,
                     ),
                   ],
                 ),

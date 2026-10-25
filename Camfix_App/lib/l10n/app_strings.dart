@@ -39,8 +39,12 @@ class AppStrings {
       AppLang.km: 'មើលលម្អិត'
     },
     'moreViews': {
-      AppLang.en: 'More views',
+      AppLang.en: 'View more',
       AppLang.km: 'មើលបន្ថែម'
+    },
+    'showLess': {
+      AppLang.en: 'Show less',
+      AppLang.km: 'បង្ហាញតិចជាង'
     },
     // --- Language screen -------------------------------------------------
     'chooseLanguage': {
