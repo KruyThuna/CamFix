@@ -22,7 +22,7 @@ api.interceptors.response.use(
     if (status === 401 && localStorage.getItem(TOKEN_KEY)) {
       localStorage.removeItem(TOKEN_KEY);
       if (!window.location.pathname.startsWith('/login')) {
-        window.location.assign('/login');
+        window.location.hash = '#/login';
       }
     }
     return Promise.reject(error);

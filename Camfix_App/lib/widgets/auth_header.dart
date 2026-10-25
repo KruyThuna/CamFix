@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_images.dart';
 import '../theme/app_theme.dart';
 import 'app_buttons.dart';
 
@@ -127,7 +128,17 @@ class _AuthHeaderState extends State<AuthHeader> with TickerProviderStateMixin {
                   ),
                   child: ClipOval(
                     child: Image.asset(
-                      'assets/images/camfix_mascot_logo.webp',
+                      AppImages.mascotLogo,
+                      errorBuilder: (context, error, stackTrace) => Image.asset(
+                        'assets/images/camfix_mascot_logo.webp',
+                        fit: BoxFit.cover,
+                        semanticLabel: 'CamFix',
+                        errorBuilder: (ctx, err, st) => const Icon(
+                          Icons.handyman,
+                          size: 56,
+                          color: AppColors.primary,
+                        ),
+                      ),
                       fit: BoxFit.cover,
                       semanticLabel: 'CamFix',
                     ),
