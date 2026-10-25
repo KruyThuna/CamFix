@@ -136,7 +136,7 @@ class _AuthHeaderState extends State<AuthHeader> with TickerProviderStateMixin {
                         errorBuilder: (ctx, err, st) => const Icon(
                           Icons.handyman,
                           size: 56,
-                          color: AppColors.primary,
+                          color: AppColors.primaryBlue,
                         ),
                       ),
                       fit: BoxFit.cover,
