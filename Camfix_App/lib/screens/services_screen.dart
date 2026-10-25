@@ -309,7 +309,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
 
   static const _categoryIcons = {
     'All': Icons.apps_rounded,
-    'Air Conditioner': Icons.toys_outlined,
+    'Air Conditioner': Icons.mode_fan_off_rounded,
     'Electrical': Icons.bolt_rounded,
     'Appliance Repair': Icons.kitchen_outlined,
     'Motorcycle': Icons.two_wheeler_rounded,
@@ -336,6 +336,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
   Widget _buildBanner() {
     final accent = _categoryAccents[_category] ?? AppColors.primaryBlue;
     final icon = _categoryIcons[_category] ?? Icons.home_repair_service;
+    final isAc = _category == 'Air Conditioner';
     final tag = _categoryTags[_category] ?? 'HOME SERVICE';
     return Container(
         padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
@@ -379,7 +380,12 @@ class _ServicesScreenState extends State<ServicesScreen> {
                     color: Colors.white.withValues(alpha: .14),
                     borderRadius: BorderRadius.circular(14)),
                 child: Column(children: [
-                  Icon(icon, color: Colors.white, size: 26),
+                  isAc
+                      ? const CustomPaint(
+                          size: Size(26, 26),
+                          painter: _AcFanPainter(Colors.white),
+                        )
+                      : Icon(icon, color: Colors.white, size: 26),
                   const SizedBox(height: 6),
                   const Text('EXPERT CARE',
                       style: TextStyle(
@@ -790,4 +796,60 @@ class _ServicesScreenState extends State<ServicesScreen> {
             onPressed: () => Navigator.pushNamed(context, '/help-support'),
             child: const Text('Get help', style: TextStyle(fontSize: 10))),
       ]));
+}
+
+
+/// 4-blade fan/propeller matching the Figma category icon for Air Conditioner.
+class _AcFanPainter extends CustomPainter {
+  final Color color;
+  const _AcFanPainter(this.color);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final s = size.width;
+    final cx = s / 2.0;
+    final cy = s / 2.0;
+    final strokeWidth = s * 0.088;
+    final strokePaint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+
+    final r0 = s * 0.09;
+    canvas.drawCircle(Offset(cx, cy), r0, strokePaint);
+
+    for (var i = 0; i < 4; i++) {
+      canvas.save();
+      canvas.translate(cx, cy);
+      canvas.rotate(i * 3.141592653589793 / 2);
+
+      final path = Path();
+      path.moveTo(0, -r0);
+      path.cubicTo(
+        -s * 0.16,
+        -s * 0.22,
+        -s * 0.04,
+        -s * 0.44,
+        s * 0.10,
+        -s * 0.38,
+      );
+      path.cubicTo(
+        s * 0.18,
+        -s * 0.32,
+        s * 0.16,
+        -s * 0.14,
+        r0,
+        0,
+      );
+      canvas.drawPath(path, strokePaint);
+
+      canvas.restore();
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _AcFanPainter oldDelegate) =>
+      oldDelegate.color != color;
 }

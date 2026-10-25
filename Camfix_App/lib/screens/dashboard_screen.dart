@@ -148,7 +148,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     ),
     _ServiceItem(
       'svcAirConditioner',
-      Icons.toys_outlined,
+      Icons.mode_fan_off_rounded,
       'Air Conditioner',
       badge: 'Fast 15m',
       englishLabel: 'Air Conditioner',
@@ -257,7 +257,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       case 'Water network':
         return Icons.plumbing_rounded;
       default:
-        return Icons.toys_outlined;
+        return Icons.mode_fan_off_rounded;
     }
   }
 
@@ -1254,12 +1254,54 @@ class _DashboardScreenState extends State<DashboardScreen> {
   static const _mintCategories = {'Water network', 'Car'};
 
   Widget _buildCategoryIcon(_ServiceItem item, Color color) {
+    if (item.category == 'Air Conditioner') {
+      return CustomPaint(
+        size: const Size(22, 22),
+        painter: _AcFanPainter(color),
+      );
+    }
+    if (item.category == 'Car') {
+      return SizedBox(
+        width: 26,
+        height: 26,
+        child: Stack(
+          alignment: Alignment.center,
+          clipBehavior: Clip.none,
+          children: [
+            Icon(
+              Icons.directions_car_filled_rounded,
+              size: 21,
+              color: color,
+            ),
+            Positioned(
+              right: -1,
+              bottom: 0,
+              child: Container(
+                padding: const EdgeInsets.all(1.5),
+                decoration: const BoxDecoration(
+                  color: Color(0xFFE6FAF5),
+                  shape: BoxShape.circle,
+                ),
+                child: Transform.rotate(
+                  angle: -0.6,
+                  child: Icon(
+                    Icons.build_rounded,
+                    size: 9,
+                    color: color,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
     if (item.category == 'Motorcycle') {
       return Column(
         mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.build_rounded, size: 11, color: color),
+          Icon(Icons.build_rounded, size: 10, color: color),
           const SizedBox(height: 1),
           Icon(Icons.two_wheeler_rounded, size: 19, color: color),
         ],
@@ -3538,4 +3580,60 @@ class _DashboardScreenState extends State<DashboardScreen> {
       Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
     }
   }
+}
+
+
+/// 4-blade fan/propeller matching the Figma category icon for Air Conditioner.
+class _AcFanPainter extends CustomPainter {
+  final Color color;
+  const _AcFanPainter(this.color);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final s = size.width;
+    final cx = s / 2.0;
+    final cy = s / 2.0;
+    final strokeWidth = s * 0.088;
+    final strokePaint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+
+    final r0 = s * 0.09;
+    canvas.drawCircle(Offset(cx, cy), r0, strokePaint);
+
+    for (var i = 0; i < 4; i++) {
+      canvas.save();
+      canvas.translate(cx, cy);
+      canvas.rotate(i * 3.141592653589793 / 2);
+
+      final path = Path();
+      path.moveTo(0, -r0);
+      path.cubicTo(
+        -s * 0.16,
+        -s * 0.22,
+        -s * 0.04,
+        -s * 0.44,
+        s * 0.10,
+        -s * 0.38,
+      );
+      path.cubicTo(
+        s * 0.18,
+        -s * 0.32,
+        s * 0.16,
+        -s * 0.14,
+        r0,
+        0,
+      );
+      canvas.drawPath(path, strokePaint);
+
+      canvas.restore();
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _AcFanPainter oldDelegate) =>
+      oldDelegate.color != color;
 }
