@@ -2,7 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../l10n/app_strings.dart';
+import '../l10n/language.dart';
 import '../models/favorite.dart';
 import '../services/api_client.dart';
 import '../services/favorites_api.dart';

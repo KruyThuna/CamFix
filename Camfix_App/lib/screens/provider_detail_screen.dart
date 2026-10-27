@@ -4,7 +4,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 
 import '../app_settings.dart';
-import '../l10n/app_strings.dart';
+import '../l10n/language.dart';
 import '../models/chat.dart';
 import '../services/chat_api.dart';
 import '../models/review.dart';

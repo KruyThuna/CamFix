@@ -3,7 +3,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
-import '../l10n/app_strings.dart';
+import '../l10n/language.dart';
 import '../lang_aware.dart';
 import '../services/auth_api.dart';
 import '../theme/app_theme.dart';

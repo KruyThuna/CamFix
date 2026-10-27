@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../app_settings.dart';
-import '../l10n/app_strings.dart';
+import '../l10n/language.dart';
 import '../lang_aware.dart';
 import '../theme/app_theme.dart';
 import '../widgets/ui.dart';

@@ -3,7 +3,7 @@ import 'dart:typed_data';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 
-import '../l10n/app_strings.dart';
+import '../l10n/language.dart';
 import '../lang_aware.dart';
 import '../theme/app_theme.dart';
 import '../widgets/ui.dart';

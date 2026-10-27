@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../l10n/app_strings.dart';
+import '../l10n/language.dart';
 import '../theme/app_theme.dart';
 
 /// Floating pill bottom navigation with 4 items: Home, Bookings, Messages,

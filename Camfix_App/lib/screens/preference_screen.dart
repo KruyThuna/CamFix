@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:latlong2/latlong.dart';
 
 import '../app_settings.dart';
-import '../l10n/app_strings.dart';
+import '../l10n/language.dart';
 import '../theme/app_theme.dart';
 
 /// Preference screen (reached from Profile): distance unit (km/mi) and a

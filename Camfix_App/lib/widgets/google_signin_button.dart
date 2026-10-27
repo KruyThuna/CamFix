@@ -2,7 +2,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
-import '../l10n/app_strings.dart';
+import '../l10n/language.dart';
 import '../services/api_client.dart';
 import '../services/auth_api.dart';
 import '../services/gmail_connect.dart';

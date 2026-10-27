@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 
-import '../l10n/app_strings.dart';
+import '../l10n/language.dart';
 import '../services/device_location.dart';
 import '../services/geocoding_api.dart';
 import '../theme/app_theme.dart';

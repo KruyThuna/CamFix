@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../l10n/app_strings.dart';
+import '../l10n/language.dart';
 import '../models/service_provider.dart';
 import '../services/api_client.dart';
 import '../services/search_history_store.dart';

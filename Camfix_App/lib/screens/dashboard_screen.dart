@@ -6,7 +6,7 @@ import 'package:latlong2/latlong.dart' hide Path;
 import 'package:url_launcher/url_launcher.dart';
 
 import '../app_settings.dart';
-import '../l10n/app_strings.dart';
+import '../l10n/language.dart';
 import '../models/chat.dart';
 import '../models/review.dart';
 import '../models/service_provider.dart';

@@ -7,7 +7,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../app_settings.dart';
-import '../l10n/app_strings.dart';
+import '../l10n/language.dart';
 import '../models/service_provider.dart';
 import '../models/technician_service_listing.dart';
 import '../services/api_client.dart';

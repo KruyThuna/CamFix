@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../l10n/app_strings.dart';
+import '../l10n/language.dart';
 import '../services/api_client.dart';
 import '../services/auth_api.dart';
 import '../theme/app_theme.dart';

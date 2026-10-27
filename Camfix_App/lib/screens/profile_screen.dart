@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../app_settings.dart';
-import '../l10n/app_strings.dart';
+import '../l10n/language.dart';
 import '../models/user_info.dart';
 import '../services/bookings_api.dart';
 import '../services/bookings_store.dart';

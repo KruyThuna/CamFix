@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../l10n/app_strings.dart';
+import '../l10n/language.dart';
 import '../lang_aware.dart';
 import '../services/auth_api.dart';
 import '../services/api_client.dart';

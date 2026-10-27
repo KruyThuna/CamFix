@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../l10n/app_strings.dart';
+import '../l10n/language.dart';
 import '../services/current_user.dart';
 import '../theme/app_theme.dart';
 import '../widgets/animated_camfix_logo.dart';

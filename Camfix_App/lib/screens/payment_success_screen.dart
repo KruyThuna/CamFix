@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../l10n/app_strings.dart';
+import '../l10n/language.dart';
 import '../models/payment.dart';
 import '../theme/app_theme.dart';
 

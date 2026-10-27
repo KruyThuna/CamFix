@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'identity_verification_screen.dart';
 import 'registration_otp_screen.dart';
 
-import '../l10n/app_strings.dart';
+import '../l10n/language.dart';
 import '../lang_aware.dart';
 import '../models/technician_profile.dart';
 import '../services/auth_api.dart';

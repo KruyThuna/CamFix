@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../l10n/app_strings.dart';
+import '../l10n/language.dart';
 import '../models/chat.dart';
 import '../services/api_client.dart';
 import '../services/chat_api.dart';

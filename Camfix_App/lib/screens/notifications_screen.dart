@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../app_settings.dart';
-import '../l10n/app_strings.dart';
+import '../l10n/language.dart';
 import '../models/app_notification.dart';
 import '../services/notifications_store.dart';
 import '../theme/app_theme.dart';

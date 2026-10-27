@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:latlong2/latlong.dart';
-import '../l10n/app_strings.dart';
+import '../l10n/language.dart';
 import '../services/api_client.dart';
 import '../services/auth_api.dart';
 import '../services/current_user.dart';

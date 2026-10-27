@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../l10n/app_strings.dart';
+import '../l10n/language.dart';
 import '../theme/app_theme.dart';
 
 /// Help & Support screen (reached from Profile): shows the support email and

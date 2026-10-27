@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../l10n/app_strings.dart';
+import '../l10n/language.dart';
 import '../models/payment.dart';
 import '../models/service_quote.dart';
 import '../services/bookings_api.dart';

@@ -3,7 +3,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../l10n/app_strings.dart';
+import '../l10n/language.dart';
 import '../models/live_technician.dart';
 import '../models/service_provider.dart';
 import '../services/osrm_api.dart';

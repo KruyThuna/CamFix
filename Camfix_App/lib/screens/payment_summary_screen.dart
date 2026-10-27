@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../l10n/app_strings.dart';
+import '../l10n/language.dart';
 import '../models/service_quote.dart';
 import '../services/bookings_store.dart' show Booking;
 import '../services/saved_card_store.dart';
