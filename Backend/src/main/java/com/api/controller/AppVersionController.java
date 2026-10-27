@@ -28,8 +28,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/app")
 public class AppVersionController {
 
-    public static final String LATEST_VERSION = "1.3.4";
-    public static final int LATEST_BUILD_NUMBER = 24;
+    public static final String LATEST_VERSION = "1.3.5";
+    public static final int LATEST_BUILD_NUMBER = 25;
     public static final int MIN_SUPPORTED_BUILD = 1;
 
     @GetMapping("/version")
