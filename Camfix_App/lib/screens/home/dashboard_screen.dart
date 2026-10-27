@@ -26,7 +26,7 @@ import '../../services/app_update_service.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/user_avatar.dart';
 import '../booking/booking_sheet.dart';
-import 'main_shell.dart';
+import 'bottom_nav_screen.dart';
 import 'services_screen.dart';
 
 class DashboardScreen extends StatefulWidget {

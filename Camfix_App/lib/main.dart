@@ -18,7 +18,7 @@ import 'screens/auth/verification_code_screen.dart';
 import 'screens/auth/forgot_password_screen.dart';
 import 'screens/auth/verify_email_screen.dart';
 import 'screens/auth/create_new_password_screen.dart';
-import 'screens/home/main_shell.dart';
+import 'screens/home/bottom_nav_screen.dart';
 import 'screens/tracking/live_tracking_screen.dart';
 import 'screens/tracking/technicians_live_screen.dart';
 import 'screens/home/services_screen.dart';
@@ -85,7 +85,7 @@ class CamFixApp extends StatelessWidget {
           '/forgot-password': (context) => const ForgotPasswordScreen(),
           '/verify-email': (context) => const VerifyEmailScreen(),
           '/new-password': (context) => const CreateNewPasswordScreen(),
-          '/dashboard': (context) => const MainShell(),
+          '/dashboard': (context) => const BottomNavScreen(),
           '/live-tracking': (context) => const LiveTrackingScreen(),
           '/technicians-live': (context) => const TechniciansLiveScreen(),
           '/services': (context) => const ServicesScreen(),

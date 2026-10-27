@@ -12,7 +12,7 @@ export 'auth/forgot_password_screen.dart';
 export 'auth/create_new_password_screen.dart';
 
 // Home Dashboard
-export 'home/main_shell.dart';
+export 'home/bottom_nav_screen.dart';
 export 'home/dashboard_screen.dart';
 export 'home/services_screen.dart';
 export 'home/provider_detail_screen.dart';

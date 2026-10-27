@@ -8,7 +8,7 @@ import '../../services/device_location.dart';
 import '../../services/technicians_api.dart';
 import '../../services/service_prices_api.dart';
 import '../../theme/app_theme.dart';
-import 'main_shell.dart';
+import 'bottom_nav_screen.dart';
 
 /// Maps an internal category name to its localised label. `'All'` is a
 /// pseudo-category (browse every technician, unfiltered) rather than a real

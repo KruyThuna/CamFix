@@ -11,19 +11,19 @@ import 'services_screen.dart';
 /// [IndexedStack] so switching tabs never rebuilds a screen or loses its
 /// scroll position. Detail screens (provider, chat thread, edit profile…)
 /// still push on top of this.
-class MainShell extends StatefulWidget {
-  const MainShell({super.key});
+class BottomNavScreen extends StatefulWidget {
+  const BottomNavScreen({super.key});
 
   /// Lets a child screen switch tabs, e.g. `MainShell.of(context)?.goToTab(1)`.
-  static MainShellController? of(BuildContext context) =>
-      context.findAncestorStateOfType<_MainShellState>();
+  static BottomNavController? of(BuildContext context) =>
+      context.findAncestorStateOfType<_BottomNavScreenState>();
 
   @override
-  State<MainShell> createState() => _MainShellState();
+  State<BottomNavScreen> createState() => _BottomNavScreenState();
 }
 
 /// The bit of [MainShell] a child is allowed to call.
-abstract class MainShellController {
+abstract class BottomNavController {
   void goToTab(int index);
 
   /// Switch to the Service tab and pre-select [category].
@@ -33,7 +33,7 @@ abstract class MainShellController {
   ValueNotifier<String?> get pendingCategory;
 }
 
-class _MainShellState extends State<MainShell> implements MainShellController {
+class _BottomNavScreenState extends State<BottomNavScreen> implements BottomNavController {
   int _index = 0;
 
   @override
@@ -111,3 +111,7 @@ class _MainShellState extends State<MainShell> implements MainShellController {
     );
   }
 }
+
+/// Backward-compatibility aliases for [BottomNavScreen]
+typedef MainShell = BottomNavScreen;
+typedef MainShellController = BottomNavController;
