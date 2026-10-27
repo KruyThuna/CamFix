@@ -60,7 +60,7 @@ Prerequisites:
    `dbdca579-55cf-4120-9396-37bd0ef1f2ad.cfargotunnel.com`.
 3. Install `cloudflared` and keep the tunnel credentials outside this repo in
    `%USERPROFILE%\.cloudflared`.
-4. Copy `deploy/cloudflare/config.yml.example` to
+4. Copy `deploy/cloudflare/config.yml` to
    `%USERPROFILE%\.cloudflared\config.yml`, then replace `YOUR_USERNAME`.
 5. Start MySQL on port 3306.
 
