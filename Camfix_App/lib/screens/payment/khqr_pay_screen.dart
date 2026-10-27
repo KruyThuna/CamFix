@@ -21,7 +21,7 @@ import '../../theme/app_theme.dart';
 import 'payment_method_screen.dart';
 import 'payment_success_screen.dart';
 import 'payment_summary_screen.dart' show PaymentBreakdown;
-import 'services_screen.dart' show categoryLabel;
+import '../home/services_screen.dart' show categoryLabel;
 
 enum BankTab { bakong, aba, acleda }
 

@@ -7,7 +7,7 @@ import '../../services/search_history_store.dart';
 import '../../services/service_prices_api.dart';
 import '../../services/technicians_api.dart';
 import '../../theme/app_theme.dart';
-import 'services_screen.dart' show categoryLabel;
+import '../home/services_screen.dart' show categoryLabel;
 
 /// Dedicated search screen (mockup pages 53-54): a real "Recently searched"
 /// list (this device's own past queries, stored locally - not fabricated),

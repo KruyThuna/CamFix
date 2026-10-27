@@ -7,7 +7,7 @@ import '../../models/live_technician.dart';
 import '../../models/service_provider.dart';
 import '../../services/current_user.dart';
 import '../../theme/app_theme.dart';
-import 'services_screen.dart' show categoryLabel;
+import '../home/services_screen.dart' show categoryLabel;
 
 /// "Nearby Technicians" live map: the current user's area plus every
 /// technician's live position. Tap a marker (or a list row) to open the

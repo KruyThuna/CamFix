@@ -18,7 +18,7 @@ import '../../services/service_prices_api.dart';
 import '../../theme/app_theme.dart';
 import '../../theme/app_images.dart';
 import '../../widgets/app_buttons.dart';
-import 'services_screen.dart' show categoryLabel;
+import '../home/services_screen.dart' show categoryLabel;
 
 /// "Book Now" flow for a provider: pick a service, a day and time, add a note,
 /// confirm. Sends the booking to the backend (`POST /api/bookings`, which

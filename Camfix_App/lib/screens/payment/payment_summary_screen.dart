@@ -7,7 +7,7 @@ import '../../services/saved_card_store.dart';
 import '../../theme/app_theme.dart';
 import 'add_card_screen.dart';
 import 'payment_method_screen.dart';
-import 'services_screen.dart' show categoryLabel;
+import '../home/services_screen.dart' show categoryLabel;
 
 /// Cost breakdown for one accepted quote - the same platform-fee/tax formula
 /// as the backend (`BookingService#payQuote`), computed client-side so this

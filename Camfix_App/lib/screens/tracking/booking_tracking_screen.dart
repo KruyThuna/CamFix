@@ -23,7 +23,7 @@ import '../../services/api_client.dart';
 import '../../services/technicians_api.dart';
 import '../../theme/app_theme.dart';
 import '../payment/payment_summary_screen.dart';
-import 'services_screen.dart' show categoryLabel;
+import '../home/services_screen.dart' show categoryLabel;
 
 /// Shows a booking's live status once a technician is involved: a map with
 /// the technician's last reported GPS fix + the job address, a status

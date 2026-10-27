@@ -7,7 +7,7 @@ import '../../models/favorite.dart';
 import '../../services/api_client.dart';
 import '../../services/favorites_api.dart';
 import '../../theme/app_theme.dart';
-import 'services_screen.dart' show categoryLabel;
+import '../home/services_screen.dart' show categoryLabel;
 
 /// The customer's saved technicians (`Profile > Favorites`).
 class FavoritesScreen extends StatefulWidget {

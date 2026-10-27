@@ -8,7 +8,7 @@ import '../../models/live_technician.dart';
 import '../../models/service_provider.dart';
 import '../../services/osrm_api.dart';
 import '../../theme/app_theme.dart';
-import 'services_screen.dart' show categoryLabel;
+import '../home/services_screen.dart' show categoryLabel;
 
 /// Full-screen, in-app directions to a technician's shop. Draws the real
 /// road route (keyless OSRM) from the user's area to the provider's pin, so

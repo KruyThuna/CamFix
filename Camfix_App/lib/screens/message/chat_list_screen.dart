@@ -9,7 +9,7 @@ import '../../services/chat_api.dart';
 import '../../services/notifications_store.dart';
 import '../../theme/app_theme.dart';
 import '../home/main_shell.dart';
-import 'services_screen.dart' show categoryLabel;
+import '../home/services_screen.dart' show categoryLabel;
 
 /// Chat list (mockup page 20): search, All / Unread filter and a list of
 /// conversations. Tapping one opens the thread at `/chat-thread`.

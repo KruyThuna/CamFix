@@ -5,7 +5,7 @@ import '../../models/payment.dart';
 import '../../services/bookings_api.dart';
 import '../../services/bookings_store.dart' show Booking;
 import '../../theme/app_theme.dart';
-import 'services_screen.dart' show categoryLabel;
+import '../home/services_screen.dart' show categoryLabel;
 
 enum _Sort { newest, oldest, amountHigh, amountLow }
 

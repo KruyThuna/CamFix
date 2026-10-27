@@ -8,8 +8,8 @@ import '../../models/service_quote.dart';
 import '../../services/bookings_api.dart';
 import '../../services/bookings_store.dart' show Booking;
 import '../../theme/app_theme.dart';
-import 'payment_summary_screen.dart' show PaymentBreakdown;
-import 'services_screen.dart' show categoryLabel;
+import '../payment/payment_summary_screen.dart' show PaymentBreakdown;
+import '../home/services_screen.dart' show categoryLabel;
 
 /// Booking Receipt (mockup): the booking, its technician, when/where, and the
 /// real cost breakdown from the accepted quote. Every line comes from the

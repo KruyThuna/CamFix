@@ -8,7 +8,7 @@ import '../../models/chat.dart';
 import '../../services/api_client.dart';
 import '../../services/chat_api.dart';
 import '../../theme/app_theme.dart';
-import 'services_screen.dart' show categoryLabel;
+import '../home/services_screen.dart' show categoryLabel;
 
 /// A real chat with the technician on one booking (`/api/chats/{jobId}`).
 /// Polls for new messages every few seconds while open; opening it marks
