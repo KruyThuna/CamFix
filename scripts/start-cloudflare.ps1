@@ -2,7 +2,7 @@
 param()
 
 $ErrorActionPreference = 'Stop'
-$repoRoot = "C:\CamV4\CamFix"
+$repoRoot = Split-Path -Parent $PSScriptRoot
 $cloudflaredConfig = Join-Path $env:USERPROFILE '.cloudflared\config.yml'
 $cloudflaredExe = "C:\Program Files (x86)\cloudflared\cloudflared.exe"
 

@@ -1,7 +1,7 @@
 [CmdletBinding()]
 param()
 
-$repoRoot = "C:\CamV4\CamFix"
+$repoRoot = Split-Path -Parent $PSScriptRoot
 
 Write-Host "========================================" -ForegroundColor Yellow
 Write-Host "    Stopping CamFix Server & Tunnel     " -ForegroundColor Yellow

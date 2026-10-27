@@ -1,7 +1,8 @@
 # Copy this file to %USERPROFILE%\.cloudflared\config.yml.
 # Keep the real credentials JSON outside this repository.
-tunnel: dbdca579-55cf-4120-9396-37bd0ef1f2ad
-credentials-file: C:\Users\YOUR_USERNAME\.cloudflared\dbdca579-55cf-4120-9396-37bd0ef1f2ad.json
+tunnel: cfbd5ee5-ba35-405f-8ef5-5140befba60a
+credentials-file: C:\Users\YOUR_USERNAME\.cloudflared\cfbd5ee5-ba35-405f-8ef5-5140befba60a.json
+protocol: http2
 
 ingress:
   - hostname: api.camonline.store
