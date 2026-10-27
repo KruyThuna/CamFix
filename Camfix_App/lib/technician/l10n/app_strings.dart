@@ -782,3 +782,6 @@ class AppStrings {
     return _map.containsKey(key) ? t(key) : code;
   }
 }
+
+/// Convenient alias for [AppStrings] allowing Language.t syntax.
+typedef Language = AppStrings;
