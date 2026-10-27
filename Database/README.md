@@ -11,8 +11,7 @@ Database/
 ├── camfix_database.sql       # 🌟 Complete MySQL Schema (Single source of truth, 21 tables)
 ├── docker-init.sql           # 🐳 Docker bootstrap schema for docker-compose
 ├── migrations/               # 📦 Incremental patches and versioned SQL migrations
-├── seeds/                    # 🌱 Sample seed data (technicians, test accounts)
-└── archive/                  # 🏛️ Historical legacy files (e.g. old MS SQL Server schema)
+└── seeds/                    # 🌱 Sample seed data (technicians, test accounts)
 ```
 
 ---
@@ -36,3 +35,4 @@ mysql -u root -p CamFix < Database/seeds/seed_technicians.sql
 
 ### 4. Incremental Updates
 All incremental fixes and versioned migrations are stored inside [migrations/](file:///c:/Users/Oxy/CamFix/Database/migrations/).
+
