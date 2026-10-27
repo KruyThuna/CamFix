@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:camfix_app/models/service_provider.dart';
-import 'package:camfix_app/screens/provider_detail_screen.dart';
+import 'package:camfix_app/screens/home/provider_detail_screen.dart';
 import 'package:camfix_app/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';

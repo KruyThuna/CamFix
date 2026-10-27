@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:camfix_app/app_settings.dart';
-import 'package:camfix_app/l10n/app_strings.dart';
+import 'package:camfix_app/l10n/language.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

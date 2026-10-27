@@ -1,7 +1,7 @@
 import 'package:camfix_app/models/service_quote.dart';
-import 'package:camfix_app/screens/khqr_pay_screen.dart';
-import 'package:camfix_app/screens/payment_method_screen.dart';
-import 'package:camfix_app/screens/payment_summary_screen.dart';
+import 'package:camfix_app/screens/payment/khqr_pay_screen.dart';
+import 'package:camfix_app/screens/payment/payment_method_screen.dart';
+import 'package:camfix_app/screens/payment/payment_summary_screen.dart';
 import 'package:camfix_app/services/bookings_store.dart';
 import 'package:camfix_app/theme/app_theme.dart';
 import 'package:flutter/material.dart';

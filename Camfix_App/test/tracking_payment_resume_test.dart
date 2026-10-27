@@ -1,6 +1,6 @@
 import 'dart:convert';
-import 'package:camfix_app/screens/booking_tracking_screen.dart';
-import 'package:camfix_app/screens/payment_summary_screen.dart';
+import 'package:camfix_app/screens/tracking/booking_tracking_screen.dart';
+import 'package:camfix_app/screens/payment/payment_summary_screen.dart';
 import 'package:camfix_app/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';

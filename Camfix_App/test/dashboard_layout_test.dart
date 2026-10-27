@@ -2,7 +2,7 @@ import 'support/golden_fonts.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:camfix_app/screens/dashboard_screen.dart';
+import 'package:camfix_app/screens/home/dashboard_screen.dart';
 import 'package:camfix_app/theme/app_theme.dart';
 import 'package:camfix_app/services/bookings_store.dart';
 import 'package:camfix_app/services/notifications_store.dart';
