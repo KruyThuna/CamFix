@@ -8,7 +8,7 @@ import '../services/auth_api.dart';
 import '../services/gmail_connect.dart';
 import '../services/web_wrapper.dart' as web;
 import 'app_buttons.dart';
-import '../screens/login_success_screen.dart';
+import '../screens/auth/login_success_screen.dart';
 
 /// "Continue with Google" — picks an email straight from a real Google
 /// account, never a password typed into this app.
