@@ -1,6 +1,7 @@
 # syntax=docker/dockerfile:1
 
 # ---- Build stage --------------------------------------------------------
+FROM eclipse-temurin:21-jdk AS build
 WORKDIR /app
 
 # Cache Gradle downloads separately from the source tree so an app-code-only
@@ -21,6 +22,5 @@ RUN useradd --system --create-home --shell /usr/sbin/nologin camfix
 COPY --from=build /app/build/libs/api.jar app.jar
 USER camfix
 
-EXPOSE 8081FROM eclipse-temurin:21-jdk AS build
-
+EXPOSE 8081
 ENTRYPOINT ["java", "-jar", "app.jar"]
