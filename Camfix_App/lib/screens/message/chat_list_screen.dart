@@ -1,3 +1,4 @@
+import '../../theme/app_images.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -151,13 +152,27 @@ class _ChatListScreenState extends State<ChatListScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(children: [
-            IconButton.filled(
-              tooltip: 'Menu',
-              style:
-                  IconButton.styleFrom(backgroundColor: AppColors.primaryBlue),
-              onPressed: () => MainShell.of(context)?.goToTab(0),
-              icon: const Icon(Icons.home_repair_service_rounded,
-                  color: Colors.white),
+            InkWell(
+              onTap: () => MainShell.of(context)?.goToTab(0),
+              borderRadius: BorderRadius.circular(999),
+              child: ClipOval(
+                child: Image.asset(
+                  AppImages.mascotLogo,
+                  width: 38,
+                  height: 38,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => Container(
+                    width: 38,
+                    height: 38,
+                    decoration: const BoxDecoration(
+                      color: AppColors.primaryBlue,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.home_repair_service_rounded,
+                        color: Colors.white, size: 20),
+                  ),
+                ),
+              ),
             ),
             const SizedBox(width: 8),
             const Expanded(
