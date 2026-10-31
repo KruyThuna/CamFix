@@ -6,6 +6,7 @@ const links = [
   { to: '/technicians', label: 'Technicians' },
   { to: '/jobs', label: 'Jobs' },
   { to: '/map', label: 'Live map' },
+  { to: '/banners', label: 'App Banners' },
   { to: '/pricing', label: 'Pricing' },
   { to: '/users', label: 'Users' },
 ];

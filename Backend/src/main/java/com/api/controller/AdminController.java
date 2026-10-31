@@ -175,6 +175,24 @@ public class AdminController {
         return adminService.resetTechnicianPassword(id);
     }
 
+    @PostMapping(value = "/technicians/{id}/banner", consumes = { "multipart/form-data" })
+    public AdminTechnicianResponse uploadTechnicianBanner(
+            @RequestHeader(value = AUTH, required = false) String auth,
+            @PathVariable Long id,
+            @RequestParam("file") org.springframework.web.multipart.MultipartFile file,
+            @RequestParam(value = "title", required = false) String title) {
+        adminService.requireAdmin(auth);
+        return adminService.uploadTechnicianBanner(id, file, title);
+    }
+
+    @DeleteMapping("/technicians/{id}/banner")
+    public AdminTechnicianResponse deleteTechnicianBanner(
+            @RequestHeader(value = AUTH, required = false) String auth,
+            @PathVariable Long id) {
+        adminService.requireAdmin(auth);
+        return adminService.deleteTechnicianBanner(id);
+    }
+
     // --- Jobs ------------------------------------------------------------------
 
     @GetMapping("/jobs")

@@ -361,6 +361,37 @@ public class AdminService {
         return sb.toString();
     }
 
+    public AdminTechnicianResponse uploadTechnicianBanner(Long technicianId, org.springframework.web.multipart.MultipartFile file, String title) {
+        Technician tech = loadTechnician(technicianId);
+        if (file == null || file.isEmpty()) {
+            throw new IllegalArgumentException("Banner file is required");
+        }
+        if (file.getSize() > 5L * 1024 * 1024) {
+            throw new IllegalArgumentException("Banner must be 5MB or smaller");
+        }
+        String contentType = file.getContentType();
+        if (contentType == null || !contentType.startsWith("image/")) {
+            throw new IllegalArgumentException("Banner must be an image file");
+        }
+        try {
+            tech.setBanner(file.getBytes());
+        } catch (java.io.IOException e) {
+            throw new IllegalArgumentException("Could not read uploaded banner");
+        }
+        tech.setBannerContentType(contentType);
+        String trimmedTitle = title != null ? title.trim() : null;
+        tech.setBannerTitle(trimmedTitle == null || trimmedTitle.isEmpty() ? null : trimmedTitle);
+        return toDto(technicianRepository.save(tech));
+    }
+
+    public AdminTechnicianResponse deleteTechnicianBanner(Long technicianId) {
+        Technician tech = loadTechnician(technicianId);
+        tech.setBanner(null);
+        tech.setBannerContentType(null);
+        tech.setBannerTitle(null);
+        return toDto(technicianRepository.save(tech));
+    }
+
     // --- Jobs --------------------------------------------------------------
 
     @Transactional(readOnly = true)
@@ -507,6 +538,10 @@ public class AdminService {
         r.setApprovedAt(str(t.getApprovedAt()));
         r.setRejectionReason(t.getRejectionReason());
         r.setIdentityEmailVerified(t.isIdentityEmailVerified());
+        r.setBannerUrl(t.getBanner() != null && t.getBanner().length > 0
+                ? "/api/technician/" + t.getTechnicianId() + "/banner"
+                : null);
+        r.setBannerTitle(t.getBannerTitle());
 
         liveLocationRepository.findByTechnicianId(t.getTechnicianId()).ifPresent(loc -> {
             r.setLastLat(loc.getLatitude());

@@ -10,6 +10,8 @@ import '../../l10n/language.dart';
 import '../../models/chat.dart';
 import '../../models/review.dart';
 import '../../models/service_provider.dart';
+import '../../models/app_banner.dart';
+import '../../services/banner_api.dart';
 import '../../models/technician_service_listing.dart';
 import '../../services/api_client.dart';
 import '../../services/bookings_api.dart';
@@ -61,6 +63,7 @@ class _ServiceItem {
 class _HeroBanner {
   const _HeroBanner(this.titleKey, this.icon, [this.category, this.imageAsset])
     : rawTitle = null,
+      subtitle = null,
       imageNetworkUrl = null,
       provider = null;
 
@@ -74,6 +77,19 @@ class _HeroBanner {
        icon = Icons.campaign_outlined,
        category = null,
        imageAsset = null,
+       subtitle = null,
+       rawTitle = title;
+
+  /// An admin-configured promotional banner for the client app.
+  const _HeroBanner.appBanner({
+    required String title,
+    required this.imageNetworkUrl,
+    this.category,
+    this.subtitle,
+  }) : titleKey = '',
+       icon = Icons.campaign_rounded,
+       imageAsset = null,
+       provider = null,
        rawTitle = title;
 
   final String titleKey;
@@ -89,7 +105,10 @@ class _HeroBanner {
   /// Literal text (not an i18n key) for a technician-posted banner.
   final String? rawTitle;
 
-  /// Network image for a technician-posted banner, in place of [imageAsset].
+  /// Subtitle or short description for promotional banner.
+  final String? subtitle;
+
+  /// Network image for a banner, in place of [imageAsset].
   final String? imageNetworkUrl;
 
   /// Technician to open on tap, for a technician-posted banner.
@@ -216,6 +235,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   final _heroController = PageController();
   int _heroPage = 0;
   Timer? _heroTimer;
+  List<AppBanner> _adminBanners = const [];
 
   Timer? _clock;
 
@@ -232,7 +252,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
   /// The static promo slides plus one real slide per approved technician
   /// who has posted a banner (`GET /api/technicians` -> `bannerUrl`).
   List<_HeroBanner> get _heroBanners => [
-    ..._staticHeroBanners,
+    for (final b in _adminBanners)
+      if (b.imageUrl != null)
+        _HeroBanner.appBanner(
+          title: b.title,
+          subtitle: b.subtitle,
+          imageNetworkUrl: b.imageUrl!,
+          category: b.category,
+        ),
+    if (_adminBanners.isEmpty) ..._staticHeroBanners,
     for (final t in _technicians)
       if (t.bannerUrl != null)
         _HeroBanner.technician(
@@ -280,6 +308,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     });
     _loadTechnicians();
     _loadRecentBooking();
+    _loadAdminBanners();
     if (!FavoritesApi.instance.isLoaded) {
       FavoritesApi.instance
           .list()
@@ -300,6 +329,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) AppUpdateService.instance.checkOnStart(context);
     });
+  }
+
+  Future<void> _loadAdminBanners() async {
+    try {
+      final list = await BannerApi.instance.list();
+      if (mounted) setState(() => _adminBanners = list);
+    } catch (_) {}
   }
 
   /// The customer's latest booking (any status), newest first.
@@ -1188,6 +1224,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 : null,
                           ),
                         ),
+                        if (banner.subtitle != null && banner.subtitle!.trim().isNotEmpty) ...[
+                          const SizedBox(height: 3),
+                          Text(
+                            banner.subtitle!.trim(),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              color: AppColors.white.withValues(alpha: 0.9),
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
                         const SizedBox(height: 8),
                         ElevatedButton(
                           onPressed: () => banner.provider != null

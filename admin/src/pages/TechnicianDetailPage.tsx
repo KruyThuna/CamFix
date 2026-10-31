@@ -10,6 +10,7 @@ import {
   resetTechnicianPassword,
   suspendTechnician,
   updateTechnician,
+  deleteTechnicianBanner,
 } from '../api/technicians';
 import { errorMessage } from '../api/client';
 import { AccountBadge, ApprovalBadge, Badge } from '../components/StatusBadge';
@@ -262,6 +263,32 @@ export function TechnicianDetailPage() {
             </p>
           ) : (
             <p className="muted">No location reported yet.</p>
+          )}
+        </div>
+
+        <div className="card pad">
+          <h2 style={{ marginBottom: 14 }}>Promotional Banner</h2>
+          {t.bannerUrl ? (
+            <div>
+              <img
+                src={t.bannerUrl}
+                alt={t.bannerTitle ?? 'Technician Banner'}
+                style={{ width: '100%', maxHeight: 180, objectFit: 'cover', borderRadius: 8, marginBottom: 8 }}
+              />
+              <p style={{ margin: '4px 0 12px', fontWeight: 600 }}>{t.bannerTitle ?? 'No title'}</p>
+              <button
+                className="danger"
+                onClick={() => {
+                  if (window.confirm('Delete this technician banner?')) {
+                    act(() => deleteTechnicianBanner(techId));
+                  }
+                }}
+              >
+                Remove Banner
+              </button>
+            </div>
+          ) : (
+            <p className="muted">No promotional banner uploaded by technician.</p>
           )}
         </div>
       </div>

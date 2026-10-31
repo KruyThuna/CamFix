@@ -10,6 +10,7 @@ import { JobDetailPage } from './pages/JobDetailPage';
 import { MapPage } from './pages/MapPage';
 import { UsersPage } from './pages/UsersPage';
 import { PricingPage } from './pages/PricingPage';
+import { BannersPage } from './pages/BannersPage';
 
 export default function App() {
   return (
@@ -28,8 +29,9 @@ export default function App() {
         <Route path="/jobs" element={<JobsPage />} />
         <Route path="/jobs/:id" element={<JobDetailPage />} />
         <Route path="/map" element={<MapPage />} />
-        <Route path="/users" element={<UsersPage />} />
+        <Route path="/banners" element={<BannersPage />} />
         <Route path="/pricing" element={<PricingPage />} />
+        <Route path="/users" element={<UsersPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

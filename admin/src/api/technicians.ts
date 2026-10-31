@@ -79,3 +79,24 @@ export async function resetTechnicianPassword(id: number): Promise<string> {
   );
   return data.temporaryPassword;
 }
+
+export async function uploadTechnicianBanner(
+  id: number,
+  file: File,
+  title?: string,
+): Promise<Technician> {
+  const data = new FormData();
+  data.append('file', file);
+  if (title) data.append('title', title);
+  const { data: res } = await api.post<Technician>(
+    `/api/admin/technicians/${id}/banner`,
+    data,
+    { headers: { 'Content-Type': 'multipart/form-data' } },
+  );
+  return res;
+}
+
+export async function deleteTechnicianBanner(id: number): Promise<Technician> {
+  const { data } = await api.delete<Technician>(`/api/admin/technicians/${id}/banner`);
+  return data;
+}

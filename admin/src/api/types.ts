@@ -38,6 +38,8 @@ export interface Technician {
   approvedAt: string | null;
   rejectionReason: string | null;
   identityEmailVerified: boolean;
+  bannerUrl?: string | null;
+  bannerTitle?: string | null;
 }
 
 export interface TechnicianLocation {
