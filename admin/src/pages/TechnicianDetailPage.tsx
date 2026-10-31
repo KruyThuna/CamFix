@@ -12,7 +12,7 @@ import {
   updateTechnician,
   deleteTechnicianBanner,
 } from '../api/technicians';
-import { errorMessage } from '../api/client';
+import { errorMessage, resolveImageUrl } from '../api/client';
 import { AccountBadge, ApprovalBadge, Badge } from '../components/StatusBadge';
 import { TechnicianForm } from '../components/TechnicianForm';
 import { TechnicianIdCard } from '../components/TechnicianIdCard';
@@ -271,7 +271,7 @@ export function TechnicianDetailPage() {
           {t.bannerUrl ? (
             <div>
               <img
-                src={t.bannerUrl}
+                src={resolveImageUrl(t.bannerUrl)}
                 alt={t.bannerTitle ?? 'Technician Banner'}
                 style={{ width: '100%', maxHeight: 180, objectFit: 'cover', borderRadius: 8, marginBottom: 8 }}
               />

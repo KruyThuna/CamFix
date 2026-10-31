@@ -9,7 +9,7 @@ import {
   updateJob,
 } from '../api/jobs';
 import { listTechnicians } from '../api/technicians';
-import { errorMessage } from '../api/client';
+import { errorMessage, resolveImageUrl } from '../api/client';
 import type { JobStatus } from '../api/types';
 import { JobStatusBadge } from '../components/StatusBadge';
 import { JobForm } from '../components/JobForm';
@@ -186,8 +186,8 @@ export function JobDetailPage() {
               <dt>Photo Attachment</dt>
               <dd>
                 {j.photoUrl ? (
-                  <a href={j.photoUrl} target="_blank" rel="noopener noreferrer">
-                    <img src={j.photoUrl} alt="Issue photo" style={{ maxWidth: 300, maxHeight: 200, borderRadius: 8, display: 'block', marginTop: 4, border: '1px solid #ddd' }} />
+                  <a href={resolveImageUrl(j.photoUrl)} target="_blank" rel="noopener noreferrer">
+                    <img src={resolveImageUrl(j.photoUrl)} alt="Issue photo" style={{ maxWidth: 300, maxHeight: 200, borderRadius: 8, display: 'block', marginTop: 4, border: '1px solid #ddd' }} />
                   </a>
                 ) : '—'}
               </dd>

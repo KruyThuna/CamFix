@@ -8,7 +8,7 @@ import {
   seedDefaultBanners,
   type AppBanner,
 } from '../api/banners';
-import { errorMessage } from '../api/client';
+import { errorMessage, resolveImageUrl } from '../api/client';
 import { SERVICE_CATEGORIES } from '../api/types';
 
 interface BannerFormState {
@@ -129,7 +129,7 @@ export function BannersPage() {
       active: b.active,
       file: null,
     });
-    setPreviewUrl(b.imageUrl ? `${b.imageUrl}` : null);
+    setPreviewUrl(b.imageUrl ? resolveImageUrl(b.imageUrl) : null);
     setError(null);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -385,7 +385,7 @@ export function BannersPage() {
               >
                 {b.imageUrl ? (
                   <img
-                    src={b.imageUrl}
+                    src={resolveImageUrl(b.imageUrl)}
                     alt={b.title}
                     style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                   />
