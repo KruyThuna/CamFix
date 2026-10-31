@@ -190,7 +190,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                     _darkRow(context),
                     _langRow(context),
                   ]),
-                  _card([_myServicesRow(context)]),
+                  _card([_myServicesRow(context), _bannerRow(context)]),
                   _card([
                     _kv(
                       context,
@@ -497,6 +497,33 @@ class _ProfileScreenState extends State<ProfileScreen>
               style: TextStyle(fontSize: 14, color: p.textSecondary),
             ),
             const SizedBox(width: 4),
+            Icon(Icons.chevron_right, size: 22, color: p.textSecondary),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _bannerRow(BuildContext context) {
+    final p = context.pal;
+    return InkWell(
+      onTap: () async {
+        final posted =
+            await Navigator.of(context).pushNamed('/get-started-banner');
+        if (posted == true) CurrentTechnician.instance.refresh();
+      },
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Row(
+          children: [
+            _icon(Icons.photo_library_outlined),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                AppStrings.t('getStartedBannerTitle'),
+                style: TextStyle(fontSize: 15, color: p.textPrimary),
+              ),
+            ),
             Icon(Icons.chevron_right, size: 22, color: p.textSecondary),
           ],
         ),

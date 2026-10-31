@@ -565,6 +565,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
           onTap: () => AppUpdateService.instance
               .checkForUpdate(context, silent: false),
         ),
+        _divider(),
+        _richNavRow(
+          Icons.handyman_rounded,
+          AppStrings.t('technicianPortal'),
+          AppStrings.t('technicianPortalDesc'),
+          tint: const Color(0xFF0284C7),
+          onTap: () => Navigator.of(context).pushNamed('/technician'),
+        ),
       ],
     );
   }
