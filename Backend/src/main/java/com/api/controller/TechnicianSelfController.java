@@ -154,6 +154,43 @@ public class TechnicianSelfController {
                 .body(t.getBanner());
     }
 
+    @GetMapping("/me/id-card")
+    public ResponseEntity<byte[]> getMyIdCard(
+            @RequestHeader(value = AUTH, required = false) String auth) {
+        byte[] image = service.getOwnIdCard(auth);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CACHE_CONTROL, "no-store")
+                .header("X-Content-Type-Options", "nosniff")
+                .header(HttpHeaders.CONTENT_TYPE, com.api.service.IdentityCardImage.contentType(image))
+                .body(image);
+    }
+
+    @GetMapping("/me/face-photo")
+    public ResponseEntity<byte[]> getMyFacePhoto(
+            @RequestHeader(value = AUTH, required = false) String auth) {
+        byte[] image = service.getOwnFacePhoto(auth);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CACHE_CONTROL, "no-store")
+                .header("X-Content-Type-Options", "nosniff")
+                .header(HttpHeaders.CONTENT_TYPE, com.api.service.IdentityCardImage.contentType(image))
+                .body(image);
+    }
+
+    @PostMapping(value = "/me/identity", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public TechnicianProfileResponse updateIdentity(
+            @RequestHeader(value = AUTH, required = false) String auth,
+            @RequestParam(value = "idCard", required = false) MultipartFile idCardFile,
+            @RequestParam(value = "facePhoto", required = false) MultipartFile facePhotoFile) {
+        return service.updateIdentity(auth, idCardFile, facePhotoFile);
+    }
+
+    @PostMapping(value = "/me/identity", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public TechnicianProfileResponse updateIdentityJson(
+            @RequestHeader(value = AUTH, required = false) String auth,
+            @RequestBody Map<String, String> body) {
+        return service.updateIdentityBase64(auth, body);
+    }
+
     @PatchMapping("/me/location")
     public ResponseEntity<Void> pushLocation(
             @RequestHeader(value = AUTH, required = false) String auth,

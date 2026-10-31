@@ -100,3 +100,35 @@ export async function deleteTechnicianBanner(id: number): Promise<Technician> {
   const { data } = await api.delete<Technician>(`/api/admin/technicians/${id}/banner`);
   return data;
 }
+
+export async function uploadTechnicianIdCard(id: number, file: File): Promise<Technician> {
+  const data = new FormData();
+  data.append('file', file);
+  const { data: res } = await api.post<Technician>(
+    '/api/admin/technicians/' + id + '/id-card',
+    data,
+    { headers: { 'Content-Type': 'multipart/form-data' } },
+  );
+  return res;
+}
+
+export async function deleteTechnicianIdCard(id: number): Promise<Technician> {
+  const { data } = await api.delete<Technician>('/api/admin/technicians/' + id + '/id-card');
+  return data;
+}
+
+export async function uploadTechnicianFacePhoto(id: number, file: File): Promise<Technician> {
+  const data = new FormData();
+  data.append('file', file);
+  const { data: res } = await api.post<Technician>(
+    '/api/admin/technicians/' + id + '/face-photo',
+    data,
+    { headers: { 'Content-Type': 'multipart/form-data' } },
+  );
+  return res;
+}
+
+export async function deleteTechnicianFacePhoto(id: number): Promise<Technician> {
+  const { data } = await api.delete<Technician>('/api/admin/technicians/' + id + '/face-photo');
+  return data;
+}

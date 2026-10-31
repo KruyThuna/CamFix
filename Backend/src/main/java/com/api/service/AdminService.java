@@ -392,6 +392,47 @@ public class AdminService {
         return toDto(technicianRepository.save(tech));
     }
 
+    public AdminTechnicianResponse uploadTechnicianIdCard(Long technicianId, org.springframework.web.multipart.MultipartFile file) {
+        Technician tech = loadTechnician(technicianId);
+        if (file == null || file.isEmpty()) {
+            throw new IllegalArgumentException("ID card file is required");
+        }
+        try {
+            byte[] bytes = IdentityCardImage.validateBytes(file.getBytes(), "ID card");
+            tech.setIdCard(bytes);
+        } catch (java.io.IOException e) {
+            throw new IllegalArgumentException("Could not read uploaded ID card");
+        }
+        return toDto(technicianRepository.save(tech));
+    }
+
+    public AdminTechnicianResponse deleteTechnicianIdCard(Long technicianId) {
+        Technician tech = loadTechnician(technicianId);
+        tech.setIdCard(null);
+        return toDto(technicianRepository.save(tech));
+    }
+
+    public AdminTechnicianResponse uploadTechnicianFacePhoto(Long technicianId, org.springframework.web.multipart.MultipartFile file) {
+        Technician tech = loadTechnician(technicianId);
+        if (file == null || file.isEmpty()) {
+            throw new IllegalArgumentException("Face photo file is required");
+        }
+        try {
+            byte[] bytes = IdentityCardImage.validateBytes(file.getBytes(), "Face photo");
+            tech.setFacePhoto(bytes);
+            tech.setIdentityEmailVerified(false);
+        } catch (java.io.IOException e) {
+            throw new IllegalArgumentException("Could not read uploaded face photo");
+        }
+        return toDto(technicianRepository.save(tech));
+    }
+
+    public AdminTechnicianResponse deleteTechnicianFacePhoto(Long technicianId) {
+        Technician tech = loadTechnician(technicianId);
+        tech.setFacePhoto(null);
+        return toDto(technicianRepository.save(tech));
+    }
+
     // --- Jobs --------------------------------------------------------------
 
     @Transactional(readOnly = true)
@@ -538,6 +579,8 @@ public class AdminService {
         r.setApprovedAt(str(t.getApprovedAt()));
         r.setRejectionReason(t.getRejectionReason());
         r.setIdentityEmailVerified(t.isIdentityEmailVerified());
+        r.setHasIdCard(t.getIdCard() != null && t.getIdCard().length > 0);
+        r.setHasFacePhoto(t.getFacePhoto() != null && t.getFacePhoto().length > 0);
         r.setBannerUrl(t.getBanner() != null && t.getBanner().length > 0
                 ? "/api/technician/" + t.getTechnicianId() + "/banner"
                 : null);

@@ -38,6 +38,8 @@ export interface Technician {
   approvedAt: string | null;
   rejectionReason: string | null;
   identityEmailVerified: boolean;
+  hasIdCard?: boolean;
+  hasFacePhoto?: boolean;
   bannerUrl?: string | null;
   bannerTitle?: string | null;
 }

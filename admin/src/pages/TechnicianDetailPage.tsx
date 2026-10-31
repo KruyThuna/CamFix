@@ -111,7 +111,7 @@ export function TechnicianDetailPage() {
       {actionError && <p className="error-text">{actionError}</p>}
 
       <div className="stack">
-        <TechnicianIdCard id={techId} identityEmailVerified={t.identityEmailVerified} />
+        <TechnicianIdCard id={techId} identityEmailVerified={t.identityEmailVerified} onUpdated={invalidate} />
         <div className="card pad">
           <div className="inline" style={{ marginBottom: 14 }}>
             <ApprovalBadge status={t.approvalStatus} />

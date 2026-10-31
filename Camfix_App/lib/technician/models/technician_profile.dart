@@ -21,6 +21,11 @@ class TechnicianProfile {
     this.photoUrl,
     this.bannerUrl,
     this.bannerTitle,
+    this.hasIdCard = false,
+    this.hasFacePhoto = false,
+    this.identityEmailVerified = false,
+    this.idCardUrl,
+    this.facePhotoUrl,
   });
 
   final int id;
@@ -43,6 +48,11 @@ class TechnicianProfile {
   final String? photoUrl;
   final String? bannerUrl;
   final String? bannerTitle;
+  final bool hasIdCard;
+  final bool hasFacePhoto;
+  final bool identityEmailVerified;
+  final String? idCardUrl;
+  final String? facePhotoUrl;
 
   bool get isApproved => approvalStatus == 'APPROVED';
   bool get isRejected => approvalStatus == 'REJECTED';
@@ -80,6 +90,11 @@ class TechnicianProfile {
         photoUrl: j['photoUrl']?.toString(),
         bannerUrl: j['bannerUrl']?.toString(),
         bannerTitle: j['bannerTitle']?.toString(),
+        hasIdCard: j['hasIdCard'] == true,
+        hasFacePhoto: j['hasFacePhoto'] == true,
+        identityEmailVerified: j['identityEmailVerified'] == true,
+        idCardUrl: j['idCardUrl']?.toString(),
+        facePhotoUrl: j['facePhotoUrl']?.toString(),
       );
 }
 

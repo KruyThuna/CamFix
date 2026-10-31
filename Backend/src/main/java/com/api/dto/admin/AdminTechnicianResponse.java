@@ -33,6 +33,8 @@ public class AdminTechnicianResponse {
      *  instead of a face photo - the review screen should show that instead
      *  of treating a missing photo as an incomplete submission. */
     private boolean identityEmailVerified;
+    private boolean hasIdCard;
+    private boolean hasFacePhoto;
 
     private String bannerUrl;
     private String bannerTitle;

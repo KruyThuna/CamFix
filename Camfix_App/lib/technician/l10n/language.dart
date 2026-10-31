@@ -106,6 +106,38 @@ class Language {
       AppLang.en: 'Verify identity',
       AppLang.km: 'ផ្ទៀងផ្ទាត់អត្តសញ្ញាណ',
     },
+    'editIdentityTitle': {
+      AppLang.en: 'Edit identity verification',
+      AppLang.km: 'កែប្រែការផ្ទៀងផ្ទាត់អត្តសញ្ញាណ',
+    },
+    'identityUpdatedSuccess': {
+      AppLang.en: 'Identity documents updated successfully',
+      AppLang.km: 'ឯកសារផ្ទៀងផ្ទាត់ត្រូវបានធ្វើបច្ចុប្បន្នភាពដោយជោគជ័យ',
+    },
+    'saveChanges': {
+      AppLang.en: 'Save changes',
+      AppLang.km: 'រក្សាទុកការផ្លាស់ប្តូរ',
+    },
+    'savingChanges': {
+      AppLang.en: 'Saving changes...',
+      AppLang.km: 'កំពុងរក្សាទុក...',
+    },
+    'identityVerification': {
+      AppLang.en: 'Identity verification',
+      AppLang.km: 'ការផ្ទៀងផ្ទាត់អត្តសញ្ញាណ',
+    },
+    'statusVerified': {
+      AppLang.en: 'Verified',
+      AppLang.km: 'បានផ្ទៀងផ្ទាត់',
+    },
+    'statusRejected': {
+      AppLang.en: 'Rejected - Tap to update',
+      AppLang.km: 'បដិសេធ - ចុចដើម្បីកែប្រែ',
+    },
+    'statusPending': {
+      AppLang.en: 'Pending Review',
+      AppLang.km: 'រង់ចាំការពិនិត្យ',
+    },
     'verificationStep': {
       AppLang.en: 'STEP 2 OF 3',
       AppLang.km: 'ជំហានទី ២ នៃ ៣',

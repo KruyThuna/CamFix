@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:http/http.dart' as http;
 
@@ -166,6 +167,16 @@ class ApiClient {
     Map<String, dynamic> body, {
     bool withAuth = true,
   }) => _send('PATCH', path, body: body, withAuth: withAuth);
+
+  Future<Uint8List> getBytes(String path, {bool withAuth = true}) async {
+    final uri = Uri.parse('$baseUrl$path');
+    final headers = await _headers(withAuth: withAuth);
+    final res = await _http.get(uri, headers: headers).timeout(const Duration(seconds: 15));
+    if (res.statusCode >= 200 && res.statusCode < 300) {
+      return res.bodyBytes;
+    }
+    throw ApiException(res.statusCode, 'Failed to download data (${res.statusCode})');
+  }
 
   Future<Map<String, dynamic>> deleteJson(
     String path, {

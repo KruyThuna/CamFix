@@ -60,6 +60,7 @@ public class TechnicianSelfService {
     private static final String STATUS_SUSPENDED = "SUSPENDED";
     private static final String AP_PENDING = "PENDING";
     private static final String AP_APPROVED = "APPROVED";
+    private static final String AP_REJECTED = "REJECTED";
 
     private static final String JOB_REQUESTED = "REQUESTED";
     private static final String JOB_ASSIGNED = "ASSIGNED";
@@ -343,6 +344,97 @@ public class TechnicianSelfService {
         return tech;
     }
 
+        @Transactional(readOnly = true)
+    public byte[] getOwnIdCard(String authorization) {
+        Technician tech = requireTechnician(authorization);
+        byte[] img = tech.getIdCard();
+        if (img == null || img.length == 0) {
+            throw new NoSuchElementException("No ID card uploaded");
+        }
+        return img;
+    }
+
+    @Transactional(readOnly = true)
+    public byte[] getOwnFacePhoto(String authorization) {
+        Technician tech = requireTechnician(authorization);
+        byte[] img = tech.getFacePhoto();
+        if (img == null || img.length == 0) {
+            throw new NoSuchElementException("No face photo uploaded");
+        }
+        return img;
+    }
+
+    public TechnicianProfileResponse updateIdentity(
+            String authorization,
+            MultipartFile idCardFile,
+            MultipartFile facePhotoFile) {
+        Technician tech = requireTechnician(authorization);
+        boolean changed = false;
+
+        if (idCardFile != null && !idCardFile.isEmpty()) {
+            try {
+                byte[] bytes = IdentityCardImage.validateBytes(idCardFile.getBytes(), "ID card");
+                tech.setIdCard(bytes);
+                changed = true;
+            } catch (java.io.IOException e) {
+                throw new IllegalArgumentException("Could not read uploaded ID card");
+            }
+        }
+
+        if (facePhotoFile != null && !facePhotoFile.isEmpty()) {
+            try {
+                byte[] bytes = IdentityCardImage.validateBytes(facePhotoFile.getBytes(), "Face photo");
+                tech.setFacePhoto(bytes);
+                tech.setIdentityEmailVerified(false);
+                changed = true;
+            } catch (java.io.IOException e) {
+                throw new IllegalArgumentException("Could not read uploaded face photo");
+            }
+        }
+
+        if (!changed) {
+            throw new IllegalArgumentException("Provide an ID card or face photo to update");
+        }
+
+        if (AP_REJECTED.equalsIgnoreCase(tech.getApprovalStatus())) {
+            tech.setApprovalStatus(AP_PENDING);
+            tech.setRejectionReason(null);
+        }
+
+        return toDto(technicianRepository.save(tech));
+    }
+
+    public TechnicianProfileResponse updateIdentityBase64(
+            String authorization,
+            Map<String, String> body) {
+        Technician tech = requireTechnician(authorization);
+        boolean changed = false;
+
+        if (body != null && body.containsKey("idCardBase64") && body.get("idCardBase64") != null && !body.get("idCardBase64").isBlank()) {
+            byte[] bytes = IdentityCardImage.decode(body.get("idCardBase64"), "ID card");
+            tech.setIdCard(bytes);
+            changed = true;
+        }
+
+        if (body != null && body.containsKey("facePhotoBase64") && body.get("facePhotoBase64") != null && !body.get("facePhotoBase64").isBlank()) {
+            byte[] bytes = IdentityCardImage.decode(body.get("facePhotoBase64"), "Face photo");
+            tech.setFacePhoto(bytes);
+            tech.setIdentityEmailVerified(false);
+            changed = true;
+        }
+
+        if (!changed) {
+            throw new IllegalArgumentException("Provide an ID card or face photo to update");
+        }
+
+        if (AP_REJECTED.equalsIgnoreCase(tech.getApprovalStatus())) {
+            tech.setApprovalStatus(AP_PENDING);
+            tech.setRejectionReason(null);
+        }
+
+        return toDto(technicianRepository.save(tech));
+    }
+
     public void pushLocation(String authorization, Double lat, Double lng) {
         if (lat == null || lng == null) {
             throw new IllegalArgumentException("lat and lng are required");
@@ -544,6 +636,15 @@ public class TechnicianSelfService {
                 ? "/api/technician/" + t.getTechnicianId() + "/banner"
                 : null);
         r.setBannerTitle(t.getBannerTitle());
+        r.setHasIdCard(t.getIdCard() != null && t.getIdCard().length > 0);
+        r.setHasFacePhoto(t.getFacePhoto() != null && t.getFacePhoto().length > 0);
+        r.setIdentityEmailVerified(t.isIdentityEmailVerified());
+        r.setIdCardUrl(t.getIdCard() != null && t.getIdCard().length > 0
+                ? "/api/technician/me/id-card"
+                : null);
+        r.setFacePhotoUrl(t.getFacePhoto() != null && t.getFacePhoto().length > 0
+                ? "/api/technician/me/face-photo"
+                : null);
         liveLocationRepository.findByTechnicianId(t.getTechnicianId()).ifPresent(loc -> {
             r.setLastLat(loc.getLatitude());
             r.setLastLng(loc.getLongitude());

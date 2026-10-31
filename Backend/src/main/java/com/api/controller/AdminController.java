@@ -3,7 +3,9 @@ package com.api.controller;
 import java.util.List;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -103,6 +105,40 @@ public class AdminController {
                 .header("X-Content-Type-Options", "nosniff")
                 .header("Content-Type", com.api.service.IdentityCardImage.contentType(image))
                 .body(image);
+    }
+
+    @PostMapping(value = "/technicians/{id}/id-card", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public AdminTechnicianResponse uploadIdCard(
+            @RequestHeader(value = AUTH, required = false) String auth,
+            @PathVariable Long id,
+            @RequestParam("file") MultipartFile file) {
+        adminService.requireAdmin(auth);
+        return adminService.uploadTechnicianIdCard(id, file);
+    }
+
+    @DeleteMapping("/technicians/{id}/id-card")
+    public AdminTechnicianResponse deleteIdCard(
+            @RequestHeader(value = AUTH, required = false) String auth,
+            @PathVariable Long id) {
+        adminService.requireAdmin(auth);
+        return adminService.deleteTechnicianIdCard(id);
+    }
+
+    @PostMapping(value = "/technicians/{id}/face-photo", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public AdminTechnicianResponse uploadFacePhoto(
+            @RequestHeader(value = AUTH, required = false) String auth,
+            @PathVariable Long id,
+            @RequestParam("file") MultipartFile file) {
+        adminService.requireAdmin(auth);
+        return adminService.uploadTechnicianFacePhoto(id, file);
+    }
+
+    @DeleteMapping("/technicians/{id}/face-photo")
+    public AdminTechnicianResponse deleteFacePhoto(
+            @RequestHeader(value = AUTH, required = false) String auth,
+            @PathVariable Long id) {
+        adminService.requireAdmin(auth);
+        return adminService.deleteTechnicianFacePhoto(id);
     }
 
     @PostMapping("/technicians")

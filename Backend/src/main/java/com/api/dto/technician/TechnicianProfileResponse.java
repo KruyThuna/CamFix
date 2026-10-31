@@ -31,4 +31,9 @@ public class TechnicianProfileResponse {
     /** Relative path (e.g. {@code /api/technician/7/banner}) or null if no banner is set. */
     private String bannerUrl;
     private String bannerTitle;
+    private boolean hasIdCard;
+    private boolean hasFacePhoto;
+    private boolean identityEmailVerified;
+    private String idCardUrl;
+    private String facePhotoUrl;
 }

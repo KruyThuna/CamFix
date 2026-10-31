@@ -12,6 +12,7 @@ import '../services/technician_api.dart';
 import '../theme/app_theme.dart';
 import '../widgets/ui.dart';
 import '../widgets/user_avatar.dart';
+import 'identity_verification_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -190,7 +191,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                     _darkRow(context),
                     _langRow(context),
                   ]),
-                  _card([_myServicesRow(context), _bannerRow(context)]),
+                  _card([_myServicesRow(context), _bannerRow(context), _identityVerificationRow(context, profile)]),
                   _card([
                     _kv(
                       context,
@@ -522,6 +523,91 @@ class _ProfileScreenState extends State<ProfileScreen>
               child: Text(
                 AppStrings.t('getStartedBannerTitle'),
                 style: TextStyle(fontSize: 15, color: p.textPrimary),
+              ),
+            ),
+            Icon(Icons.chevron_right, size: 22, color: p.textSecondary),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _identityVerificationRow(
+    BuildContext context,
+    TechnicianProfile profile,
+  ) {
+    final p = context.pal;
+    final isKm = AppSettings.instance.lang == AppLang.km;
+    final String statusLabel;
+    final Color statusColor;
+
+    if (profile.isApproved) {
+      statusLabel = isKm ? 'បានផ្ទៀងផ្ទាត់' : 'Verified';
+      statusColor = const Color(0xFF16A34A);
+    } else if (profile.isRejected) {
+      statusLabel =
+          isKm ? 'បដិសេធ - ចុចដើម្បីកែប្រែ' : 'Rejected - Tap to update';
+      statusColor = Colors.red;
+    } else {
+      statusLabel = isKm ? 'រង់ចាំការពិនិត្យ' : 'Pending Review';
+      statusColor = Colors.orange;
+    }
+
+    return InkWell(
+      onTap: () async {
+        final updated = await Navigator.of(context).push<bool>(
+          MaterialPageRoute(
+            builder: (_) => IdentityVerificationScreen(
+              email: profile.email,
+              isEditing: true,
+            ),
+          ),
+        );
+        if (updated == true) {
+          CurrentTechnician.instance.refresh();
+        }
+      },
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Row(
+          children: [
+            _icon(Icons.verified_user_outlined),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    AppStrings.t('identityVerification'),
+                    style: TextStyle(
+                      fontSize: 15,
+                      color: p.textPrimary,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Row(
+                    children: [
+                      Container(
+                        width: 8,
+                        height: 8,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: statusColor,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        statusLabel,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: statusColor,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
             Icon(Icons.chevron_right, size: 22, color: p.textSecondary),

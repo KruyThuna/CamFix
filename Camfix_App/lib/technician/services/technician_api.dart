@@ -1,3 +1,5 @@
+import 'dart:convert';
+import 'dart:typed_data';
 import '../models/service_quote.dart';
 import '../models/tech_job.dart';
 import '../models/tech_service_listing.dart';
@@ -14,6 +16,42 @@ class TechnicianApi {
   Future<TechnicianProfile> me({Duration ttl = Duration.zero}) async {
     final json = await _client.getJson('/api/technician/me', ttl: ttl);
     return TechnicianProfile.fromJson(json);
+  }
+
+  Future<TechnicianProfile> updateIdentity({
+    Uint8List? idCard,
+    Uint8List? facePhoto,
+  }) async {
+    final body = <String, dynamic>{};
+    if (idCard != null && idCard.isNotEmpty) {
+      body['idCardBase64'] = base64Encode(idCard);
+    }
+    if (facePhoto != null && facePhoto.isNotEmpty) {
+      body['facePhotoBase64'] = base64Encode(facePhoto);
+    }
+    final json = await _client.postJson(
+      '/api/technician/me/identity',
+      body,
+      withAuth: true,
+    );
+    _client.invalidate('/api/technician/me');
+    return TechnicianProfile.fromJson(json);
+  }
+
+  Future<Uint8List?> getIdCard() async {
+    try {
+      return await _client.getBytes('/api/technician/me/id-card');
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<Uint8List?> getFacePhoto() async {
+    try {
+      return await _client.getBytes('/api/technician/me/face-photo');
+    } catch (_) {
+      return null;
+    }
   }
 
   Future<TechnicianProfile> updateProfile(Map<String, dynamic> fields) async {

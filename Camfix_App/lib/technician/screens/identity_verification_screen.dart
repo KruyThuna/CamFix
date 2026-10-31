@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import '../l10n/language.dart';
 import '../lang_aware.dart';
 import '../services/auth_api.dart';
+import '../services/technician_api.dart';
 import '../theme/app_theme.dart';
 import '../widgets/ui.dart';
 import 'selfie_camera_screen.dart';
@@ -32,7 +33,10 @@ class IdentityVerificationScreen extends StatefulWidget {
     super.key,
     required this.email,
     this.initial,
+    this.isEditing = false,
   });
+
+  final bool isEditing;
 
   /// The technician's account email (already collected on the registration
   /// form) - where the alternative verification code gets sent.
@@ -53,6 +57,8 @@ class _IdentityVerificationScreenState extends State<IdentityVerificationScreen>
   final _emailCodeController = TextEditingController();
   bool _emailCodeSent = false;
   bool _sendingEmailCode = false;
+  bool _loadingExisting = false;
+  bool _saving = false;
 
   @override
   void initState() {
@@ -64,6 +70,55 @@ class _IdentityVerificationScreenState extends State<IdentityVerificationScreen>
     _emailCodeController.addListener(() {
       if (mounted) setState(() {});
     });
+    if (widget.isEditing && (_idCard == null || _facePhoto == null)) {
+      _loadExisting();
+    }
+  }
+
+  Future<void> _loadExisting() async {
+    setState(() => _loadingExisting = true);
+    try {
+      final card = await TechnicianApi.instance.getIdCard();
+      final face = await TechnicianApi.instance.getFacePhoto();
+      if (mounted) {
+        setState(() {
+          if (card != null && _idCard == null) _idCard = card;
+          if (face != null && _facePhoto == null) _facePhoto = face;
+        });
+      }
+    } catch (_) {}
+    if (mounted) setState(() => _loadingExisting = false);
+  }
+
+  Future<void> _saveChanges() async {
+    if (_idCard == null && _facePhoto == null) return;
+    setState(() => _saving = true);
+    try {
+      await TechnicianApi.instance.updateIdentity(
+        idCard: _idCard,
+        facePhoto: _facePhoto,
+      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(AppStrings.t('identityUpdatedSuccess')),
+            backgroundColor: const Color(0xFF16A34A),
+          ),
+        );
+        Navigator.pop(context, true);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString()),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
   }
 
   @override
@@ -277,7 +332,7 @@ class _IdentityVerificationScreenState extends State<IdentityVerificationScreen>
                   style: const TextStyle(color: AppColors.primaryBlue),
                 ),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: 12),
               Expanded(
                 child: Text(
                   AppStrings.t(title),
@@ -287,77 +342,34 @@ class _IdentityVerificationScreenState extends State<IdentityVerificationScreen>
                   ),
                 ),
               ),
-              if (photo != null)
-                const Icon(Icons.check_circle, color: AppColors.success),
             ],
           ),
           const SizedBox(height: 10),
           Text(AppStrings.t(help), style: TextStyle(color: p.textSecondary)),
-          const SizedBox(height: 16),
+          const SizedBox(height: 18),
           Container(
+            height: face ? 260 : 200,
             width: double.infinity,
-            height: 280,
             decoration: BoxDecoration(
               color: p.surfaceAlt,
-              borderRadius: BorderRadius.circular(18),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: p.border),
             ),
-            child: face
-                ? Center(
-                    child: Container(
-                      width: 192,
-                      height: 240,
-                      clipBehavior: Clip.antiAlias,
-                      decoration: BoxDecoration(
-                        color: p.surface,
-                        borderRadius: BorderRadius.circular(24),
-                        border: Border.all(color: p.border),
-                        boxShadow: [
-                          BoxShadow(
-                              color: p.shadow,
-                              blurRadius: 20,
-                              offset: const Offset(0, 6))
-                        ],
-                      ),
-                      child: photo == null
-                          ? Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                  Icon(Icons.face_outlined,
-                                      size: 72,
-                                      color: AppColors.primaryBlue
-                                          .withValues(alpha: .5)),
-                                  const SizedBox(height: 12),
-                                  Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 16),
-                                      child: Text(AppStrings.t('faceFrameHint'),
-                                          textAlign: TextAlign.center,
-                                          style: TextStyle(
-                                              color: p.textSecondary,
-                                              fontSize: 12))),
-                                ])
-                          : Image.memory(photo,
-                              fit: BoxFit.cover,
-                              alignment: Alignment.center,
-                              errorBuilder: (_, _, _) =>
-                                  const Icon(Icons.broken_image_outlined)),
-                    ),
+            child: photo == null
+                ? Icon(
+                    icon,
+                    size: 72,
+                    color: AppColors.primaryBlue.withValues(alpha: .45),
                   )
-                : photo == null
-                    ? Icon(
-                        icon,
-                        size: 76,
-                        color: AppColors.primaryBlue.withValues(alpha: .45),
-                      )
-                    : Padding(
-                        padding: const EdgeInsets.all(8),
-                        child: Image.memory(
-                          photo,
-                          fit: BoxFit.contain,
-                          errorBuilder: (_, _, _) =>
-                              Text(AppStrings.t('idCardInvalid')),
-                        ),
-                      ),
+                : Padding(
+                    padding: const EdgeInsets.all(8),
+                    child: Image.memory(
+                      photo,
+                      fit: BoxFit.contain,
+                      errorBuilder: (_, _, _) =>
+                          Text(AppStrings.t('idCardInvalid')),
+                    ),
+                  ),
           ),
           const SizedBox(height: 18),
           Wrap(spacing: 8, runSpacing: 8, children: actions),
@@ -371,11 +383,17 @@ class _IdentityVerificationScreenState extends State<IdentityVerificationScreen>
     final validEmailCode = RegExp(
       r'^[0-9]{6}$',
     ).hasMatch(_emailCodeController.text.trim());
-    final ready =
-        _idCard != null && (_facePhoto != null || validEmailCode) && !_picking;
+    final ready = widget.isEditing
+        ? ((_idCard != null || _facePhoto != null) && !_picking && !_saving)
+        : (_idCard != null && (_facePhoto != null || validEmailCode) && !_picking);
+
     return Scaffold(
       appBar: AppBar(
-        title: Text(AppStrings.t('verifyIdentityTitle')),
+        title: Text(
+          widget.isEditing
+              ? AppStrings.t('editIdentityTitle')
+              : AppStrings.t('verifyIdentityTitle'),
+        ),
         actions: const [LanguageToggle()],
       ),
       body: SafeArea(
@@ -385,16 +403,24 @@ class _IdentityVerificationScreenState extends State<IdentityVerificationScreen>
             child: ListView(
               padding: const EdgeInsets.all(24),
               children: [
-                Text(
-                  AppStrings.t('verificationStep'),
-                  style: const TextStyle(
-                    color: AppColors.primaryBlue,
-                    fontWeight: FontWeight.w600,
+                if (!widget.isEditing) ...[
+                  Text(
+                    AppStrings.t('verificationStep'),
+                    style: const TextStyle(
+                      color: AppColors.primaryBlue,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 8),
-                const StepDots(step: 2),
-                const SizedBox(height: 8),
+                  const SizedBox(height: 8),
+                  const StepDots(step: 2),
+                  const SizedBox(height: 8),
+                ] else ...[
+                  if (_loadingExisting)
+                    const Padding(
+                      padding: EdgeInsets.only(bottom: 12),
+                      child: LinearProgressIndicator(),
+                    ),
+                ],
                 Text(
                   AppStrings.t('verifyIdentityIntro'),
                   style: const TextStyle(fontSize: 16),
@@ -479,8 +505,10 @@ class _IdentityVerificationScreenState extends State<IdentityVerificationScreen>
                           );
                   },
                 ),
-                const SizedBox(height: 20),
-                _emailAlternativeCard(),
+                if (!widget.isEditing) ...[
+                  const SizedBox(height: 20),
+                  _emailAlternativeCard(),
+                ],
                 const SizedBox(height: 20),
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -501,18 +529,28 @@ class _IdentityVerificationScreenState extends State<IdentityVerificationScreen>
                 ),
                 const SizedBox(height: 24),
                 PrimaryButton(
-                  label: AppStrings.t('submitIdentity'),
+                  label: widget.isEditing
+                      ? (_saving
+                          ? AppStrings.t('savingChanges')
+                          : AppStrings.t('saveChanges'))
+                      : AppStrings.t('submitIdentity'),
                   onPressed: ready
-                      ? () => Navigator.pop(
-                            context,
-                            IdentityPhotos(
-                              _idCard!,
-                              facePhoto: _facePhoto,
-                              emailOtpCode: _facePhoto == null
-                                  ? _emailCodeController.text.trim()
-                                  : null,
-                            ),
-                          )
+                      ? () {
+                          if (widget.isEditing) {
+                            _saveChanges();
+                          } else {
+                            Navigator.pop(
+                              context,
+                              IdentityPhotos(
+                                _idCard!,
+                                facePhoto: _facePhoto,
+                                emailOtpCode: _facePhoto == null
+                                    ? _emailCodeController.text.trim()
+                                    : null,
+                              ),
+                            );
+                          }
+                        }
                       : null,
                 ),
               ],

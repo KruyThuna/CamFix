@@ -10,6 +10,38 @@ public final class IdentityCardImage {
     private IdentityCardImage() {}
     private static final int MAX_BYTES = 5 * 1024 * 1024;
 
+    public static byte[] validateBytes(byte[] bytes, String label) {
+        if (bytes == null || bytes.length == 0) {
+            throw new IllegalArgumentException(label + " photo is required");
+        }
+        if (bytes.length > MAX_BYTES) {
+            throw new IllegalArgumentException(label + " photo must be no larger than 5 MB");
+        }
+        try {
+            contentType(bytes);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException(e.getMessage().replace("ID card", label));
+        }
+        try (ImageInputStream input = ImageIO.createImageInputStream(new ByteArrayInputStream(bytes))) {
+            var readers = ImageIO.getImageReaders(input);
+            if (!readers.hasNext()) throw new IllegalArgumentException("Invalid " + label + " image");
+            var reader = readers.next();
+            try {
+                reader.setInput(input);
+                int width = reader.getWidth(0), height = reader.getHeight(0);
+                if (width < 1 || height < 1 || (long) width * height > 20_000_000) {
+                    throw new IllegalArgumentException(label + " image exceeds 20 megapixels");
+                }
+                reader.read(0);
+            } finally {
+                reader.dispose();
+            }
+        } catch (java.io.IOException e) {
+            throw new IllegalArgumentException("Invalid " + label + " image");
+        }
+        return bytes;
+    }
+
     public static byte[] decode(String encoded, String label) {
         try {
             return decode(encoded);
@@ -31,28 +63,7 @@ public final class IdentityCardImage {
         } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException("Invalid ID card image encoding");
         }
-        if (bytes.length > MAX_BYTES) {
-            throw new IllegalArgumentException("ID card photo must be no larger than 5 MB");
-        }
-        contentType(bytes);
-        try (ImageInputStream input = ImageIO.createImageInputStream(new ByteArrayInputStream(bytes))) {
-            var readers = ImageIO.getImageReaders(input);
-            if (!readers.hasNext()) throw new IllegalArgumentException("Invalid ID card image");
-            var reader = readers.next();
-            try {
-                reader.setInput(input);
-                int width = reader.getWidth(0), height = reader.getHeight(0);
-                if (width < 1 || height < 1 || (long) width * height > 20_000_000) {
-                    throw new IllegalArgumentException("ID card image exceeds 20 megapixels");
-                }
-                reader.read(0);
-            } finally {
-                reader.dispose();
-            }
-        } catch (java.io.IOException e) {
-            throw new IllegalArgumentException("Invalid ID card image");
-        }
-        return bytes;
+        return validateBytes(bytes, "ID card");
     }
 
     public static String contentType(byte[] bytes) {
