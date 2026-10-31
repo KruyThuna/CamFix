@@ -5,6 +5,7 @@ import {
   createBanner,
   updateBanner,
   deleteBanner,
+  seedDefaultBanners,
   type AppBanner,
 } from '../api/banners';
 import { errorMessage } from '../api/client';
@@ -68,9 +69,19 @@ export function BannersPage() {
       setForm(defaultForm);
       setPreviewUrl(null);
       setError(null);
-      setSuccess('Banner saved successfully!');
+      setSuccess(editing ? 'Banner updated successfully!' : 'Banner created successfully!');
       qc.invalidateQueries({ queryKey: ['admin-banners'] });
-      setTimeout(() => setSuccess(null), 3000);
+      setTimeout(() => setSuccess(null), 3500);
+    },
+    onError: (e) => setError(errorMessage(e)),
+  });
+
+  const seedMutation = useMutation({
+    mutationFn: seedDefaultBanners,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['admin-banners'] });
+      setSuccess('Old default system banners loaded! You can now edit and customize them.');
+      setTimeout(() => setSuccess(null), 4000);
     },
     onError: (e) => setError(errorMessage(e)),
   });
@@ -80,7 +91,7 @@ export function BannersPage() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['admin-banners'] });
       setSuccess('Banner deleted successfully!');
-      setTimeout(() => setSuccess(null), 3000);
+      setTimeout(() => setSuccess(null), 3500);
     },
     onError: (e) => setError(errorMessage(e)),
   });
@@ -120,6 +131,7 @@ export function BannersPage() {
     });
     setPreviewUrl(b.imageUrl ? `${b.imageUrl}` : null);
     setError(null);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const startCreate = () => {
@@ -128,6 +140,7 @@ export function BannersPage() {
     setForm(defaultForm);
     setPreviewUrl(null);
     setError(null);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const cancelForm = () => {
@@ -156,14 +169,25 @@ export function BannersPage() {
         <div>
           <h1>Client App Banners</h1>
           <p className="sub">
-            Manage promotional hero banners shown on the Client App Home/Dashboard carousel.
+            Manage and update promotional hero banners shown in the Client App Home/Dashboard carousel.
           </p>
         </div>
-        {!creating && !editing && (
-          <button className="primary" onClick={startCreate}>
-            + Upload New Banner
-          </button>
-        )}
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+          {banners.length === 0 && (
+            <button
+              onClick={() => seedMutation.mutate()}
+              disabled={seedMutation.isPending}
+              style={{ background: '#0284c7', color: '#fff' }}
+            >
+              {seedMutation.isPending ? 'Loading...' : '⚡ Load Old Default Banners'}
+            </button>
+          )}
+          {!creating && !editing && (
+            <button className="primary" onClick={startCreate}>
+              + Upload New Banner
+            </button>
+          )}
+        </div>
       </div>
 
       {error && (
@@ -179,10 +203,17 @@ export function BannersPage() {
       )}
 
       {(creating || editing) && (
-        <form className="card pad stack" onSubmit={handleSubmit} style={{ marginBottom: 24 }}>
-          <h2>{editing ? 'Edit Banner' : 'Upload New Promotional Banner'}</h2>
+        <form className="card pad stack" onSubmit={handleSubmit} style={{ marginBottom: 24, border: '2px solid #0284c7' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <h2>{editing ? `Edit Banner: ${editing.title}` : 'Upload New Promotional Banner'}</h2>
+            <button type="button" onClick={cancelForm} style={{ fontSize: 12 }}>
+              ✕ Close
+            </button>
+          </div>
           <p className="muted" style={{ margin: 0 }}>
-            Upload an eye-catching banner image (16:9 or 3:1 aspect ratio recommended, max 10MB).
+            {editing
+              ? 'Update title, subtitle, target service category, or choose a new image file to replace the existing photo.'
+              : 'Upload an eye-catching banner image (16:9 or 3:1 aspect ratio recommended, max 10MB).'}
           </p>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16 }}>
@@ -252,7 +283,7 @@ export function BannersPage() {
 
           <div>
             <label htmlFor="banner-file" style={{ display: 'block', fontWeight: 600, marginBottom: 4 }}>
-              Banner Image File {editing ? '(Leave blank to keep existing image)' : '*'}
+              Banner Image File {editing ? '(Leave empty to keep existing image)' : '*'}
             </label>
             <input
               id="banner-file"
@@ -310,12 +341,21 @@ export function BannersPage() {
         <p>Loading banners...</p>
       ) : banners.length === 0 ? (
         <div className="card pad" style={{ textAlign: 'center', padding: '48px 24px' }}>
-          <p style={{ fontSize: 16, color: '#64748b', marginBottom: 16 }}>
-            No custom app banners created yet. The Client App is currently displaying default system banners.
+          <p style={{ fontSize: 16, color: '#64748b', marginBottom: 20 }}>
+            No custom app banners in database yet. The Client App is currently displaying default fallback banners.
           </p>
-          <button className="primary" onClick={startCreate}>
-            + Upload Your First Banner
-          </button>
+          <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
+            <button
+              onClick={() => seedMutation.mutate()}
+              disabled={seedMutation.isPending}
+              style={{ background: '#0284c7', color: '#fff', padding: '10px 18px', fontWeight: 600, borderRadius: 8 }}
+            >
+              {seedMutation.isPending ? 'Loading...' : '⚡ Load Old Default Banners to Edit'}
+            </button>
+            <button className="primary" onClick={startCreate} style={{ padding: '10px 18px' }}>
+              + Upload New Custom Banner
+            </button>
+          </div>
         </div>
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 18 }}>
@@ -330,12 +370,13 @@ export function BannersPage() {
                 flexDirection: 'column',
                 border: b.active ? '1px solid #cbd5e1' : '1px dashed #94a3b8',
                 opacity: b.active ? 1 : 0.75,
+                boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
               }}
             >
               <div
                 style={{
                   height: 140,
-                  background: '#0f172a',
+                  background: 'linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%)',
                   position: 'relative',
                   display: 'flex',
                   alignItems: 'center',
@@ -349,7 +390,10 @@ export function BannersPage() {
                     style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                   />
                 ) : (
-                  <span style={{ color: '#94a3b8', fontSize: 14 }}>No Image</span>
+                  <div style={{ color: '#fff', textAlign: 'center', padding: 12 }}>
+                    <span style={{ fontSize: 24, display: 'block' }}>🛠️</span>
+                    <span style={{ fontSize: 13, fontWeight: 600 }}>Default Gradient Banner</span>
+                  </div>
                 )}
                 <div
                   style={{
@@ -369,30 +413,31 @@ export function BannersPage() {
               </div>
 
               <div style={{ padding: 16, display: 'flex', flexDirection: 'column', flex: 1 }}>
-                <h3 style={{ margin: '0 0 4px', fontSize: 16, fontWeight: 700 }}>{b.title}</h3>
+                <h3 style={{ margin: '0 0 4px', fontSize: 16, fontWeight: 700, color: '#0f172a' }}>{b.title}</h3>
                 {b.subtitle && (
                   <p style={{ margin: '0 0 8px', fontSize: 13, color: '#64748b' }}>{b.subtitle}</p>
                 )}
-                <div style={{ fontSize: 12, color: '#475569', marginBottom: 12, display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                <div style={{ fontSize: 12, color: '#475569', marginBottom: 14, display: 'flex', gap: 12, flexWrap: 'wrap' }}>
                   <span>📂 <strong>{b.category || 'General'}</strong></span>
                   <span>🔢 Order: <strong>{b.displayOrder}</strong></span>
                 </div>
 
                 <div style={{ marginTop: 'auto', display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                   <button
-                    style={{ fontSize: 12, padding: '4px 10px' }}
+                    className="primary"
+                    style={{ fontSize: 12, padding: '6px 14px' }}
+                    onClick={() => startEdit(b)}
+                  >
+                    ✏️ Edit Banner
+                  </button>
+                  <button
+                    style={{ fontSize: 12, padding: '6px 12px' }}
                     onClick={() => toggleActiveMutation.mutate(b)}
                   >
                     {b.active ? 'Disable' : 'Enable'}
                   </button>
                   <button
-                    style={{ fontSize: 12, padding: '4px 10px' }}
-                    onClick={() => startEdit(b)}
-                  >
-                    Edit
-                  </button>
-                  <button
-                    style={{ fontSize: 12, padding: '4px 10px', color: '#dc2626' }}
+                    style={{ fontSize: 12, padding: '6px 12px', color: '#dc2626' }}
                     onClick={() => {
                       if (window.confirm(`Are you sure you want to delete banner "${b.title}"?`)) {
                         deleteMutation.mutate(b.id);

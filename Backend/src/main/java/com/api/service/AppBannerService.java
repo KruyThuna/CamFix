@@ -1,6 +1,7 @@
 package com.api.service;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
@@ -25,18 +26,24 @@ public class AppBannerService {
         this.adminService = adminService;
     }
 
-    /** Public: list all active banners for the client app. */
-    @Transactional(readOnly = true)
+    /** Public: list all active banners for the client app. Auto-seeds default banners if empty. */
+    @Transactional
     public List<BannerResponse> listActive() {
+        if (bannerRepository.count() == 0) {
+            seedDefaultBanners(null);
+        }
         return bannerRepository.findByActiveTrueOrderByDisplayOrderAscIdDesc().stream()
                 .map(this::toDto)
                 .collect(Collectors.toList());
     }
 
-    /** Admin: list all banners (active & inactive). */
-    @Transactional(readOnly = true)
+    /** Admin: list all banners (active & inactive). Auto-seeds default banners if empty. */
+    @Transactional
     public List<BannerResponse> listAll(String authorization) {
         adminService.requireAdmin(authorization);
+        if (bannerRepository.count() == 0) {
+            seedDefaultBanners(null);
+        }
         return bannerRepository.findAllByOrderByDisplayOrderAscIdDesc().stream()
                 .map(this::toDto)
                 .collect(Collectors.toList());
@@ -51,6 +58,59 @@ public class AppBannerService {
             throw new NoSuchElementException("Banner image not set: " + id);
         }
         return b;
+    }
+
+    /** Seeds the old/default client app banners into the database so Admin can edit them. */
+    @Transactional
+    public List<BannerResponse> seedDefaultBanners(String authorization) {
+        if (authorization != null) {
+            adminService.requireAdmin(authorization);
+        }
+        if (bannerRepository.count() > 0) {
+            return bannerRepository.findAllByOrderByDisplayOrderAscIdDesc().stream()
+                    .map(this::toDto)
+                    .collect(Collectors.toList());
+        }
+
+        byte[] acImage = null;
+        try (InputStream is = getClass().getResourceAsStream("/default_banner_ac.png")) {
+            if (is != null) {
+                acImage = is.readAllBytes();
+            }
+        } catch (Exception ignored) {
+        }
+
+        AppBanner b1 = new AppBanner();
+        b1.setTitle("Cool Comfort, Fast Service");
+        b1.setSubtitle("Certified Air Conditioner repair & maintenance");
+        b1.setCategory("Air Conditioner");
+        b1.setDisplayOrder(1);
+        b1.setActive(true);
+        if (acImage != null && acImage.length > 0) {
+            b1.setImage(acImage);
+            b1.setImageContentType("image/png");
+        }
+        bannerRepository.save(b1);
+
+        AppBanner b2 = new AppBanner();
+        b2.setTitle("On-Demand Home Services, Anytime");
+        b2.setSubtitle("Find trusted local technicians near you");
+        b2.setCategory(null);
+        b2.setDisplayOrder(2);
+        b2.setActive(true);
+        bannerRepository.save(b2);
+
+        AppBanner b3 = new AppBanner();
+        b3.setTitle("Quick & Easy Booking");
+        b3.setSubtitle("Transparent quotes and live tracking");
+        b3.setCategory(null);
+        b3.setDisplayOrder(3);
+        b3.setActive(true);
+        bannerRepository.save(b3);
+
+        return bannerRepository.findAllByOrderByDisplayOrderAscIdDesc().stream()
+                .map(this::toDto)
+                .collect(Collectors.toList());
     }
 
     /** Admin: create a new promotional banner. */

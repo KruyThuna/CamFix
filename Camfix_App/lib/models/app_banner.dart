@@ -32,3 +32,4 @@ class AppBanner {
         active: j['active'] == true,
       );
 }
+

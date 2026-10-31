@@ -14,3 +14,4 @@ public interface AppBannerRepository extends JpaRepository<AppBanner, Long> {
 
     List<AppBanner> findAllByOrderByDisplayOrderAscIdDesc();
 }
+

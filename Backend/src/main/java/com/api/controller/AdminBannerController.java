@@ -38,6 +38,12 @@ public class AdminBannerController {
         return bannerService.listAll(auth);
     }
 
+    /** Seed/restore old default system banners into the database. */
+    @PostMapping("/seed")
+    public List<BannerResponse> seedDefaults(@RequestHeader(value = AUTH, required = false) String auth) {
+        return bannerService.seedDefaultBanners(auth);
+    }
+
     /** Create a new banner with optional image file. */
     @PostMapping(consumes = { "multipart/form-data" })
     public ResponseEntity<BannerResponse> create(

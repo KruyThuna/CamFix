@@ -18,6 +18,11 @@ export async function listBanners(): Promise<AppBanner[]> {
   return res.data;
 }
 
+export async function seedDefaultBanners(): Promise<AppBanner[]> {
+  const res = await api.post<AppBanner[]>('/api/admin/banners/seed');
+  return res.data;
+}
+
 export async function createBanner(formData: FormData): Promise<AppBanner> {
   const res = await api.post<AppBanner>('/api/admin/banners', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },

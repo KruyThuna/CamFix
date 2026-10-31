@@ -52,3 +52,4 @@ public class BannerController {
                 .body(b.getImage());
     }
 }
+

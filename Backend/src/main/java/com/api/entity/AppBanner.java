@@ -139,3 +139,4 @@ public class AppBanner {
         return updatedAt;
     }
 }
+
