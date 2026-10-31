@@ -58,6 +58,10 @@ class _ChatListScreenState extends State<ChatListScreen> {
   List<ChatThread> get _visible {
     final q = _query.trim().toLowerCase();
     return _threads.where((c) {
+      // Option 1: Hide empty threads that have never exchanged any message
+      final hasMessage = c.lastMessage != null && c.lastMessage!.trim().isNotEmpty;
+      if (!hasMessage) return false;
+
       if (_unreadOnly && c.unreadCount == 0) return false;
       if (q.isNotEmpty &&
           !c.otherName.toLowerCase().contains(q) &&
