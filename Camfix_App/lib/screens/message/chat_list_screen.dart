@@ -53,23 +53,81 @@ class _ChatListScreenState extends State<ChatListScreen> {
     }
   }
 
-  int get _unreadTotal => _threads.where((c) => c.unreadCount > 0).length;
+  int get _unreadTotal => _visible.where((c) => c.unreadCount > 0).length;
 
   List<ChatThread> get _visible {
     final q = _query.trim().toLowerCase();
-    return _threads.where((c) {
-      // Option 1: Hide empty threads that have never exchanged any message
-      final hasMessage = c.lastMessage != null && c.lastMessage!.trim().isNotEmpty;
-      if (!hasMessage) return false;
 
-      if (_unreadOnly && c.unreadCount == 0) return false;
+    // Deduplicate conversations so each technician/contact appears only once
+    final Map<String, ChatThread> deduplicated = {};
+    for (final c in _threads) {
+      final hasMessage =
+          c.lastMessage != null && c.lastMessage!.trim().isNotEmpty;
+      if (!hasMessage) continue;
+
+      if (_unreadOnly && c.unreadCount == 0) continue;
       if (q.isNotEmpty &&
           !c.otherName.toLowerCase().contains(q) &&
           !categoryLabel(c.category).toLowerCase().contains(q)) {
-        return false;
+        continue;
       }
-      return true;
-    }).toList();
+
+      final key = c.otherTechnicianId != null
+          ? 'tech_${c.otherTechnicianId}'
+          : 'name_${c.otherName.trim().toLowerCase()}';
+
+      if (!deduplicated.containsKey(key)) {
+        deduplicated[key] = c;
+      } else {
+        final existing = deduplicated[key]!;
+        final cTime = c.lastAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+        final existingTime =
+            existing.lastAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+
+        // Keep the thread with the most recent activity, summing unread counts
+        if (cTime.isAfter(existingTime) ||
+            (cTime == existingTime && c.jobId > existing.jobId)) {
+          deduplicated[key] = ChatThread(
+            jobId: c.jobId,
+            category: c.category,
+            jobStatus: c.jobStatus,
+            otherName: c.otherName,
+            otherPhone: c.otherPhone ?? existing.otherPhone,
+            otherTechnicianId:
+                c.otherTechnicianId ?? existing.otherTechnicianId,
+            lastMessage: c.lastMessage,
+            lastMine: c.lastMine,
+            lastAt: c.lastAt,
+            unreadCount: existing.unreadCount + c.unreadCount,
+          );
+        } else {
+          deduplicated[key] = ChatThread(
+            jobId: existing.jobId,
+            category: existing.category,
+            jobStatus: existing.jobStatus,
+            otherName: existing.otherName,
+            otherPhone: existing.otherPhone ?? c.otherPhone,
+            otherTechnicianId:
+                existing.otherTechnicianId ?? c.otherTechnicianId,
+            lastMessage: existing.lastMessage,
+            lastMine: existing.lastMine,
+            lastAt: existing.lastAt,
+            unreadCount: existing.unreadCount + c.unreadCount,
+          );
+        }
+      }
+    }
+
+    final list = deduplicated.values.toList();
+    list.sort((a, b) {
+      final aTime = a.lastAt;
+      final bTime = b.lastAt;
+      if (aTime == null && bTime == null) return b.jobId.compareTo(a.jobId);
+      if (aTime == null) return 1;
+      if (bTime == null) return -1;
+      return bTime.compareTo(aTime);
+    });
+    return list;
   }
 
   Future<void> _open(ChatThread t) async {

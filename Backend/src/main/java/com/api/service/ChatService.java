@@ -24,9 +24,9 @@ import com.api.dto.chat.ChatDtos.MessageResponse;
 import com.api.dto.chat.ChatDtos.ThreadResponse;
 
 /**
- * Real per-booking chat between a customer and the technician assigned to
- * that booking. The caller's side (CUSTOMER / TECHNICIAN) is derived from
- * the job itself - anyone who is neither gets "not found".
+ * Unified chat between a customer and a technician. All bookings between the
+ * same customer and technician share one continuous conversation history so
+ * previous messages are preserved and threads are not duplicated.
  */
 @Service
 public class ChatService {
@@ -80,21 +80,38 @@ public class ChatService {
         return ROLE_CUSTOMER.equals(role) ? ROLE_TECHNICIAN : ROLE_CUSTOMER;
     }
 
-    /** Messages in a thread (optionally only those after {@code afterId});
+    /** Find all job IDs between the same customer and technician so chat history is shared. */
+    private List<Long> sharedJobIds(Job job) {
+        if (job == null || job.getId() == null) {
+            return List.of();
+        }
+        if (job.getCustomerUserId() == null || job.getTechnicianId() == null) {
+            return List.of(job.getId());
+        }
+        List<Job> shared = jobRepository.findByCustomerUserIdAndTechnicianId(
+                job.getCustomerUserId(), job.getTechnicianId());
+        if (shared == null || shared.isEmpty()) {
+            return List.of(job.getId());
+        }
+        return shared.stream().map(Job::getId).collect(Collectors.toList());
+    }
+
+    /** Messages in a thread across all shared bookings between the customer and technician;
      *  marks the other side's messages as read. */
     @Transactional
     public List<MessageResponse> messages(String authorization, Long jobId, Long afterId) {
         Seat s = seat(authorization, jobId);
+        List<Long> jobIds = sharedJobIds(s.job());
         List<ChatMessage> unread =
-                chatRepository.findByJobIdAndSenderRoleAndReadAtIsNull(jobId, other(s.role()));
+                chatRepository.findByJobIdInAndSenderRoleAndReadAtIsNull(jobIds, other(s.role()));
         if (!unread.isEmpty()) {
             LocalDateTime now = LocalDateTime.now();
             unread.forEach(m -> m.setReadAt(now));
             chatRepository.saveAll(unread);
         }
         List<ChatMessage> list = afterId == null
-                ? chatRepository.findByJobIdOrderByIdAsc(jobId)
-                : chatRepository.findByJobIdAndIdGreaterThanOrderByIdAsc(jobId, afterId);
+                ? chatRepository.findByJobIdInOrderByIdAsc(jobIds)
+                : chatRepository.findByJobIdInAndIdGreaterThanOrderByIdAsc(jobIds, afterId);
         return list.stream().map(m -> toDto(m, s.role())).collect(Collectors.toList());
     }
 
@@ -109,10 +126,10 @@ public class ChatService {
             throw new IllegalArgumentException("Message is too long (max " + MAX_BODY + " characters)");
         }
         String otherRole = other(s.role());
-        // Notify only on the first unread message, so a burst of messages
-        // doesn't flood the other person's notification list.
+        List<Long> jobIds = sharedJobIds(s.job());
+        // Notify only on the first unread message across their shared conversation
         boolean firstUnread = chatRepository
-                .findByJobIdAndSenderRoleAndReadAtIsNull(jobId, s.role()).isEmpty();
+                .findByJobIdInAndSenderRoleAndReadAtIsNull(jobIds, s.role()).isEmpty();
 
         ChatMessage m = new ChatMessage();
         m.setJobId(jobId);
@@ -134,8 +151,8 @@ public class ChatService {
         return toDto(m, s.role());
     }
 
-    /** Every conversation the caller is part of, most recent activity first.
-     *  Transactional so the technician's lazily-loaded {@code Users} can be read. */
+    /** Every conversation the caller is part of, deduplicated per participant pair,
+     *  most recent activity first. */
     @Transactional(readOnly = true)
     public List<ThreadResponse> threads(String authorization) {
         Users me = authSupport.currentUser(authorization);
@@ -148,40 +165,71 @@ public class ChatService {
         if (jobs.isEmpty()) {
             return List.of();
         }
+
         Map<Long, List<ChatMessage>> byJob = chatRepository
                 .findByJobIdIn(jobs.stream().map(Job::getId).collect(Collectors.toList()))
                 .stream().collect(Collectors.groupingBy(ChatMessage::getJobId));
 
+        // Group jobs by participant pair (customerUserId, technicianId) so each contact
+        // has exactly one unified thread.
+        Map<String, List<Job>> groupedJobs = jobs.stream().collect(Collectors.groupingBy(j -> {
+            Long cId = j.getCustomerUserId() != null ? j.getCustomerUserId() : -j.getId();
+            Long tId = j.getTechnicianId() != null ? j.getTechnicianId() : -j.getId();
+            return cId + "_" + tId;
+        }));
+
         List<ThreadResponse> out = new ArrayList<>();
-        for (Job j : jobs) {
-            String role = me.getUserId().equals(j.getCustomerUserId()) ? ROLE_CUSTOMER : ROLE_TECHNICIAN;
-            List<ChatMessage> msgs = byJob.getOrDefault(j.getId(), List.of());
-            ChatMessage last = msgs.stream().max(Comparator.comparing(ChatMessage::getId)).orElse(null);
-            int unread = (int) msgs.stream()
+        for (List<Job> pairJobs : groupedJobs.values()) {
+            // Sort jobs descending by id (latest booking first)
+            pairJobs.sort(Comparator.comparing(Job::getId).reversed());
+            Job primaryJob = pairJobs.get(0);
+            String role = me.getUserId().equals(primaryJob.getCustomerUserId()) ? ROLE_CUSTOMER : ROLE_TECHNICIAN;
+
+            // Collect all messages across all jobs in this pair
+            List<ChatMessage> allPairMsgs = pairJobs.stream()
+                    .flatMap(j -> byJob.getOrDefault(j.getId(), List.of()).stream())
+                    .collect(Collectors.toList());
+
+            ChatMessage last = allPairMsgs.stream().max(Comparator.comparing(ChatMessage::getId)).orElse(null);
+            int unread = (int) allPairMsgs.stream()
                     .filter(m -> !role.equals(m.getSenderRole()) && m.getReadAt() == null)
                     .count();
+
+            // Representative job for category & status: latest job or job with latest message
+            Job repJob = primaryJob;
+            if (last != null) {
+                for (Job j : pairJobs) {
+                    if (j.getId().equals(last.getJobId())) {
+                        repJob = j;
+                        break;
+                    }
+                }
+            }
+
             String otherName;
             String otherPhone;
             Long otherTechId = null;
             if (ROLE_CUSTOMER.equals(role)) {
-                Technician t = technicianRepository.findById(j.getTechnicianId()).orElse(null);
+                Technician t = technicianRepository.findById(repJob.getTechnicianId()).orElse(null);
                 Users tu = t == null ? null : t.getUsers();
                 otherName = tu == null ? "Technician" : displayName(tu);
                 otherPhone = tu == null ? null : tu.getPhoneNumber();
-                otherTechId = j.getTechnicianId();
+                otherTechId = repJob.getTechnicianId();
             } else {
-                Users cu = j.getCustomerUserId() == null ? null
-                        : userRepository.findById(j.getCustomerUserId()).orElse(null);
-                otherName = cu == null ? "Customer" : displayName(cu);
-                otherPhone = cu == null ? null : cu.getPhoneNumber();
+                Users cu = repJob.getCustomerUserId() == null ? null
+                        : userRepository.findById(repJob.getCustomerUserId()).orElse(null);
+                otherName = cu == null ? (repJob.getCustomerName() != null ? repJob.getCustomerName() : "Customer") : displayName(cu);
+                otherPhone = cu == null ? repJob.getCustomerPhone() : cu.getPhoneNumber();
             }
-            out.add(new ThreadResponse(j.getId(), j.getCategory(), j.getStatus(), role,
+
+            out.add(new ThreadResponse(primaryJob.getId(), repJob.getCategory(), repJob.getStatus(), role,
                     otherName, otherPhone, otherTechId,
                     last == null ? null : last.getBody(),
                     last != null && role.equals(last.getSenderRole()),
                     last == null ? null : last.getCreatedAt(),
                     unread));
         }
+
         // Threads with messages first (newest activity), then the rest by job id.
         out.sort(Comparator
                 .comparing((ThreadResponse t) -> t.lastAt() == null)

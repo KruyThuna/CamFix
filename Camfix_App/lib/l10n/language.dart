@@ -1981,13 +1981,13 @@ class Language {
     },
     'copied': {AppLang.en: 'Copied', AppLang.km: 'បានចម្លង'},
     'changePhoto': {AppLang.en: 'Change photo', AppLang.km: 'ប្តូររូបភាព'},
-        'technicianPortal': {
+    'technicianPortal': {
       AppLang.en: 'Technician Portal',
-      AppLang.km: '??????????????????',
+      AppLang.km: 'ផតថលជាងជួសជុល',
     },
     'technicianPortalDesc': {
       AppLang.en: 'Manage services, jobs, and promotional banner',
-      AppLang.km: '????????????????? ?????? ?????????????????????????',
+      AppLang.km: 'គ្រប់គ្រងសេវាកម្ម ការងារ និងផ្ទាំងផ្សព្វផ្សាយ',
     },
     'attachPhoto': {AppLang.en: 'Attach photo', AppLang.km: 'ភ្ជាប់រូបភាព'},
     'chooseGallery': {
