@@ -24,15 +24,9 @@ export function fmtRelative(iso: string | null | undefined): string {
 
 export function isSyntheticEmail(email: string | null | undefined): boolean {
   if (!email || email.trim() === '') return true;
-  const clean = email.trim().toLowerCase();
-  return (
-    clean.includes('phone.camfix.local') ||
-    clean.endsWith('@camfix.local') ||
-    clean.endsWith('@phone.local') ||
-    clean.startsWith('phone_')
-  );
+  return email.toLowerCase().endsWith('@phone.camfix.local');
 }
 
 export function fmtEmail(email: string | null | undefined): string {
-  return isSyntheticEmail(email) ? 'N/A' : (email?.trim() || 'N/A');
+  return isSyntheticEmail(email) ? 'N/A' : (email ?? 'N/A');
 }

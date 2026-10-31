@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -41,7 +42,22 @@ import 'screens/payment/total_spend_screen.dart';
 import 'technician/main.dart' show TechnicianPortal;
 
 Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+    WidgetsFlutterBinding.ensureInitialized();
+  // Filter transient browser resize / DevTools inspect ViewInsets assertion in Flutter Web
+  FlutterError.onError = (FlutterErrorDetails details) {
+    final msg = details.exceptionAsString();
+    if (msg.contains('ViewInsets cannot be negative') || msg.contains('_viewInsets.isNonNegative')) {
+      return;
+    }
+    FlutterError.presentError(details);
+  };
+  PlatformDispatcher.instance.onError = (error, stack) {
+    final msg = error.toString();
+    if (msg.contains('ViewInsets cannot be negative') || msg.contains('_viewInsets.isNonNegative')) {
+      return true;
+    }
+    return false;
+  };
   // Restore the saved language / theme before the first frame so the app
   // opens in the language the user last chose.
   await AppSettings.instance.load();

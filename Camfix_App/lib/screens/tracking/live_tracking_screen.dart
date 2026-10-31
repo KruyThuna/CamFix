@@ -29,8 +29,10 @@ class LiveTrackingScreen extends StatefulWidget {
 class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
   /// Real Google Maps is used when this is set *and* the platform key is
   /// configured (see GOOGLE_MAPS_SETUP.md); otherwise the OpenStreetMap view.
-  static const String _mapsKey =
-      String.fromEnvironment('GOOGLE_MAPS_API_KEY', defaultValue: '');
+  static const String _mapsKey = String.fromEnvironment(
+    'GOOGLE_MAPS_API_KEY',
+    defaultValue: '',
+  );
   bool get _useGoogle => _mapsKey.isNotEmpty;
 
   bool _booted = false;
@@ -52,7 +54,8 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
     super.didChangeDependencies();
     if (_booted) return;
     _booted = true;
-    _info = ModalRoute.of(context)?.settings.arguments as TrackingInfo? ??
+    _info =
+        ModalRoute.of(context)?.settings.arguments as TrackingInfo? ??
         TrackingInfo.sample;
     _route = TrafficRoute.build(_info.origin, _info.destination);
     _mapOptions = MapOptions(
@@ -83,13 +86,21 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
   /// the streets instead of a drawn line. Falls back to the synthetic curve if
   /// the call fails.
   Future<void> _loadOsrmRoute() async {
-    final r = await OsrmApi.instance
-        .route(origin: _info.origin, destination: _info.destination);
+    final r = await OsrmApi.instance.route(
+      origin: _info.origin,
+      destination: _info.destination,
+    );
     if (r == null || !mounted) return;
     final alts = <RouteOption>[];
     for (var i = 1; i < r.routes.length && i <= 2; i++) {
-      alts.add(RouteOption(r.routes[i].points, r.routes[i].meters,
-          r.routes[i].minutes, i == 1 ? 0.5 : 0.62));
+      alts.add(
+        RouteOption(
+          r.routes[i].points,
+          r.routes[i].meters,
+          r.routes[i].minutes,
+          i == 1 ? 0.5 : 0.62,
+        ),
+      );
     }
     setState(() {
       _osrm = r;
@@ -101,14 +112,18 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
       if (_traveled > _route.totalMeters) _traveled = _route.totalMeters;
     });
     try {
-      _map.fitCamera(CameraFit.bounds(
-        bounds: LatLngBounds.fromPoints([
-          ..._route.points,
-          for (final a in _route.alts) ...a.points,
-        ]),
-        padding: const EdgeInsets.fromLTRB(36, 92, 36, 284),
-      ));
-    } catch (_) {/* map not ready yet */}
+      _map.fitCamera(
+        CameraFit.bounds(
+          bounds: LatLngBounds.fromPoints([
+            ..._route.points,
+            for (final a in _route.alts) ...a.points,
+          ]),
+          padding: const EdgeInsets.fromLTRB(36, 92, 36, 284),
+        ),
+      );
+    } catch (_) {
+      /* map not ready yet */
+    }
   }
 
   /// Ask Google for the real road route(s) + traffic-aware ETA. Mobile only
@@ -117,8 +132,10 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
   Future<void> _loadDirections() async {
     final d = await DirectionsApi.instance.route(
       origin: gm.LatLng(_info.origin.latitude, _info.origin.longitude),
-      destination:
-          gm.LatLng(_info.destination.latitude, _info.destination.longitude),
+      destination: gm.LatLng(
+        _info.destination.latitude,
+        _info.destination.longitude,
+      ),
     );
     if (!mounted) return;
     if (d == null) {
@@ -277,77 +294,80 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
   }
 
   Widget _osmMap(({LatLng pos, double bearing}) here) => FlutterMap(
-        mapController: _map,
-        options: _mapOptions,
-        children: [
-          TileLayer(
-            urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-            userAgentPackageName: 'com.example.camfix_app',
-            maxNativeZoom: 19,
-            maxZoom: 20,
+    mapController: _map,
+    options: _mapOptions,
+    children: [
+      TileLayer(
+        urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+        userAgentPackageName: 'com.example.camfix_app',
+        maxNativeZoom: 19,
+        maxZoom: 20,
+      ),
+      PolylineLayer(
+        polylines: [
+          for (final alt in _route.alts) ...[
+            Polyline(
+              points: alt.points,
+              strokeWidth: 9,
+              color: const Color(0xFFB0BBD4),
+            ),
+            Polyline(
+              points: alt.points,
+              strokeWidth: 5,
+              color: const Color(0xFF8A96B4),
+            ),
+          ],
+          Polyline(
+            points: _route.points,
+            strokeWidth: 11,
+            color: const Color(0xFF1A63D8),
           ),
-          PolylineLayer(
-            polylines: [
-              for (final alt in _route.alts) ...[
-                Polyline(
-                  points: alt.points,
-                  strokeWidth: 9,
-                  color: const Color(0xFFB0BBD4),
-                ),
-                Polyline(
-                  points: alt.points,
-                  strokeWidth: 5,
-                  color: const Color(0xFF8A96B4),
-                ),
-              ],
-              Polyline(
-                points: _route.points,
-                strokeWidth: 11,
-                color: const Color(0xFF1A63D8),
+          for (final seg in _route.segments)
+            Polyline(
+              points: seg.points,
+              strokeWidth: seg.level == TrafficLevel.blocked ? 7 : 6,
+              color: seg.level.color,
+            ),
+        ],
+      ),
+      MarkerLayer(
+        markers: [
+          for (final alt in _route.alts)
+            Marker(
+              point: alt.labelAnchor,
+              width: 104,
+              height: 28,
+              child: _routeBubble(
+                _routeLabel(alt.minutes, alt.km),
+                faint: true,
               ),
-              for (final seg in _route.segments)
-                Polyline(
-                  points: seg.points,
-                  strokeWidth: seg.level == TrafficLevel.blocked ? 7 : 6,
-                  color: seg.level.color,
-                ),
-            ],
+            ),
+          Marker(
+            point: _route.mainLabelAnchor,
+            width: 108,
+            height: 28,
+            child: _routeBubble(
+              _routeLabel(_route.mainMinutes, _route.mainKm),
+              faint: false,
+            ),
           ),
-          MarkerLayer(
-            markers: [
-              for (final alt in _route.alts)
-                Marker(
-                  point: alt.labelAnchor,
-                  width: 104,
-                  height: 28,
-                  child: _routeBubble(_routeLabel(alt.minutes, alt.km),
-                      faint: true),
-                ),
-              Marker(
-                point: _route.mainLabelAnchor,
-                width: 108,
-                height: 28,
-                child: _routeBubble(
-                    _routeLabel(_route.mainMinutes, _route.mainKm),
-                    faint: false),
-              ),
-              _originDot(_route.points.first),
-              _destPin(_route.points.last),
-              if (_route.midpointOf(TrafficLevel.blocked) case final b?)
-                _pin(b, TrafficLevel.blocked.color, Icons.block),
-              if (_route.midpointOf(TrafficLevel.unknown) case final u?)
-                _pin(u, TrafficLevel.unknown.color, Icons.help_outline),
-              Marker(
-                point: here.pos,
-                width: 46,
-                height: 46,
-                rotate: true,
-                child: _technician(here.bearing),
-              ),
-            ],
+          _originDot(_route.points.first),
+          _destPin(_route.points.last),
+          if (_route.midpointOf(TrafficLevel.blocked) case final b?)
+            _pin(b, TrafficLevel.blocked.color, Icons.block),
+          if (_route.midpointOf(TrafficLevel.unknown) case final u?)
+            _pin(u, TrafficLevel.unknown.color, Icons.help_outline),
+          Marker(
+            point: here.pos,
+            width: 46,
+            height: 46,
+            rotate: true,
+            child: _technician(here.bearing),
           ),
         ],
-      );
+      ),
+    ],
+  );
 
   void _zoomBy(double d) {
     final z = (_map.camera.zoom + d).clamp(3.0, 18.0);
@@ -355,87 +375,88 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
   }
 
   Widget _zoomBtn(AppPalette p, IconData icon, VoidCallback onTap) => InkWell(
+    borderRadius: BorderRadius.circular(12),
+    onTap: onTap,
+    child: Container(
+      width: 42,
+      height: 42,
+      decoration: BoxDecoration(
+        color: p.surface,
         borderRadius: BorderRadius.circular(12),
-        onTap: onTap,
-        child: Container(
-          width: 42,
-          height: 42,
-          decoration: BoxDecoration(
-            color: p.surface,
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: [
-              BoxShadow(
-                  color: p.shadow, blurRadius: 8, offset: const Offset(0, 2)),
-            ],
-          ),
-          child: Icon(icon, color: p.textPrimary, size: 20),
-        ),
-      );
+        boxShadow: [
+          BoxShadow(color: p.shadow, blurRadius: 8, offset: const Offset(0, 2)),
+        ],
+      ),
+      child: Icon(icon, color: p.textPrimary, size: 20),
+    ),
+  );
 
   Widget _technician(double bearing) => Container(
-        decoration: BoxDecoration(
-          color: AppColors.white,
-          shape: BoxShape.circle,
-          border: Border.all(color: const Color(0xFF4C8DFF), width: 3),
-          boxShadow: [
-            BoxShadow(
-                color: Colors.black.withValues(alpha: 0.4), blurRadius: 8),
-          ],
-        ),
-        padding: const EdgeInsets.all(7),
-        child: Transform.rotate(
-          angle: bearing,
-          child: const Icon(Icons.navigation,
-              color: AppColors.primaryBlue, size: 18),
-        ),
-      );
+    decoration: BoxDecoration(
+      color: AppColors.white,
+      shape: BoxShape.circle,
+      border: Border.all(color: const Color(0xFF4C8DFF), width: 3),
+      boxShadow: [
+        BoxShadow(color: Colors.black.withValues(alpha: 0.4), blurRadius: 8),
+      ],
+    ),
+    padding: const EdgeInsets.all(7),
+    child: Transform.rotate(
+      angle: bearing,
+      child: const Icon(
+        Icons.navigation,
+        color: AppColors.primaryBlue,
+        size: 18,
+      ),
+    ),
+  );
 
   /// Pickup / current position — Google-style blue location dot.
   Marker _originDot(LatLng at) => Marker(
-        point: at,
-        width: 30,
-        height: 30,
-        child: Center(
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              Container(
-                width: 28,
-                height: 28,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF4C8DFF).withValues(alpha: 0.25),
-                  shape: BoxShape.circle,
-                ),
-              ),
-              Container(
-                width: 16,
-                height: 16,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF4C8DFF),
-                  shape: BoxShape.circle,
-                  border: Border.all(color: AppColors.white, width: 3),
-                ),
-              ),
-            ],
+    point: at,
+    width: 30,
+    height: 30,
+    child: Center(
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          Container(
+            width: 28,
+            height: 28,
+            decoration: BoxDecoration(
+              color: const Color(0xFF4C8DFF).withValues(alpha: 0.25),
+              shape: BoxShape.circle,
+            ),
           ),
-        ),
-      );
+          Container(
+            width: 16,
+            height: 16,
+            decoration: BoxDecoration(
+              color: const Color(0xFF4C8DFF),
+              shape: BoxShape.circle,
+              border: Border.all(color: AppColors.white, width: 3),
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
 
   /// Destination — Google-style red teardrop pin (tip on the point).
   Marker _destPin(LatLng at) => Marker(
-        point: at,
-        width: 40,
-        height: 44,
-        alignment: Alignment.topCenter,
-        child: const Icon(
-          Icons.location_on,
-          color: Color(0xFFEA4335),
-          size: 40,
-          shadows: [
-            Shadow(color: Colors.black54, blurRadius: 6, offset: Offset(0, 3)),
-          ],
-        ),
-      );
+    point: at,
+    width: 40,
+    height: 44,
+    alignment: Alignment.topCenter,
+    child: const Icon(
+      Icons.location_on,
+      color: Color(0xFFEA4335),
+      size: 40,
+      shadows: [
+        Shadow(color: Colors.black54, blurRadius: 6, offset: Offset(0, 3)),
+      ],
+    ),
+  );
 
   String _routeLabel(int minutes, double km) =>
       '$minutes ${AppStrings.t('minShort')} · '
@@ -443,227 +464,264 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
 
   /// Google-style "X min · Y km" pill sitting on a route line.
   Widget _routeBubble(String text, {required bool faint}) => Center(
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-          decoration: BoxDecoration(
-            color: faint ? AppColors.white : const Color(0xFF1A63D8),
-            borderRadius: BorderRadius.circular(13),
-            border: faint ? Border.all(color: const Color(0xFFB0BBD4)) : null,
-            boxShadow: [
-              BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.18),
-                  blurRadius: 4,
-                  offset: const Offset(0, 1)),
-            ],
+    child: Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+      decoration: BoxDecoration(
+        color: faint ? AppColors.white : const Color(0xFF1A63D8),
+        borderRadius: BorderRadius.circular(13),
+        border: faint ? Border.all(color: const Color(0xFFB0BBD4)) : null,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.18),
+            blurRadius: 4,
+            offset: const Offset(0, 1),
           ),
-          child: Text(
-            text,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              color: faint ? const Color(0xFF3C4043) : AppColors.white,
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
+        ],
+      ),
+      child: Text(
+        text,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: TextStyle(
+          color: faint ? const Color(0xFF3C4043) : AppColors.white,
+          fontSize: 11,
+          fontWeight: FontWeight.w700,
         ),
-      );
+      ),
+    ),
+  );
 
   Marker _pin(LatLng at, Color color, IconData icon) => Marker(
-        point: at,
-        width: 30,
-        height: 30,
-        child: Container(
-          decoration: BoxDecoration(
-            color: color,
-            shape: BoxShape.circle,
-            border: Border.all(color: AppColors.white, width: 2),
-          ),
-          child: Icon(icon, color: AppColors.white, size: 16),
-        ),
-      );
+    point: at,
+    width: 30,
+    height: 30,
+    child: Container(
+      decoration: BoxDecoration(
+        color: color,
+        shape: BoxShape.circle,
+        border: Border.all(color: AppColors.white, width: 2),
+      ),
+      child: Icon(icon, color: AppColors.white, size: 16),
+    ),
+  );
 
   Widget _backButton(AppPalette p) => Positioned(
-        top: 0,
-        left: 0,
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: InkWell(
-              customBorder: const CircleBorder(),
-              onTap: () => Navigator.of(context).maybePop(),
-              child: Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: p.surface,
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                        color: p.shadow,
-                        blurRadius: 8,
-                        offset: const Offset(0, 2)),
-                  ],
+    top: 0,
+    left: 0,
+    child: SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: InkWell(
+          customBorder: const CircleBorder(),
+          onTap: () => Navigator.of(context).maybePop(),
+          child: Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: p.surface,
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: p.shadow,
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
                 ),
-                child: Icon(Icons.arrow_back, color: p.textPrimary, size: 20),
-              ),
+              ],
+            ),
+            child: Icon(Icons.arrow_back, color: p.textPrimary, size: 20),
+          ),
+        ),
+      ),
+    ),
+  );
+
+  Widget _card(AppPalette p) => Container(
+    padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
+    decoration: BoxDecoration(
+      color: p.surface,
+      borderRadius: BorderRadius.circular(22),
+      boxShadow: [
+        BoxShadow(color: p.shadow, blurRadius: 16, offset: const Offset(0, 6)),
+      ],
+    ),
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Center(
+          child: Container(
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: p.textSecondary.withValues(alpha: 0.35),
+              borderRadius: BorderRadius.circular(2),
             ),
           ),
         ),
-      );
-
-  Widget _card(AppPalette p) => Container(
-        padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
-        decoration: BoxDecoration(
-          color: p.surface,
-          borderRadius: BorderRadius.circular(22),
-          boxShadow: [
-            BoxShadow(
-                color: p.shadow, blurRadius: 16, offset: const Offset(0, 6)),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Text(
+              AppStrings.t('trackingDetails'),
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+                color: p.textPrimary,
+              ),
+            ),
+            const Spacer(),
+            Text(
+              AppStrings.t('etaLabel'),
+              style: TextStyle(fontSize: 11, color: p.textSecondary),
+            ),
+            const SizedBox(width: 6),
+            Text(
+              _eta(),
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                color: p.textPrimary,
+              ),
+            ),
           ],
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: Container(
-                width: 40,
-                height: 4,
+        const SizedBox(height: 10),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+          decoration: BoxDecoration(
+            color: _statusColor().withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 9,
+                height: 9,
                 decoration: BoxDecoration(
-                  color: p.textSecondary.withValues(alpha: 0.35),
-                  borderRadius: BorderRadius.circular(2),
+                  color: _statusColor(),
+                  shape: BoxShape.circle,
                 ),
               ),
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Text(AppStrings.t('trackingDetails'),
-                    style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                        color: p.textPrimary)),
-                const Spacer(),
-                Text(AppStrings.t('etaLabel'),
-                    style: TextStyle(fontSize: 11, color: p.textSecondary)),
-                const SizedBox(width: 6),
-                Text(_eta(),
-                    style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                        color: p.textPrimary)),
-              ],
-            ),
-            const SizedBox(height: 10),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
-              decoration: BoxDecoration(
-                color: _statusColor().withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(10),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  AppStrings.t(_statusKey()),
+                  style: TextStyle(
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w600,
+                    color: p.textPrimary,
+                  ),
+                ),
               ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 9,
-                    height: 9,
-                    decoration: BoxDecoration(
-                        color: _statusColor(), shape: BoxShape.circle),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(AppStrings.t(_statusKey()),
-                        style: TextStyle(
-                            fontSize: 12.5,
-                            fontWeight: FontWeight.w600,
-                            color: p.textPrimary)),
-                  ),
-                ],
-              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: _leg(p, AppStrings.t('fromLabel'), _info.originName),
             ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                    child:
-                        _leg(p, AppStrings.t('fromLabel'), _info.originName)),
-                Icon(Icons.arrow_forward, size: 16, color: p.textSecondary),
-                Expanded(
-                    child: _leg(
-                        p, AppStrings.t('destination'), _info.destinationName,
-                        alignEnd: true)),
-              ],
-            ),
-            const SizedBox(height: 14),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-              decoration: BoxDecoration(
-                color: AppColors.darkButton,
-                borderRadius: BorderRadius.circular(30),
-              ),
-              child: Row(
-                children: [
-                  const CircleAvatar(
-                    radius: 18,
-                    backgroundColor: AppColors.white,
-                    child: Icon(Icons.person,
-                        color: AppColors.darkButton, size: 20),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(_info.technicianName,
-                            style: const TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.white)),
-                        Text(AppStrings.t('technicianLabel'),
-                            style: TextStyle(
-                                fontSize: 12,
-                                color: AppColors.white.withValues(alpha: 0.7))),
-                      ],
-                    ),
-                  ),
-                  _round(Icons.chat_bubble_outline_rounded,
-                      () => Navigator.of(context).pushNamed('/chat')),
-                  const SizedBox(width: 8),
-                  _round(Icons.call_outlined, () {}),
-                ],
+            Icon(Icons.arrow_forward, size: 16, color: p.textSecondary),
+            Expanded(
+              child: _leg(
+                p,
+                AppStrings.t('destination'),
+                _info.destinationName,
+                alignEnd: true,
               ),
             ),
           ],
         ),
-      );
+        const SizedBox(height: 14),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          decoration: BoxDecoration(
+            color: AppColors.darkButton,
+            borderRadius: BorderRadius.circular(30),
+          ),
+          child: Row(
+            children: [
+              const CircleAvatar(
+                radius: 18,
+                backgroundColor: AppColors.white,
+                child: Icon(
+                  Icons.person,
+                  color: AppColors.darkButton,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _info.technicianName,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.white,
+                      ),
+                    ),
+                    Text(
+                      AppStrings.t('technicianLabel'),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: AppColors.white.withValues(alpha: 0.7),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              _round(
+                Icons.chat_bubble_outline_rounded,
+                () => Navigator.of(context).pushNamed('/chat'),
+              ),
+              const SizedBox(width: 8),
+              _round(Icons.call_outlined, () {}),
+            ],
+          ),
+        ),
+      ],
+    ),
+  );
 
-  Widget _leg(AppPalette p, String label, String value,
-      {bool alignEnd = false}) {
+  Widget _leg(
+    AppPalette p,
+    String label,
+    String value, {
+    bool alignEnd = false,
+  }) {
     return Column(
-      crossAxisAlignment:
-          alignEnd ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+      crossAxisAlignment: alignEnd
+          ? CrossAxisAlignment.end
+          : CrossAxisAlignment.start,
       children: [
         Text(label, style: TextStyle(fontSize: 11, color: p.textSecondary)),
-        Text(value,
-            style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: p.textPrimary)),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: p.textPrimary,
+          ),
+        ),
       ],
     );
   }
 
   Widget _round(IconData icon, VoidCallback onTap) => InkWell(
-        customBorder: const CircleBorder(),
-        onTap: onTap,
-        child: Container(
-          width: 38,
-          height: 38,
-          decoration: const BoxDecoration(
-            color: AppColors.white,
-            shape: BoxShape.circle,
-          ),
-          child: Icon(icon, size: 18, color: AppColors.primaryBlue),
-        ),
-      );
+    customBorder: const CircleBorder(),
+    onTap: onTap,
+    child: Container(
+      width: 38,
+      height: 38,
+      decoration: const BoxDecoration(
+        color: AppColors.white,
+        shape: BoxShape.circle,
+      ),
+      child: Icon(icon, size: 18, color: AppColors.primaryBlue),
+    ),
+  );
 }

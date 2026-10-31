@@ -80,10 +80,7 @@ public class TechnicianServiceManager {
         return jobRepository.findByTechnicianIdAndStatus(technicianId, STATUS_COMPLETED, pageable)
                 .map(job -> new CompletedWorkResponse(
                         job.getId(), job.getCategory(), job.getCompletedAt(),
-                        job.getCustomerUserId(), job.getCustomerName(),
-                        job.getDescription(),
-                        (job.getPhoto() != null && job.getPhoto().length > 0 ? "/api/bookings/" + job.getId() + "/photo" : job.getPhotoUrl()),
-                        job.getAddress())).getContent();
+                        job.getCustomerUserId(), job.getCustomerName())).getContent();
     }
 
     @Transactional(readOnly = true)

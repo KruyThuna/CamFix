@@ -293,8 +293,10 @@ class _BookingSheetState extends State<_BookingSheet> {
         debugPrint('Failed to upload booking photo: $e');
       }
     }
+    if (!mounted) return;
     final navigator = Navigator.of(context);
     navigator.pop(); // close the sheet
+    if (!mounted) return;
     final track = await showDialog<bool>(
       context: context,
       builder: (_) => _BookingDoneDialog(

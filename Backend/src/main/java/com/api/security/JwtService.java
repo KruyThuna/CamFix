@@ -22,7 +22,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
  * the classpath, so no extra library is required.
  */
 @Service
-public class JwtService {
+public class JwtService { 
 
     private static final String HEADER_JSON = "{\"alg\":\"HS256\",\"typ\":\"JWT\"}";
     private static final Base64.Encoder B64 = Base64.getUrlEncoder().withoutPadding();

@@ -17,6 +17,7 @@
   <base href="$FLUTTER_BASE_HREF">
 
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
   <meta name="description" content="A new Flutter project.">
 
@@ -46,6 +47,25 @@
         document.head.appendChild(s);
       }
     })();
+  </script>
+  <!-- Suppress transient browser resize / DevTools inspect ViewInsets assertion -->
+  <script>
+    window.addEventListener('unhandledrejection', function (e) {
+      if (e && e.reason && (
+        String(e.reason).indexOf('ViewInsets cannot be negative') !== -1 ||
+        String(e.reason).indexOf('_viewInsets.isNonNegative') !== -1
+      )) {
+        e.preventDefault();
+      }
+    });
+    window.addEventListener('error', function (e) {
+      if (e && e.message && (
+        e.message.indexOf('ViewInsets cannot be negative') !== -1 ||
+        e.message.indexOf('_viewInsets.isNonNegative') !== -1
+      )) {
+        e.preventDefault();
+      }
+    });
   </script>
 </head>
 <body>

@@ -47,12 +47,12 @@ class _DirectionsMapScreenState extends State<DirectionsMapScreen> {
 
     _provider =
         ModalRoute.of(context)?.settings.arguments as ServiceProvider? ??
-            const ServiceProvider(
-              name: 'Technician',
-              category: 'Service',
-              location: 'Phnom Penh',
-              rating: 4.5,
-            );
+        const ServiceProvider(
+          name: 'Technician',
+          category: 'Service',
+          location: 'Phnom Penh',
+          rating: 4.5,
+        );
     _origin = LiveTechnician.userPos;
     _dest = LatLng(_provider.latitude, _provider.longitude);
     _mapOptions = MapOptions(
@@ -74,8 +74,9 @@ class _DirectionsMapScreenState extends State<DirectionsMapScreen> {
     final osrm = await _fetchRoute();
     if (!mounted) return;
     if (osrm == null) {
-      final straight =
-          const Distance().as(LengthUnit.Kilometer, _origin, _dest).toDouble();
+      final straight = const Distance()
+          .as(LengthUnit.Kilometer, _origin, _dest)
+          .toDouble();
       setState(() {
         _route = [_origin, _dest];
         _km = straight;
@@ -92,18 +93,24 @@ class _DirectionsMapScreenState extends State<DirectionsMapScreen> {
       _loading = false;
     });
     try {
-      _map.fitCamera(CameraFit.bounds(
-        bounds: LatLngBounds.fromPoints(_route),
-        padding: const EdgeInsets.fromLTRB(48, 120, 48, 240),
-      ));
-    } catch (_) {/* map not ready yet — initialCameraFit already covers it */}
+      _map.fitCamera(
+        CameraFit.bounds(
+          bounds: LatLngBounds.fromPoints(_route),
+          padding: const EdgeInsets.fromLTRB(48, 120, 48, 240),
+        ),
+      );
+    } catch (_) {
+      /* map not ready yet — initialCameraFit already covers it */
+    }
   }
 
   /// (points, km, minutes) for the best OSRM route, or null on any failure.
   Future<(List<LatLng>, double, int)?> _fetchRoute() async {
     try {
-      final r =
-          await OsrmApi.instance.route(origin: _origin, destination: _dest);
+      final r = await OsrmApi.instance.route(
+        origin: _origin,
+        destination: _dest,
+      );
       if (r == null || r.routes.isEmpty) return null;
       final best = r.routes.first;
       if (best.points.length < 2) return null;
@@ -114,9 +121,11 @@ class _DirectionsMapScreenState extends State<DirectionsMapScreen> {
   }
 
   Future<void> _openInMapsApp() async {
-    final uri = Uri.parse('https://www.google.com/maps/dir/?api=1'
-        '&destination=${_dest.latitude},${_dest.longitude}'
-        '&travelmode=driving');
+    final uri = Uri.parse(
+      'https://www.google.com/maps/dir/?api=1'
+      '&destination=${_dest.latitude},${_dest.longitude}'
+      '&travelmode=driving',
+    );
     try {
       final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
       if (!ok && mounted) _snack(AppStrings.t('couldNotOpenMaps'));
@@ -128,11 +137,13 @@ class _DirectionsMapScreenState extends State<DirectionsMapScreen> {
   void _snack(String message) {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(
-        content: Text(message),
-        behavior: SnackBarBehavior.floating,
-        duration: const Duration(seconds: 2),
-      ));
+      ..showSnackBar(
+        SnackBar(
+          content: Text(message),
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 2),
+        ),
+      );
   }
 
   @override
@@ -205,28 +216,35 @@ class _DirectionsMapScreenState extends State<DirectionsMapScreen> {
                 padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
                 child: Row(
                   children: [
-                    _circle(p, Icons.arrow_back,
-                        () => Navigator.of(context).maybePop()),
+                    _circle(
+                      p,
+                      Icons.arrow_back,
+                      () => Navigator.of(context).maybePop(),
+                    ),
                     const SizedBox(width: 10),
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 14, vertical: 9),
+                        horizontal: 14,
+                        vertical: 9,
+                      ),
                       decoration: BoxDecoration(
                         color: p.surface,
                         borderRadius: BorderRadius.circular(12),
                         boxShadow: [
                           BoxShadow(
-                              color: p.shadow,
-                              blurRadius: 8,
-                              offset: const Offset(0, 2)),
+                            color: p.shadow,
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
                         ],
                       ),
                       child: Text(
                         AppStrings.t('directionsTitle'),
                         style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w700,
-                            color: p.textPrimary),
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: p.textPrimary,
+                        ),
                       ),
                     ),
                     if (_loading) ...[
@@ -248,10 +266,7 @@ class _DirectionsMapScreenState extends State<DirectionsMapScreen> {
             left: 0,
             right: 0,
             bottom: 0,
-            child: SafeArea(
-              top: false,
-              child: _infoCard(p),
-            ),
+            child: SafeArea(top: false, child: _infoCard(p)),
           ),
         ],
       ),
@@ -267,7 +282,10 @@ class _DirectionsMapScreenState extends State<DirectionsMapScreen> {
         borderRadius: BorderRadius.circular(18),
         boxShadow: [
           BoxShadow(
-              color: p.shadow, blurRadius: 16, offset: const Offset(0, 6)),
+            color: p.shadow,
+            blurRadius: 16,
+            offset: const Offset(0, 6),
+          ),
         ],
       ),
       child: Column(
@@ -283,21 +301,27 @@ class _DirectionsMapScreenState extends State<DirectionsMapScreen> {
                   color: _amber.withValues(alpha: 0.16),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.storefront_rounded,
-                    color: _amber, size: 20),
+                child: const Icon(
+                  Icons.storefront_rounded,
+                  color: _amber,
+                  size: 20,
+                ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(_provider.name,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w700,
-                            color: p.textPrimary)),
+                    Text(
+                      _provider.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: p.textPrimary,
+                      ),
+                    ),
                     Text(
                       '${categoryLabel(_provider.category)} · ${_provider.location}',
                       maxLines: 1,
@@ -312,18 +336,22 @@ class _DirectionsMapScreenState extends State<DirectionsMapScreen> {
           const SizedBox(height: 12),
           Row(
             children: [
-              Icon(Icons.directions_car_filled_rounded,
-                  size: 16, color: p.textSecondary),
+              Icon(
+                Icons.directions_car_filled_rounded,
+                size: 16,
+                color: p.textSecondary,
+              ),
               const SizedBox(width: 6),
               Text(
                 _loading
                     ? '…'
                     : '${_km.toStringAsFixed(1)} ${AppStrings.t('kmShort')}'
-                        '   ·   ~$_min ${AppStrings.t('minShort')}',
+                          '   ·   ~$_min ${AppStrings.t('minShort')}',
                 style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: p.textPrimary),
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: p.textPrimary,
+                ),
               ),
             ],
           ),
@@ -347,7 +375,8 @@ class _DirectionsMapScreenState extends State<DirectionsMapScreen> {
                 elevation: 0,
                 minimumSize: const Size.fromHeight(46),
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(24)),
+                  borderRadius: BorderRadius.circular(24),
+                ),
               ),
             ),
           ),
@@ -368,8 +397,11 @@ class _DirectionsMapScreenState extends State<DirectionsMapScreen> {
             shape: BoxShape.circle,
             border: Border.all(color: AppColors.white, width: 2.5),
           ),
-          child: const Icon(Icons.storefront_rounded,
-              color: AppColors.white, size: 18),
+          child: const Icon(
+            Icons.storefront_rounded,
+            color: AppColors.white,
+            size: 18,
+          ),
         ),
         Transform.translate(
           offset: const Offset(0, -5),
@@ -394,7 +426,10 @@ class _DirectionsMapScreenState extends State<DirectionsMapScreen> {
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
-                color: p.shadow, blurRadius: 8, offset: const Offset(0, 2)),
+              color: p.shadow,
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
           ],
         ),
         child: Icon(icon, color: p.textPrimary, size: 20),

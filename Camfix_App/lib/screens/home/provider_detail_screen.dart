@@ -1088,9 +1088,6 @@ class _ProviderDetailScreenState extends State<ProviderDetailScreen> {
     );
   }
 
-  void _showCustomerProfile(CompletedWork work, [ServiceProvider? p]) =>
-      _showWorkDetails(work, p);
-
   void _showWorkDetails(CompletedWork work, [ServiceProvider? p]) {
     final hasPhoto = work.photoUrl != null && work.photoUrl!.isNotEmpty;
     showModalBottomSheet<void>(

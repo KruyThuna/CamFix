@@ -115,14 +115,18 @@ class _TechniciansLiveScreenState extends State<TechniciansLiveScreen> {
                                     : AppColors.white,
                                 shape: BoxShape.circle,
                                 border: Border.all(
-                                    color: AppColors.primaryBlue, width: 2),
+                                  color: AppColors.primaryBlue,
+                                  width: 2,
+                                ),
                               ),
                               padding: const EdgeInsets.all(6),
-                              child: Icon(Icons.person,
-                                  size: 18,
-                                  color: _selected == t
-                                      ? AppColors.white
-                                      : AppColors.primaryBlue),
+                              child: Icon(
+                                Icons.person,
+                                size: 18,
+                                color: _selected == t
+                                    ? AppColors.white
+                                    : AppColors.primaryBlue,
+                              ),
                             ),
                             Positioned(
                               right: 2,
@@ -136,7 +140,9 @@ class _TechniciansLiveScreenState extends State<TechniciansLiveScreen> {
                                       : AppColors.hintGrey,
                                   shape: BoxShape.circle,
                                   border: Border.all(
-                                      color: AppColors.white, width: 2),
+                                    color: AppColors.white,
+                                    width: 2,
+                                  ),
                                 ),
                               ),
                             ),
@@ -160,36 +166,49 @@ class _TechniciansLiveScreenState extends State<TechniciansLiveScreen> {
                 padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
                 child: Row(
                   children: [
-                    _circle(p, Icons.arrow_back,
-                        () => Navigator.of(context).maybePop()),
+                    _circle(
+                      p,
+                      Icons.arrow_back,
+                      () => Navigator.of(context).maybePop(),
+                    ),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 14, vertical: 10),
+                          horizontal: 14,
+                          vertical: 10,
+                        ),
                         decoration: BoxDecoration(
                           color: p.surface,
                           borderRadius: BorderRadius.circular(12),
                           boxShadow: [
                             BoxShadow(
-                                color: p.shadow,
-                                blurRadius: 8,
-                                offset: const Offset(0, 2)),
+                              color: p.shadow,
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
                           ],
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(AppStrings.t('nearbyTechnicians'),
-                                style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w700,
-                                    color: p.textPrimary)),
-                            Text('${AppStrings.t('nearYou')} · $_userName',
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                    fontSize: 12, color: p.textSecondary)),
+                            Text(
+                              AppStrings.t('nearbyTechnicians'),
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                                color: p.textPrimary,
+                              ),
+                            ),
+                            Text(
+                              '${AppStrings.t('nearYou')} · $_userName',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: p.textSecondary,
+                              ),
+                            ),
                           ],
                         ),
                       ),
@@ -207,8 +226,9 @@ class _TechniciansLiveScreenState extends State<TechniciansLiveScreen> {
             bottom: 0,
             child: SafeArea(
               top: false,
-              child:
-                  _selected != null ? _selectedCard(p, _selected!) : _list(p),
+              child: _selected != null
+                  ? _selectedCard(p, _selected!)
+                  : _list(p),
             ),
           ),
         ],
@@ -225,7 +245,10 @@ class _TechniciansLiveScreenState extends State<TechniciansLiveScreen> {
         borderRadius: BorderRadius.circular(18),
         boxShadow: [
           BoxShadow(
-              color: p.shadow, blurRadius: 16, offset: const Offset(0, 6)),
+            color: p.shadow,
+            blurRadius: 16,
+            offset: const Offset(0, 6),
+          ),
         ],
       ),
       child: Column(
@@ -243,7 +266,8 @@ class _TechniciansLiveScreenState extends State<TechniciansLiveScreen> {
                 elevation: 0,
                 minimumSize: const Size.fromHeight(44),
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(24)),
+                  borderRadius: BorderRadius.circular(24),
+                ),
               ),
               child: Text(AppStrings.t('viewProfile')),
             ),
@@ -263,7 +287,10 @@ class _TechniciansLiveScreenState extends State<TechniciansLiveScreen> {
         borderRadius: BorderRadius.circular(18),
         boxShadow: [
           BoxShadow(
-              color: p.shadow, blurRadius: 16, offset: const Offset(0, 6)),
+            color: p.shadow,
+            blurRadius: 16,
+            offset: const Offset(0, 6),
+          ),
         ],
       ),
       child: ListView.separated(
@@ -295,13 +322,18 @@ class _TechniciansLiveScreenState extends State<TechniciansLiveScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(t.name,
-                  style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: p.textPrimary)),
-              Text(categoryLabel(t.category),
-                  style: TextStyle(fontSize: 12, color: p.textSecondary)),
+              Text(
+                t.name,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: p.textPrimary,
+                ),
+              ),
+              Text(
+                categoryLabel(t.category),
+                style: TextStyle(fontSize: 12, color: p.textSecondary),
+              ),
             ],
           ),
         ),
@@ -309,10 +341,11 @@ class _TechniciansLiveScreenState extends State<TechniciansLiveScreen> {
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             Text(
-                '${AppSettings.instance.convertKm(t.distanceKm).toStringAsFixed(1)} '
-                '${AppStrings.t(AppSettings.instance.distanceUnitKey)} '
-                '${AppStrings.t('nearby')}',
-                style: TextStyle(fontSize: 11.5, color: p.textSecondary)),
+              '${AppSettings.instance.convertKm(t.distanceKm).toStringAsFixed(1)} '
+              '${AppStrings.t(AppSettings.instance.distanceUnitKey)} '
+              '${AppStrings.t('nearby')}',
+              style: TextStyle(fontSize: 11.5, color: p.textSecondary),
+            ),
             const SizedBox(height: 2),
             Row(
               children: [
@@ -327,8 +360,9 @@ class _TechniciansLiveScreenState extends State<TechniciansLiveScreen> {
                   style: TextStyle(
                     fontSize: 11.5,
                     fontWeight: FontWeight.w600,
-                    color:
-                        t.available ? AppColors.primaryBlue : p.textSecondary,
+                    color: t.available
+                        ? AppColors.primaryBlue
+                        : p.textSecondary,
                   ),
                 ),
               ],
@@ -351,7 +385,10 @@ class _TechniciansLiveScreenState extends State<TechniciansLiveScreen> {
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
-                color: p.shadow, blurRadius: 8, offset: const Offset(0, 2)),
+              color: p.shadow,
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
           ],
         ),
         child: Icon(icon, color: p.textPrimary, size: 20),

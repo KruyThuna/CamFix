@@ -49,11 +49,14 @@ class _TrackingSheet extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  Text(AppStrings.t('trackingDetails'),
-                      style: TextStyle(
-                          fontSize: 17,
-                          fontWeight: FontWeight.w700,
-                          color: p.textPrimary)),
+                  Text(
+                    AppStrings.t('trackingDetails'),
+                    style: TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w700,
+                      color: p.textPrimary,
+                    ),
+                  ),
                   const Spacer(),
                   InkWell(
                     customBorder: const CircleBorder(),
@@ -65,8 +68,11 @@ class _TrackingSheet extends StatelessWidget {
                         color: p.surfaceAlt,
                         shape: BoxShape.circle,
                       ),
-                      child:
-                          Icon(Icons.close, size: 17, color: p.textSecondary),
+                      child: Icon(
+                        Icons.close,
+                        size: 17,
+                        color: p.textSecondary,
+                      ),
                     ),
                   ),
                 ],
@@ -83,19 +89,25 @@ class _TrackingSheet extends StatelessWidget {
                       color: AppColors.darkButton,
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: const Icon(Icons.ac_unit_rounded,
-                        color: AppColors.white, size: 20),
+                    child: const Icon(
+                      Icons.ac_unit_rounded,
+                      color: AppColors.white,
+                      size: 20,
+                    ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(AppStrings.t(info.serviceKey),
-                            style: TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w700,
-                                color: p.textPrimary)),
+                        Text(
+                          AppStrings.t(info.serviceKey),
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            color: p.textPrimary,
+                          ),
+                        ),
                         const SizedBox(height: 3),
                         Row(
                           children: [
@@ -106,7 +118,9 @@ class _TrackingSheet extends StatelessWidget {
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: TextStyle(
-                                    fontSize: 12, color: p.textSecondary),
+                                  fontSize: 12,
+                                  color: p.textSecondary,
+                                ),
                               ),
                             ),
                             const SizedBox(width: 6),
@@ -114,7 +128,8 @@ class _TrackingSheet extends StatelessWidget {
                               customBorder: const CircleBorder(),
                               onTap: () {
                                 Clipboard.setData(
-                                    ClipboardData(text: info.trackingId));
+                                  ClipboardData(text: info.trackingId),
+                                );
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
                                     behavior: SnackBarBehavior.floating,
@@ -123,8 +138,11 @@ class _TrackingSheet extends StatelessWidget {
                                   ),
                                 );
                               },
-                              child: const Icon(Icons.content_copy,
-                                  size: 14, color: AppColors.primaryBlue),
+                              child: const Icon(
+                                Icons.content_copy,
+                                size: 14,
+                                color: AppColors.primaryBlue,
+                              ),
                             ),
                           ],
                         ),
@@ -149,33 +167,49 @@ class _TrackingSheet extends StatelessWidget {
                       children: [
                         Expanded(
                           child: _field(
-                              p, AppStrings.t('fromLabel'), info.originName),
-                        ),
-                        Expanded(
-                          child: _field(p, AppStrings.t('destination'),
-                              info.destinationName),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 14),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _field(p, AppStrings.t('technicianLabel'),
-                              info.technicianName),
+                            p,
+                            AppStrings.t('fromLabel'),
+                            info.originName,
+                          ),
                         ),
                         Expanded(
                           child: _field(
-                              p, AppStrings.t('rateLabel'), '${info.rating}/5'),
+                            p,
+                            AppStrings.t('destination'),
+                            info.destinationName,
+                          ),
                         ),
                       ],
                     ),
                     const SizedBox(height: 14),
                     Row(
                       children: [
-                        Text(AppStrings.t('statusLabel'),
-                            style: TextStyle(
-                                fontSize: 12, color: p.textSecondary)),
+                        Expanded(
+                          child: _field(
+                            p,
+                            AppStrings.t('technicianLabel'),
+                            info.technicianName,
+                          ),
+                        ),
+                        Expanded(
+                          child: _field(
+                            p,
+                            AppStrings.t('rateLabel'),
+                            '${info.rating}/5',
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 14),
+                    Row(
+                      children: [
+                        Text(
+                          AppStrings.t('statusLabel'),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: p.textSecondary,
+                          ),
+                        ),
                         const Spacer(),
                         Container(
                           padding: const EdgeInsets.fromLTRB(10, 5, 12, 5),
@@ -190,15 +224,19 @@ class _TrackingSheet extends StatelessWidget {
                                 width: 7,
                                 height: 7,
                                 decoration: const BoxDecoration(
-                                    color: _statusAccent,
-                                    shape: BoxShape.circle),
+                                  color: _statusAccent,
+                                  shape: BoxShape.circle,
+                                ),
                               ),
                               const SizedBox(width: 6),
-                              Text(AppStrings.t('inTransit'),
-                                  style: const TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w700,
-                                      color: _statusAccent)),
+                              Text(
+                                AppStrings.t('inTransit'),
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                  color: _statusAccent,
+                                ),
+                              ),
                             ],
                           ),
                         ),
@@ -213,8 +251,9 @@ class _TrackingSheet extends StatelessWidget {
                 _stepRow(
                   p,
                   title: AppStrings.t(_steps[i].$1),
-                  subtitle:
-                      _steps[i].$2 == null ? null : AppStrings.t(_steps[i].$2!),
+                  subtitle: _steps[i].$2 == null
+                      ? null
+                      : AppStrings.t(_steps[i].$2!),
                   icon: _steps[i].$3,
                   reached: i <= info.currentStep,
                   connectorDone: i < info.currentStep,
@@ -244,13 +283,16 @@ class _TrackingSheet extends StatelessWidget {
       children: [
         Text(label, style: TextStyle(fontSize: 12, color: p.textSecondary)),
         const SizedBox(height: 3),
-        Text(value,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: p.textPrimary)),
+        Text(
+          value,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: p.textPrimary,
+          ),
+        ),
       ],
     );
   }
@@ -302,15 +344,20 @@ class _TrackingSheet extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title,
-                    style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                        color: reached ? p.textPrimary : p.textSecondary)),
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: reached ? p.textPrimary : p.textSecondary,
+                  ),
+                ),
                 if (subtitle != null) ...[
                   const SizedBox(height: 2),
-                  Text(subtitle,
-                      style: TextStyle(fontSize: 12, color: p.textSecondary)),
+                  Text(
+                    subtitle,
+                    style: TextStyle(fontSize: 12, color: p.textSecondary),
+                  ),
                 ],
               ],
             ),

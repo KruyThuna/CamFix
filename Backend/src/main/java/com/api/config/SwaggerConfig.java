@@ -10,7 +10,6 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Contact;
 import io.swagger.v3.oas.models.info.Info;
@@ -59,7 +58,7 @@ public class SwaggerConfig {
                                                 .description("CamFix Platform REST API and CRUD operations")
                                                 .contact(new Contact()
                                                                 .name("CamFix Team")
-                                                                .url("https://camonline.store")))
+                                                                .url("https://admin.camonline.store")))
                                 .servers(List.of(
                                                 new Server().url("https://api.camonline.store").description("Production Server (Cloudflare)"),
                                                 new Server().url("http://localhost:8081").description("Local Development Server")))
@@ -80,7 +79,6 @@ public class SwaggerConfig {
                                                 new Tag().name("Chat & Call").description("In-app messaging and call signaling"),
                                                 new Tag().name("App Version").description("Mobile app versioning and APK download")));
         }
-
         /**
          * Dev CORS: allow the Flutter web build / Vite to call the API from
          * another localhost port. Native mobile builds don't use CORS.
@@ -95,7 +93,9 @@ public class SwaggerConfig {
                                 "https://*.camonline.store",
                                 "http://camonline.store",
                                 "http://*.camonline.store",
-                                "https://*.github.io"));
+                                "https://*.github.io",
+                                "https://*.workers.dev",
+                                "https://*.pages.dev"));
                 cfg.setAllowedMethods(List.of(
                                 "GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
                 cfg.setAllowedHeaders(List.of("*"));
