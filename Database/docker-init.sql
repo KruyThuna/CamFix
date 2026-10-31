@@ -318,3 +318,19 @@ CREATE TABLE IF NOT EXISTS chat_message (
     CONSTRAINT fk_chat_message_sender
         FOREIGN KEY (sender_user_id) REFERENCES users (Userid)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+
+-- Client App promotional hero banners managed by Admin
+CREATE TABLE IF NOT EXISTS app_banner (
+    id                 BIGINT AUTO_INCREMENT PRIMARY KEY,
+    title              VARCHAR(150) NOT NULL,
+    subtitle           VARCHAR(255) NULL,
+    category           VARCHAR(100) NULL,
+    action_url         VARCHAR(255) NULL,
+    image              LONGBLOB NULL,
+    image_content_type VARCHAR(100) NULL,
+    display_order      INT NOT NULL DEFAULT 0,
+    active             BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at         DATETIME NULL,
+    updated_at         DATETIME NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
