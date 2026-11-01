@@ -107,7 +107,6 @@ export async function uploadTechnicianIdCard(id: number, file: File): Promise<Te
   const { data: res } = await api.post<Technician>(
     '/api/admin/technicians/' + id + '/id-card',
     data,
-    { headers: { 'Content-Type': 'multipart/form-data' } },
   );
   return res;
 }
@@ -123,7 +122,6 @@ export async function uploadTechnicianFacePhoto(id: number, file: File): Promise
   const { data: res } = await api.post<Technician>(
     '/api/admin/technicians/' + id + '/face-photo',
     data,
-    { headers: { 'Content-Type': 'multipart/form-data' } },
   );
   return res;
 }

@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
@@ -176,7 +177,7 @@ public class TechnicianSelfController {
                 .body(image);
     }
 
-    @PostMapping(value = "/me/identity", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @RequestMapping(value = "/me/identity", method = { RequestMethod.POST, RequestMethod.PUT }, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public TechnicianProfileResponse updateIdentity(
             @RequestHeader(value = AUTH, required = false) String auth,
             @RequestParam(value = "idCard", required = false) MultipartFile idCardFile,
@@ -184,7 +185,7 @@ public class TechnicianSelfController {
         return service.updateIdentity(auth, idCardFile, facePhotoFile);
     }
 
-    @PostMapping(value = "/me/identity", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @RequestMapping(value = "/me/identity", method = { RequestMethod.POST, RequestMethod.PUT })
     public TechnicianProfileResponse updateIdentityJson(
             @RequestHeader(value = AUTH, required = false) String auth,
             @RequestBody Map<String, String> body) {

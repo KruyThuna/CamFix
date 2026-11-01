@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -107,7 +108,7 @@ public class AdminController {
                 .body(image);
     }
 
-    @PostMapping(value = "/technicians/{id}/id-card", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @RequestMapping(value = "/technicians/{id}/id-card", method = { RequestMethod.POST, RequestMethod.PUT })
     public AdminTechnicianResponse uploadIdCard(
             @RequestHeader(value = AUTH, required = false) String auth,
             @PathVariable Long id,
@@ -124,7 +125,7 @@ public class AdminController {
         return adminService.deleteTechnicianIdCard(id);
     }
 
-    @PostMapping(value = "/technicians/{id}/face-photo", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @RequestMapping(value = "/technicians/{id}/face-photo", method = { RequestMethod.POST, RequestMethod.PUT })
     public AdminTechnicianResponse uploadFacePhoto(
             @RequestHeader(value = AUTH, required = false) String auth,
             @PathVariable Long id,
