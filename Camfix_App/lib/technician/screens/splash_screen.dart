@@ -12,7 +12,23 @@ class SplashScreen extends StatefulWidget {
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> {
+class _SplashScreenState extends State<SplashScreen>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _pulseController = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1400),
+  )..repeat(reverse: true);
+
+  late final Animation<double> _pulseScale = Tween<double>(
+    begin: 1.0,
+    end: 1.08,
+  ).animate(
+    CurvedAnimation(
+      parent: _pulseController,
+      curve: Curves.easeInOut,
+    ),
+  );
+
   @override
   void initState() {
     super.initState();
@@ -20,7 +36,7 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _boot() async {
-    await Future<void>.delayed(const Duration(milliseconds: 1500));
+    await Future<void>.delayed(const Duration(milliseconds: 2400));
     if (!await TokenStore.instance.hasToken()) {
       _go('/language');
       return;
@@ -42,6 +58,12 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   @override
+  void dispose() {
+    _pulseController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
@@ -50,45 +72,52 @@ class _SplashScreenState extends State<SplashScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              width: 108,
-              height: 108,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.white,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.18),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
+            AnimatedBuilder(
+              animation: _pulseController,
+              builder: (context, child) => Transform.scale(
+                scale: _pulseScale.value,
+                child: Container(
+                  width: 110,
+                  height: 110,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.22),
+                        blurRadius: 18,
+                        spreadRadius: 2,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-              padding: const EdgeInsets.all(8),
-              child: ClipOval(
-                child: Image.asset(
-                  'assets/images/camfix_mascot_logo.webp',
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => Image.asset(
-                    'assets/images/logo/camfix_mascot_logo.webp',
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => const Icon(
-                      Icons.handyman_rounded,
-                      size: 56,
-                      color: AppColors.primaryBlue,
+                  padding: const EdgeInsets.all(8),
+                  child: ClipOval(
+                    child: Image.asset(
+                      'assets/images/camfix_mascot_logo.webp',
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => Image.asset(
+                        'assets/images/logo/camfix_mascot_logo.webp',
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => const Icon(
+                          Icons.handyman_rounded,
+                          size: 56,
+                          color: AppColors.primaryBlue,
+                        ),
+                      ),
                     ),
                   ),
                 ),
               ),
             ),
-            const SizedBox(height: 18),
+            const SizedBox(height: 24),
             const Text(
               'CAM FIX',
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 28,
                 fontWeight: FontWeight.w800,
-                letterSpacing: 1.5,
+                letterSpacing: 2,
               ),
             ),
             const SizedBox(height: 6),
@@ -96,12 +125,12 @@ class _SplashScreenState extends State<SplashScreen> {
               AppStrings.t('splashSubtitle'),
               style: const TextStyle(color: Colors.white70, fontSize: 15),
             ),
-            const SizedBox(height: 28),
+            const SizedBox(height: 32),
             const SizedBox(
               height: 22,
               width: 22,
               child: CircularProgressIndicator(
-                strokeWidth: 2,
+                strokeWidth: 2.2,
                 color: Colors.white,
               ),
             ),

@@ -14,14 +14,36 @@ class SplashScreen extends StatefulWidget {
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> {
+class _SplashScreenState extends State<SplashScreen>
+    with SingleTickerProviderStateMixin {
   final _net = ConnectivityService.instance;
   bool _blocked = false;
+
+  late final AnimationController _textController = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1000),
+  );
+
+  late final Animation<Offset> _textSlide = Tween<Offset>(
+    begin: const Offset(0, 0.4),
+    end: Offset.zero,
+  ).animate(
+    CurvedAnimation(
+      parent: _textController,
+      curve: const Interval(0.2, 1.0, curve: Curves.easeOutCubic),
+    ),
+  );
+
+  late final Animation<double> _textFade = CurvedAnimation(
+    parent: _textController,
+    curve: const Interval(0.2, 1.0, curve: Curves.easeIn),
+  );
 
   @override
   void initState() {
     super.initState();
     _net.addListener(_onNet);
+    _textController.forward();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) unawaited(_boot());
     });
@@ -31,7 +53,7 @@ class _SplashScreenState extends State<SplashScreen> {
     // Check Wi-Fi / mobile / no-connection *and* real internet reachability
     // before leaving the splash.
     await _net.start();
-    await Future<void>.delayed(const Duration(seconds: 2));
+    await Future<void>.delayed(const Duration(milliseconds: 2600));
     if (!mounted || !_isCurrent) return; // deep-linked past the splash
     if (_net.isOffline) {
       setState(() => _blocked = true); // wait for internet or the user
@@ -55,19 +77,15 @@ class _SplashScreenState extends State<SplashScreen> {
     if (_net.isOnline) _go();
   }
 
-  /// The splash may sit *under* a deep-linked route in the initial stack
-  /// (e.g. opening the app straight on `/live-tracking`). Never navigate then.
   bool get _isCurrent => ModalRoute.of(context)?.isCurrent ?? true;
 
   Future<void> _go() async {
     _net.removeListener(_onNet);
     if (!mounted || !_isCurrent) return;
-    // A JWT from a previous session means the user is still signed in — go
-    // straight to the app instead of the language / login flow.
     final signedIn = await TokenStore.instance.hasToken();
     if (!mounted || !_isCurrent) return;
     if (signedIn) {
-      unawaited(CurrentUser.instance.refresh()); // warm the profile
+      unawaited(CurrentUser.instance.refresh());
       Navigator.of(context).pushReplacementNamed('/dashboard');
     } else {
       Navigator.of(context).pushReplacementNamed('/language');
@@ -77,6 +95,7 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void dispose() {
     _net.removeListener(_onNet);
+    _textController.dispose();
     super.dispose();
   }
 
@@ -89,28 +108,40 @@ class _SplashScreenState extends State<SplashScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             const AnimatedCamFixLogo(),
-            const SizedBox(height: 14),
-            const Text(
-              'CAM FIX',
-              style: TextStyle(
-                color: AppColors.primaryBlue,
-                fontSize: 26,
-                fontWeight: FontWeight.w800,
-                letterSpacing: 2,
-              ),
-            ),
             const SizedBox(height: 20),
-            if (!_blocked)
-              const SizedBox(
-                width: 22,
-                height: 22,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2.2,
-                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.primaryBlue),
+            FadeTransition(
+              opacity: _textFade,
+              child: SlideTransition(
+                position: _textSlide,
+                child: Column(
+                  children: [
+                    const Text(
+                      'CAM FIX',
+                      style: TextStyle(
+                        color: AppColors.primaryBlue,
+                        fontSize: 28,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 3,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      'On-Demand Home Services',
+                      style: TextStyle(
+                        color: Colors.grey.shade600,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ],
                 ),
               ),
+            ),
+            const SizedBox(height: 36),
+            if (!_blocked) const _AnimatedPulseDots(),
             if (_blocked) ...[
-              const SizedBox(height: 28),
+              const SizedBox(height: 12),
               const Icon(Icons.wifi_off_rounded,
                   color: AppColors.primaryBlue, size: 26),
               const SizedBox(height: 10),
@@ -162,6 +193,54 @@ class _SplashScreenState extends State<SplashScreen> {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// A sleek 3-dot pulsing loading wave indicator.
+class _AnimatedPulseDots extends StatefulWidget {
+  const _AnimatedPulseDots();
+
+  @override
+  State<_AnimatedPulseDots> createState() => _AnimatedPulseDotsState();
+}
+
+class _AnimatedPulseDotsState extends State<_AnimatedPulseDots>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _anim = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1000),
+  )..repeat();
+
+  @override
+  void dispose() {
+    _anim.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _anim,
+      builder: (context, _) {
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          children: List.generate(3, (i) {
+            final t = (_anim.value - i * 0.22) % 1.0;
+            final scale = 0.6 + 0.4 * (t < 0.5 ? t * 2 : (1.0 - t) * 2);
+            final opacity = 0.4 + 0.6 * (t < 0.5 ? t * 2 : (1.0 - t) * 2);
+            return Container(
+              margin: const EdgeInsets.symmetric(horizontal: 4),
+              width: 8 * scale,
+              height: 8 * scale,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: AppColors.primaryBlue.withValues(alpha: opacity),
+              ),
+            );
+          }),
+        );
+      },
     );
   }
 }
