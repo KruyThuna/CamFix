@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import '../theme/app_images.dart';
 
-/// Clean standalone CamFix mascot logo without any circular border or disc,
-/// exactly matching the user request.
+/// Clean standalone CamFix mascot logo without any border or circular disc outline,
+/// seamlessly blending onto pure white background.
 class AnimatedCamFixLogo extends StatefulWidget {
   const AnimatedCamFixLogo({super.key, this.size = 180.0});
 
@@ -50,12 +50,12 @@ class _AnimatedCamFixLogoState extends State<AnimatedCamFixLogo>
           child: child,
         ),
         child: Image.asset(
-          AppImages.mascotLogo,
+          AppImages.splashBadge,
           width: widget.size,
           height: widget.size,
           fit: BoxFit.contain,
           errorBuilder: (context, error, stackTrace) => Image.asset(
-            'assets/images/camfix_mascot_logo.webp',
+            'assets/images/camfix_splash_badge.png',
             width: widget.size,
             height: widget.size,
             fit: BoxFit.contain,
