@@ -25,7 +25,7 @@ class _AnimatedCamFixLogoState extends State<AnimatedCamFixLogo>
 
   late final Animation<double> _entranceScale = CurvedAnimation(
     parent: _entranceController,
-    curve: Curves.elasticOut,
+    curve: Curves.easeOutBack,
   );
 
   late final Animation<double> _entranceOpacity = CurvedAnimation(
@@ -77,40 +77,38 @@ class _AnimatedCamFixLogoState extends State<AnimatedCamFixLogo>
               child: Container(
                 width: size,
                 height: size,
-                padding: const EdgeInsets.all(5),
+                padding: const EdgeInsets.all(4),
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: Colors.white,
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFF2563EB).withValues(alpha: 0.24),
+                      color: const Color(0xFF2563EB).withValues(alpha: 0.22),
                       blurRadius: _glowAnimation.value,
                       spreadRadius: 3,
                       offset: const Offset(0, 6),
                     ),
                   ],
                 ),
-                child: ClipOval(
-                  child: Image.asset(
-                    'assets/images/camfix_mascot_logo.webp',
+                child: Image.asset(
+                  'assets/images/camfix_mascot_logo.webp',
+                  fit: BoxFit.contain,
+                  excludeFromSemantics: true,
+                  errorBuilder: (context, error, stackTrace) => Image.asset(
+                    'assets/images/logo/camfix_mascot_logo.webp',
                     fit: BoxFit.contain,
                     excludeFromSemantics: true,
-                    errorBuilder: (context, error, stackTrace) => Image.asset(
-                      'assets/images/logo/camfix_mascot_logo.webp',
-                      fit: BoxFit.contain,
-                      excludeFromSemantics: true,
-                      errorBuilder: (context, error, stackTrace) => Container(
-                        width: size,
-                        height: size,
-                        decoration: const BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Color(0xFF2563EB),
-                        ),
-                        child: const Icon(
-                          Icons.handyman_rounded,
-                          color: Colors.white,
-                          size: 64,
-                        ),
+                    errorBuilder: (context, error, stackTrace) => Container(
+                      width: size,
+                      height: size,
+                      decoration: const BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Color(0xFF2563EB),
+                      ),
+                      child: const Icon(
+                        Icons.handyman_rounded,
+                        color: Colors.white,
+                        size: 64,
                       ),
                     ),
                   ),
