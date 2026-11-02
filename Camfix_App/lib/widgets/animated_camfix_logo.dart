@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import '../theme/app_images.dart';
 
-/// The official CamFix circular mascot badge matching the user's design.
+/// Clean standalone CamFix mascot logo without any circular border or disc,
+/// exactly matching the user request.
 class AnimatedCamFixLogo extends StatefulWidget {
-  const AnimatedCamFixLogo({super.key, this.size = 150.0});
+  const AnimatedCamFixLogo({super.key, this.size = 180.0});
 
   final double size;
 
-  /// Pure white background matching the logo.
+  /// Pure white background.
   static const backgroundColor = Color(0xFFFFFFFF);
 
   @override
@@ -22,8 +23,8 @@ class _AnimatedCamFixLogoState extends State<AnimatedCamFixLogo>
   )..repeat(reverse: true);
 
   late final Animation<double> _scaleAnimation = Tween<double>(
-    begin: 0.96,
-    end: 1.04,
+    begin: 0.95,
+    end: 1.05,
   ).animate(
     CurvedAnimation(
       parent: _controller,
@@ -40,7 +41,7 @@ class _AnimatedCamFixLogoState extends State<AnimatedCamFixLogo>
   @override
   Widget build(BuildContext context) {
     return Semantics(
-      label: 'CamFix Mascot Badge',
+      label: 'CamFix Mascot Logo',
       image: true,
       child: AnimatedBuilder(
         animation: _controller,
@@ -49,25 +50,19 @@ class _AnimatedCamFixLogoState extends State<AnimatedCamFixLogo>
           child: child,
         ),
         child: Image.asset(
-          AppImages.splashBadge,
+          AppImages.mascotLogo,
           width: widget.size,
           height: widget.size,
           fit: BoxFit.contain,
           errorBuilder: (context, error, stackTrace) => Image.asset(
-            'assets/images/camfix_splash_badge.png',
+            'assets/images/camfix_mascot_logo.webp',
             width: widget.size,
             height: widget.size,
             fit: BoxFit.contain,
-            errorBuilder: (context, error, stackTrace) => Image.asset(
-              'assets/images/camfix_mascot_logo.webp',
-              width: widget.size,
-              height: widget.size,
-              fit: BoxFit.contain,
-              errorBuilder: (context, error, stackTrace) => const Icon(
-                Icons.handyman_rounded,
-                size: 64,
-                color: Color(0xFF2563EB),
-              ),
+            errorBuilder: (context, error, stackTrace) => const Icon(
+              Icons.handyman_rounded,
+              size: 72,
+              color: Color(0xFF2563EB),
             ),
           ),
         ),

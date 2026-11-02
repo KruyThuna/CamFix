@@ -77,14 +77,14 @@ class _SplashScreenState extends State<SplashScreen>
               builder: (context, child) => Transform.scale(
                 scale: _pulseScale.value,
                 child: Image.asset(
-                  'assets/images/camfix_splash_badge.png',
-                  width: 120,
-                  height: 120,
+                  'assets/images/logo/camfix_mascot_logo.webp',
+                  width: 140,
+                  height: 140,
                   fit: BoxFit.contain,
                   errorBuilder: (_, __, ___) => Image.asset(
-                    'assets/images/logo/camfix_mascot_logo.webp',
-                    width: 120,
-                    height: 120,
+                    'assets/images/camfix_mascot_logo.webp',
+                    width: 140,
+                    height: 140,
                     fit: BoxFit.contain,
                     errorBuilder: (_, __, ___) => const Icon(
                       Icons.handyman_rounded,
