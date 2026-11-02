@@ -7,8 +7,8 @@ class AnimatedCamFixLogo extends StatefulWidget {
 
   final double size;
 
-  /// Soft light background matching the Figma splash screen.
-  static const backgroundColor = Color(0xFFF1F3F6);
+  /// Pure white background matching the logo.
+  static const backgroundColor = Color(0xFFFFFFFF);
 
   @override
   State<AnimatedCamFixLogo> createState() => _AnimatedCamFixLogoState();
