@@ -39,7 +39,7 @@ class _AnimatedCamFixLogoState extends State<AnimatedCamFixLogo>
   @override
   Widget build(BuildContext context) {
     final reducedMotion = MediaQuery.disableAnimationsOf(context);
-    final size = (MediaQuery.sizeOf(context).width * .55).clamp(150.0, 240.0);
+    final size = (MediaQuery.sizeOf(context).width * .48).clamp(140.0, 190.0);
     return Semantics(
       label: 'CamFix',
       image: true,
@@ -62,29 +62,44 @@ class _AnimatedCamFixLogoState extends State<AnimatedCamFixLogo>
                 : 1 + .035 * Curves.easeInOut.transform(_controller.value),
             child: child,
           ),
-          child: Image.asset(
-            'assets/images/camfix_mascot_logo.webp',
+          child: Container(
             width: size,
             height: size,
-            fit: BoxFit.contain,
-            excludeFromSemantics: true,
-            errorBuilder: (context, error, stackTrace) => Image.asset(
-              'assets/images/logo/camfix_mascot_logo.webp',
-              width: size,
-              height: size,
-              fit: BoxFit.contain,
-              excludeFromSemantics: true,
-              errorBuilder: (context, error, stackTrace) => Container(
-                width: size,
-                height: size,
-                decoration: const BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Color(0xFF2563EB),
+            padding: const EdgeInsets.all(4),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.white,
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF2563EB).withValues(alpha: 0.16),
+                  blurRadius: 24,
+                  spreadRadius: 2,
+                  offset: const Offset(0, 8),
                 ),
-                child: const Icon(
-                  Icons.handyman_rounded,
-                  color: Colors.white,
-                  size: 64,
+              ],
+            ),
+            child: ClipOval(
+              child: Image.asset(
+                'assets/images/camfix_mascot_logo.webp',
+                fit: BoxFit.contain,
+                excludeFromSemantics: true,
+                errorBuilder: (context, error, stackTrace) => Image.asset(
+                  'assets/images/logo/camfix_mascot_logo.webp',
+                  fit: BoxFit.contain,
+                  excludeFromSemantics: true,
+                  errorBuilder: (context, error, stackTrace) => Container(
+                    width: size,
+                    height: size,
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Color(0xFF2563EB),
+                    ),
+                    child: const Icon(
+                      Icons.handyman_rounded,
+                      color: Colors.white,
+                      size: 64,
+                    ),
+                  ),
                 ),
               ),
             ),
