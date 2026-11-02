@@ -77,8 +77,8 @@ class _SplashScreenState extends State<SplashScreen>
               builder: (context, child) => Transform.scale(
                 scale: _pulseScale.value,
                 child: Container(
-                  width: 110,
-                  height: 110,
+                  width: 120,
+                  height: 120,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: Colors.white,
@@ -91,19 +91,17 @@ class _SplashScreenState extends State<SplashScreen>
                       ),
                     ],
                   ),
-                  padding: const EdgeInsets.all(8),
-                  child: ClipOval(
-                    child: Image.asset(
+                  padding: const EdgeInsets.all(14),
+                  child: Image.asset(
+                    'assets/images/logo/camfix_mascot_logo.webp',
+                    fit: BoxFit.contain,
+                    errorBuilder: (_, __, ___) => Image.asset(
                       'assets/images/camfix_mascot_logo.webp',
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => Image.asset(
-                        'assets/images/logo/camfix_mascot_logo.webp',
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => const Icon(
-                          Icons.handyman_rounded,
-                          size: 56,
-                          color: AppColors.primaryBlue,
-                        ),
+                      fit: BoxFit.contain,
+                      errorBuilder: (_, __, ___) => const Icon(
+                        Icons.handyman_rounded,
+                        size: 56,
+                        color: AppColors.primaryBlue,
                       ),
                     ),
                   ),
