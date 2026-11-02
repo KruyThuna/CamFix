@@ -68,6 +68,26 @@ class _AnimatedCamFixLogoState extends State<AnimatedCamFixLogo>
             height: size,
             fit: BoxFit.contain,
             excludeFromSemantics: true,
+            errorBuilder: (context, error, stackTrace) => Image.asset(
+              'assets/images/logo/camfix_mascot_logo.webp',
+              width: size,
+              height: size,
+              fit: BoxFit.contain,
+              excludeFromSemantics: true,
+              errorBuilder: (context, error, stackTrace) => Container(
+                width: size,
+                height: size,
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Color(0xFF2563EB),
+                ),
+                child: const Icon(
+                  Icons.handyman_rounded,
+                  color: Colors.white,
+                  size: 64,
+                ),
+              ),
+            ),
           ),
         ),
       ),

@@ -89,6 +89,26 @@ class _SplashScreenState extends State<SplashScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             const AnimatedCamFixLogo(),
+            const SizedBox(height: 14),
+            const Text(
+              'CAM FIX',
+              style: TextStyle(
+                color: AppColors.primaryBlue,
+                fontSize: 26,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 2,
+              ),
+            ),
+            const SizedBox(height: 20),
+            if (!_blocked)
+              const SizedBox(
+                width: 22,
+                height: 22,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2.2,
+                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.primaryBlue),
+                ),
+              ),
             if (_blocked) ...[
               const SizedBox(height: 28),
               const Icon(Icons.wifi_off_rounded,
