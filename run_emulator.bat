@@ -6,5 +6,5 @@ echo ===================================================
 start "" "%LOCALAPPDATA%\Android\sdk\emulator\emulator.exe" -avd 9_Pro
 echo.
 echo Emulator is starting! The phone window will appear on your desktop shortly.
-timeout /t 5
+ping 127.0.0.1 -n 3 > nul
 

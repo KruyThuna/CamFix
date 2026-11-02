@@ -76,33 +76,20 @@ class _SplashScreenState extends State<SplashScreen>
               animation: _pulseController,
               builder: (context, child) => Transform.scale(
                 scale: _pulseScale.value,
-                child: Container(
+                child: Image.asset(
+                  'assets/images/camfix_splash_badge.png',
                   width: 120,
                   height: 120,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Colors.white,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.22),
-                        blurRadius: 18,
-                        spreadRadius: 2,
-                        offset: const Offset(0, 6),
-                      ),
-                    ],
-                  ),
-                  padding: const EdgeInsets.all(14),
-                  child: Image.asset(
+                  fit: BoxFit.contain,
+                  errorBuilder: (_, __, ___) => Image.asset(
                     'assets/images/logo/camfix_mascot_logo.webp',
+                    width: 120,
+                    height: 120,
                     fit: BoxFit.contain,
-                    errorBuilder: (_, __, ___) => Image.asset(
-                      'assets/images/camfix_mascot_logo.webp',
-                      fit: BoxFit.contain,
-                      errorBuilder: (_, __, ___) => const Icon(
-                        Icons.handyman_rounded,
-                        size: 56,
-                        color: AppColors.primaryBlue,
-                      ),
+                    errorBuilder: (_, __, ___) => const Icon(
+                      Icons.handyman_rounded,
+                      size: 56,
+                      color: AppColors.primaryBlue,
                     ),
                   ),
                 ),

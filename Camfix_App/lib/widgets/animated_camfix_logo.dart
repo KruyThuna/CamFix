@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import '../theme/app_images.dart';
 
-/// The official CamFix circular mascot badge matching the user design.
+/// The official CamFix circular mascot badge matching the user's design.
 class AnimatedCamFixLogo extends StatefulWidget {
-  const AnimatedCamFixLogo({super.key});
+  const AnimatedCamFixLogo({super.key, this.size = 150.0});
+
+  final double size;
 
   /// Soft light background matching the Figma splash screen.
   static const backgroundColor = Color(0xFFF1F3F6);
@@ -36,10 +39,6 @@ class _AnimatedCamFixLogoState extends State<AnimatedCamFixLogo>
 
   @override
   Widget build(BuildContext context) {
-    // 160x160 circular badge with 18px padding ensures the mascot and
-    // the "CAM FIX" pill fit completely inside with generous white margins
-    // without any clipping.
-    const size = 160.0;
     return Semantics(
       label: 'CamFix Mascot Badge',
       image: true,
@@ -49,33 +48,20 @@ class _AnimatedCamFixLogoState extends State<AnimatedCamFixLogo>
           scale: _scaleAnimation.value,
           child: child,
         ),
-        child: Container(
-          width: size,
-          height: size,
-          padding: const EdgeInsets.all(18),
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: Colors.white,
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFF2563EB).withValues(alpha: 0.12),
-                blurRadius: 20,
-                spreadRadius: 2,
-                offset: const Offset(0, 6),
-              ),
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.08),
-                blurRadius: 10,
-                spreadRadius: 1,
-                offset: const Offset(0, 3),
-              ),
-            ],
-          ),
-          child: Image.asset(
-            'assets/images/logo/camfix_mascot_logo.webp',
+        child: Image.asset(
+          AppImages.splashBadge,
+          width: widget.size,
+          height: widget.size,
+          fit: BoxFit.contain,
+          errorBuilder: (context, error, stackTrace) => Image.asset(
+            'assets/images/camfix_splash_badge.png',
+            width: widget.size,
+            height: widget.size,
             fit: BoxFit.contain,
             errorBuilder: (context, error, stackTrace) => Image.asset(
               'assets/images/camfix_mascot_logo.webp',
+              width: widget.size,
+              height: widget.size,
               fit: BoxFit.contain,
               errorBuilder: (context, error, stackTrace) => const Icon(
                 Icons.handyman_rounded,
