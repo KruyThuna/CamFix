@@ -231,8 +231,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   // Matches pubspec.yaml's version - real, not a placeholder.
-  static const String _appVersion = '1.2.8';
-  static const String _buildNumber = '16';
+  static const String _appVersion = AppUpdateService.currentVersion;
+  static const int _buildNumber = AppUpdateService.currentBuildNumber;
 
   Widget _sectionLabel(String text) => Padding(
         padding: const EdgeInsets.only(left: 4, bottom: 8),
