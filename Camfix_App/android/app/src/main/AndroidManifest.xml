@@ -14,7 +14,7 @@
     <application
         android:label="CAM FIX"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@mipmap/logo"
         android:networkSecurityConfig="@xml/network_security_config">
         <!-- google_maps_flutter: filled from MAPS_API_KEY in local.properties
              (see GOOGLE_MAPS_SETUP.md). Empty = Google map simply won't load;
