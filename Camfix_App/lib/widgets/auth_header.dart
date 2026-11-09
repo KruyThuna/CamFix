@@ -72,7 +72,7 @@ class _AuthHeaderState extends State<AuthHeader> with TickerProviderStateMixin {
             child: FadeTransition(
               opacity: ribbon,
               child: Image.asset(
-                'assets/images/sharp.png',
+                AppImages.sharp,
                 fit: BoxFit.cover,
                 height: 580,
               ),
@@ -94,7 +94,7 @@ class _AuthHeaderState extends State<AuthHeader> with TickerProviderStateMixin {
                     .animate(robot),
                 child: const SizedBox(
                   height: 350,
-                  child: Image(image: AssetImage('assets/images/robot.png')),
+                  child: Image(image: AssetImage(AppImages.robot)),
                 ),
               ),
             ),
@@ -130,7 +130,7 @@ class _AuthHeaderState extends State<AuthHeader> with TickerProviderStateMixin {
                     child: Image.asset(
                       AppImages.mascotLogo,
                       errorBuilder: (context, error, stackTrace) => Image.asset(
-                        'assets/images/camfix_mascot_logo.webp',
+                        AppImages.mascotLogo,
                         fit: BoxFit.cover,
                         semanticLabel: 'CamFix',
                         errorBuilder: (ctx, err, st) => const Icon(

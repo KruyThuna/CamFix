@@ -244,7 +244,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       'heroAcTitle',
       Icons.ac_unit_rounded,
       'Air Conditioner',
-      'assets/images/hero_ac_technician.png',
+      AppImages.heroAcTechnician,
     ),
     _HeroBanner('heroGeneralTitle', Icons.build_rounded),
   ];
@@ -622,7 +622,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     message: 'Menu',
                     child: ClipOval(
                       child: Image.asset(
-                        'assets/images/camfix_mascot_logo.webp',
+                        AppImages.mascotLogo,
                         width: 40,
                         height: 40,
                         fit: BoxFit.cover,
