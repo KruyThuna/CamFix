@@ -3393,6 +3393,28 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 fontSize: 12.5,
                               ),
                             ),
+                          ] else if ((user?.phone ?? '').isNotEmpty) ...[
+                            const SizedBox(height: 2),
+                            Text(
+                              user!.phone!,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: AppColors.white.withValues(alpha: 0.85),
+                                fontSize: 12.5,
+                              ),
+                            ),
+                          ] else ...[
+                            const SizedBox(height: 2),
+                            Text(
+                              AppStrings.t('viewProfile'),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: AppColors.white.withValues(alpha: 0.85),
+                                fontSize: 12,
+                              ),
+                            ),
                           ],
                         ],
                       ),
@@ -3409,6 +3431,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
               child: ListView(
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 children: [
+                  _drawerRow(
+                    icon: Icons.person_outline_rounded,
+                    label: AppStrings.t('editProfile'),
+                    onTap: () {
+                      Navigator.of(context).pop();
+                      Navigator.of(context).pushNamed('/edit-profile');
+                    },
+                  ),
                   _drawerRow(
                     icon: Icons.favorite_border_rounded,
                     label: AppStrings.t('favorites'),
@@ -3436,7 +3466,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                   _drawerRow(
                     icon: Icons.verified_user_outlined,
-                    label: 'Trust & Safety',
+                    label: AppStrings.t('trustAndSafety'),
                     onTap: () {
                       Navigator.of(context).pop();
                       _showTrustInfo();
@@ -3467,7 +3497,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   const SizedBox(height: 8),
                   Center(
                     child: Text(
-                      'CAMFIX v$_appVersion',
+                      'CAMFIX v$_appVersion (Build $_buildNumber)',
                       style: TextStyle(fontSize: 11, color: p.textSecondary),
                     ),
                   ),
@@ -3481,7 +3511,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   // Matches pubspec.yaml's version — real, not a placeholder.
-  static const String _appVersion = '1.2.8';
+  static const String _appVersion = AppUpdateService.currentVersion;
+  static const int _buildNumber = AppUpdateService.currentBuildNumber;
 
   void _showTrustInfo() {
     showDialog<void>(
