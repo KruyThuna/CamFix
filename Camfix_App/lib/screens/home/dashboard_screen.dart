@@ -580,7 +580,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         MediaQuery.of(context).size.height -
                         MediaQuery.of(context).padding.top,
                   ),
-                  
+
                   padding: EdgeInsets.only(top: 4, bottom: 110 + bottomInset),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -1228,7 +1228,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 : null,
                           ),
                         ),
-                        if (banner.subtitle != null && banner.subtitle!.trim().isNotEmpty) ...[
+                        if (banner.subtitle != null &&
+                            banner.subtitle!.trim().isNotEmpty) ...[
                           const SizedBox(height: 3),
                           Text(
                             banner.subtitle!.trim(),
@@ -1321,11 +1322,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           alignment: Alignment.center,
           clipBehavior: Clip.none,
           children: [
-            Icon(
-              Icons.directions_car_filled_rounded,
-              size: 21,
-              color: color,
-            ),
+            Icon(Icons.directions_car_filled_rounded, size: 21, color: color),
             Positioned(
               right: -1,
               bottom: 0,
@@ -1337,11 +1334,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
                 child: Transform.rotate(
                   angle: -0.6,
-                  child: Icon(
-                    Icons.build_rounded,
-                    size: 9,
-                    color: color,
-                  ),
+                  child: Icon(Icons.build_rounded, size: 9, color: color),
                 ),
               ),
             ),
@@ -1360,11 +1353,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ],
       );
     }
-    return Icon(
-      item.icon,
-      color: color,
-      size: 24,
-    );
+    return Icon(item.icon, color: color, size: 24);
   }
 
   Widget _serviceTile(_ServiceItem item, {String? subtitle}) {
@@ -1374,8 +1363,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final iconColor = mint ? const Color(0xFF009B72) : const Color(0xFF3B67FF);
     final label =
         (AppSettings.instance.lang == AppLang.en && item.englishLabel != null)
-            ? item.englishLabel!
-            : AppStrings.t(item.labelKey);
+        ? item.englishLabel!
+        : AppStrings.t(item.labelKey);
     final sub = item.badge ?? subtitle;
 
     return Container(
@@ -1414,9 +1403,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         : const Color(0xFFE8EBFF),
                     shape: BoxShape.circle,
                   ),
-                  child: Center(
-                    child: _buildCategoryIcon(item, iconColor),
-                  ),
+                  child: Center(child: _buildCategoryIcon(item, iconColor)),
                 ),
                 const SizedBox(height: 8),
                 Text(
@@ -1451,7 +1438,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
     );
   }
-
 
   /// "Services" header + grid matching Figma card design.
   Widget _buildServicesSection() {
@@ -3577,8 +3563,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         ),
                         onTap: () {
                           Navigator.of(context).pop();
-                          AppUpdateService.instance
-                              .checkForUpdate(context, silent: false);
+                          AppUpdateService.instance.checkForUpdate(
+                            context,
+                            silent: false,
+                          );
                         },
                       ),
                     ],
@@ -3639,14 +3627,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _drawerDivider() => Divider(
-        height: 1,
-        thickness: 1,
-        indent: 56,
-        endIndent: 16,
-        color: context.pal.border,
-      );
+    height: 1,
+    thickness: 1,
+    indent: 56,
+    endIndent: 16,
+    color: context.pal.border,
+  );
 
-  Widget _drawerIconBubble(IconData icon, {Color tint = AppColors.primaryBlue}) {
+  Widget _drawerIconBubble(
+    IconData icon, {
+    Color tint = AppColors.primaryBlue,
+  }) {
     return Container(
       width: 32,
       height: 32,
@@ -3804,25 +3795,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
       builder: (sheetContext) {
         final p = sheetContext.pal;
         Widget point(IconData icon, String key) => Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(icon, size: 20, color: AppColors.primaryBlue),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      AppStrings.t(key),
-                      style: TextStyle(
-                        fontSize: 13.5,
-                        height: 1.4,
-                        color: p.textPrimary,
-                      ),
-                    ),
+          padding: const EdgeInsets.only(bottom: 12),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(icon, size: 20, color: AppColors.primaryBlue),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  AppStrings.t(key),
+                  style: TextStyle(
+                    fontSize: 13.5,
+                    height: 1.4,
+                    color: p.textPrimary,
                   ),
-                ],
+                ),
               ),
-            );
+            ],
+          ),
+        );
         return SafeArea(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
@@ -3897,7 +3888,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 }
 
-
 /// 4-blade fan/propeller matching the Figma category icon for Air Conditioner.
 class _AcFanPainter extends CustomPainter {
   final Color color;
@@ -3934,14 +3924,7 @@ class _AcFanPainter extends CustomPainter {
         s * 0.10,
         -s * 0.38,
       );
-      path.cubicTo(
-        s * 0.18,
-        -s * 0.32,
-        s * 0.16,
-        -s * 0.14,
-        r0,
-        0,
-      );
+      path.cubicTo(s * 0.18, -s * 0.32, s * 0.16, -s * 0.14, r0, 0);
       canvas.drawPath(path, strokePaint);
 
       canvas.restore();

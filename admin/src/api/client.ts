@@ -3,7 +3,12 @@ import axios from 'axios';
 export const TOKEN_KEY = 'camfix_admin_token';
 
 export const baseURL =
-  (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? 'http://localhost:8081';
+  (import.meta.env.VITE_API_BASE_URL as string | undefined) ??
+  (typeof window !== 'undefined' &&
+  window.location.hostname !== 'localhost' &&
+  window.location.hostname !== '127.0.0.1'
+    ? 'https://api.camonline.store'
+    : 'http://localhost:8081');
 
 export const api = axios.create({ baseURL });
 

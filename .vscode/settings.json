@@ -1,6 +1,15 @@
 {
-    "cmake.sourceDirectory": "C:/Cam/Camfix_App/windows",
+    "cmake.sourceDirectory": "${workspaceFolder}/Camfix_App/windows",
     "claudeCode.useTerminal": true,
     "java.compile.nullAnalysis.mode": "automatic",
-    "java.configuration.updateBuildConfiguration": "automatic"
+    "java.configuration.updateBuildConfiguration": "automatic",
+    "files.associations": {
+        "version": "plaintext",
+        "**/version": "plaintext",
+        "**/.dart_tool/**": "plaintext"
+    },
+    "C_Cpp.files.exclude": {
+        "**/.dart_tool/**": true,
+        "**/Camfix_App/.dart_tool/**": true
+    }
 }
