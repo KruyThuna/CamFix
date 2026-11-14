@@ -166,7 +166,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      builder: (_) => const _LanguageSheet(),
+      builder: (_) => const LanguageSheet(),
     );
     if (picked != null) {
       AppSettings.instance.setLang(picked);
@@ -651,8 +651,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 }
 
 /// Bottom sheet for choosing the app language.
-class _LanguageSheet extends StatelessWidget {
-  const _LanguageSheet();
+class LanguageSheet extends StatelessWidget {
+  const LanguageSheet({super.key});
 
   @override
   Widget build(BuildContext context) {

@@ -25,9 +25,13 @@ import '../../services/service_prices_api.dart';
 import '../../services/technicians_api.dart';
 import '../../services/token_store.dart';
 import '../../services/app_update_service.dart';
+import '../../services/saved_card_store.dart';
+import '../../theme/app_images.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/user_avatar.dart';
 import '../booking/booking_sheet.dart';
+import '../payment/payment_wallet_screen.dart';
+import '../profile/profile_screen.dart';
 import 'bottom_nav_screen.dart';
 import 'services_screen.dart';
 
@@ -3348,19 +3352,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget _buildDrawer() {
     final p = context.pal;
     final user = CurrentUser.instance.value;
+    final card = SavedCardStore.instance.card;
+
     return Drawer(
       backgroundColor: p.background,
       child: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            // User header banner
             InkWell(
               onTap: () {
                 Navigator.of(context).pop();
                 _openProfile();
               },
               child: Container(
-                padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
                 decoration: const BoxDecoration(
                   gradient: AppColors.blueGradient,
                 ),
@@ -3393,10 +3400,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 fontSize: 12.5,
                               ),
                             ),
-                          ] else if ((user?.phone ?? '').isNotEmpty) ...[
+                          ] else if ((user?.realPhone ?? '').isNotEmpty) ...[
                             const SizedBox(height: 2),
                             Text(
-                              user!.phone!,
+                              user!.realPhone,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
@@ -3427,74 +3434,158 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
               ),
             ),
+
+            // Scrollable settings & preferences cards
             Expanded(
               child: ListView(
-                padding: const EdgeInsets.symmetric(vertical: 8),
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
                 children: [
-                  _drawerRow(
-                    icon: Icons.person_outline_rounded,
-                    label: AppStrings.t('editProfile'),
-                    onTap: () {
-                      Navigator.of(context).pop();
-                      Navigator.of(context).pushNamed('/edit-profile');
-                    },
+                  _drawerSectionLabel(AppStrings.t('accountPreferencesCaps')),
+                  _drawerCard(
+                    children: [
+                      _drawerRichNavRow(
+                        icon: Icons.credit_card_rounded,
+                        title: AppStrings.t('paymentWallet'),
+                        subtitle: card != null
+                            ? 'Card •••• ${card.last4}'
+                            : AppStrings.t('noPaymentMethodYet'),
+                        tint: AppColors.primaryBlue,
+                        trailing: card != null
+                            ? Container(
+                                width: 8,
+                                height: 8,
+                                margin: const EdgeInsets.only(right: 8),
+                                decoration: const BoxDecoration(
+                                  color: Color(0xFF2ECC71),
+                                  shape: BoxShape.circle,
+                                ),
+                              )
+                            : null,
+                        onTap: () async {
+                          Navigator.of(context).pop();
+                          await Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => const PaymentWalletScreen(),
+                            ),
+                          );
+                          if (mounted) setState(() {});
+                        },
+                      ),
+                      _drawerDivider(),
+                      _drawerSwitchRow(
+                        icon: Icons.notifications_none_rounded,
+                        tint: const Color(0xFFB455E0),
+                        title: AppStrings.t('pushNotifications'),
+                        subtitle: AppStrings.t('notificationsDesc'),
+                        value: AppSettings.instance.notificationsEnabled,
+                        onChanged: (v) {
+                          AppSettings.instance.setNotificationsEnabled(v);
+                          if (v) {
+                            NotificationsStore.instance.startPolling();
+                          } else {
+                            NotificationsStore.instance.stopPolling();
+                          }
+                          setState(() {});
+                        },
+                      ),
+                      _drawerDivider(),
+                      _drawerRichNavRow(
+                        icon: Icons.translate_rounded,
+                        title: AppStrings.t('appLanguage'),
+                        subtitle: AppStrings.t('languageOptionsDesc'),
+                        tint: const Color(0xFF1E9E52),
+                        trailing: Padding(
+                          padding: const EdgeInsets.only(right: 4),
+                          child: Text(
+                            AppSettings.instance.lang == AppLang.km
+                                ? AppStrings.t('khmer')
+                                : AppStrings.t('english'),
+                            style: TextStyle(
+                              fontSize: 12.5,
+                              color: p.textSecondary,
+                            ),
+                          ),
+                        ),
+                        onTap: _pickLanguage,
+                      ),
+                      _drawerDivider(),
+                      _drawerSwitchRow(
+                        icon: Icons.dark_mode_outlined,
+                        tint: const Color(0xFF34495E),
+                        title: AppStrings.t('darkMode'),
+                        subtitle: AppStrings.t('darkModeDesc'),
+                        value: AppSettings.instance.isDark,
+                        onChanged: (v) {
+                          AppSettings.instance.setDarkMode(v);
+                          setState(() {});
+                        },
+                      ),
+                      _drawerDivider(),
+                      _drawerRichNavRow(
+                        icon: Icons.tune_rounded,
+                        title: AppStrings.t('preference'),
+                        subtitle: AppStrings.t('preferenceDesc'),
+                        tint: const Color(0xFFD9822B),
+                        onTap: () {
+                          Navigator.of(context).pop();
+                          Navigator.of(context).pushNamed('/preference');
+                        },
+                      ),
+                    ],
                   ),
-                  _drawerRow(
-                    icon: Icons.favorite_border_rounded,
-                    label: AppStrings.t('favorites'),
-                    onTap: () {
-                      Navigator.of(context).pop();
-                      Navigator.of(context).pushNamed('/favorites');
-                    },
+                  const SizedBox(height: 20),
+                  _drawerSectionLabel(AppStrings.t('supportTrustCaps')),
+                  _drawerCard(
+                    children: [
+                      _drawerRichNavRow(
+                        icon: Icons.help_outline_rounded,
+                        title: AppStrings.t('helpCenter'),
+                        subtitle: AppStrings.t('helpCenterDesc'),
+                        tint: const Color(0xFF16A085),
+                        onTap: () {
+                          Navigator.of(context).pop();
+                          Navigator.of(context).pushNamed('/help-support');
+                        },
+                      ),
+                      _drawerDivider(),
+                      _drawerRichNavRow(
+                        icon: Icons.handshake_outlined,
+                        title: AppStrings.t('trustShield'),
+                        subtitle: AppStrings.t('trustShieldDesc'),
+                        tint: AppColors.primaryBlue,
+                        onTap: () {
+                          Navigator.of(context).pop();
+                          _showTrustInfo();
+                        },
+                      ),
+                      _drawerDivider(),
+                      _drawerRichNavRow(
+                        icon: Icons.system_update_rounded,
+                        title: AppStrings.t('appUpdateTitle'),
+                        subtitle: AppStrings.t('appUpdateSubtitle'),
+                        tint: const Color(0xFFE67E22),
+                        trailing: Padding(
+                          padding: const EdgeInsets.only(right: 4),
+                          child: Text(
+                            'v$_appVersion',
+                            style: TextStyle(
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.w600,
+                              color: p.textSecondary,
+                            ),
+                          ),
+                        ),
+                        onTap: () {
+                          Navigator.of(context).pop();
+                          AppUpdateService.instance
+                              .checkForUpdate(context, silent: false);
+                        },
+                      ),
+                    ],
                   ),
-                  _drawerRow(
-                    icon: Icons.notifications_none_rounded,
-                    label: AppStrings.t('notifications'),
-                    onTap: () async {
-                      Navigator.of(context).pop();
-                      await Navigator.of(context).pushNamed('/notifications');
-                      NotificationsStore.instance.refresh();
-                    },
-                  ),
-                  _drawerRow(
-                    icon: Icons.help_outline_rounded,
-                    label: AppStrings.t('helpAndSupport'),
-                    onTap: () {
-                      Navigator.of(context).pop();
-                      Navigator.of(context).pushNamed('/help-support');
-                    },
-                  ),
-                  _drawerRow(
-                    icon: Icons.verified_user_outlined,
-                    label: AppStrings.t('trustAndSafety'),
-                    onTap: () {
-                      Navigator.of(context).pop();
-                      _showTrustInfo();
-                    },
-                  ),
-                  _drawerRow(
-                    icon: Icons.privacy_tip_outlined,
-                    label: AppStrings.t('privacyPolicy'),
-                    onTap: () {
-                      Navigator.of(context).pop();
-                      Navigator.of(context).pushNamed('/privacy-policy');
-                    },
-                  ),
-                  Divider(height: 24, color: p.border),
-                  _drawerLanguageRow(p),
-                  const SizedBox(height: 4),
-                  _drawerDarkModeRow(p),
-                  Divider(height: 24, color: p.border),
-                  _drawerRow(
-                    icon: Icons.logout_rounded,
-                    label: AppStrings.t('logout'),
-                    color: const Color(0xFFE5484D),
-                    onTap: () {
-                      Navigator.of(context).pop();
-                      _logout();
-                    },
-                  ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 20),
+                  _drawerLogoutButton(),
+                  const SizedBox(height: 14),
                   Center(
                     child: Text(
                       'CAMFIX v$_appVersion (Build $_buildNumber)',
@@ -3514,117 +3605,261 @@ class _DashboardScreenState extends State<DashboardScreen> {
   static const String _appVersion = AppUpdateService.currentVersion;
   static const int _buildNumber = AppUpdateService.currentBuildNumber;
 
-  void _showTrustInfo() {
-    showDialog<void>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(AppStrings.t('trustAndSafety')),
-        content: Text(AppStrings.t('trustAndSafetyDesc')),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(),
-            child: Text(AppStrings.t('done')),
-          ),
-        ],
+  Widget _drawerSectionLabel(String text) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 4, bottom: 8),
+      child: Text(
+        text,
+        style: TextStyle(
+          fontSize: 11.5,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0.5,
+          color: context.pal.textSecondary,
+        ),
       ),
     );
   }
 
-  Widget _drawerRow({
+  Widget _drawerCard({required List<Widget> children}) {
+    final p = context.pal;
+    return Container(
+      decoration: BoxDecoration(
+        color: p.surface,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: p.shadow,
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(children: children),
+    );
+  }
+
+  Widget _drawerDivider() => Divider(
+        height: 1,
+        thickness: 1,
+        indent: 56,
+        endIndent: 16,
+        color: context.pal.border,
+      );
+
+  Widget _drawerIconBubble(IconData icon, {Color tint = AppColors.primaryBlue}) {
+    return Container(
+      width: 32,
+      height: 32,
+      decoration: BoxDecoration(
+        color: tint.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Icon(icon, size: 18, color: tint),
+    );
+  }
+
+  Widget _drawerRichNavRow({
     required IconData icon,
-    required String label,
+    required String title,
+    required String subtitle,
     required VoidCallback onTap,
-    Color? color,
+    Widget? trailing,
+    Color tint = AppColors.primaryBlue,
   }) {
     final p = context.pal;
-    final tint = color ?? p.textPrimary;
-    return ListTile(
-      leading: Icon(icon, color: tint),
-      title: Text(
-        label,
-        style: TextStyle(color: tint, fontWeight: FontWeight.w600),
-      ),
+    return InkWell(
       onTap: onTap,
-    );
-  }
-
-  Widget _drawerLanguageRow(AppPalette p) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      child: Row(
-        children: [
-          Icon(Icons.translate_rounded, color: p.textPrimary),
-          const SizedBox(width: 32),
-          Expanded(
-            child: Text(
-              AppStrings.t('language'),
-              style: TextStyle(
-                color: p.textPrimary,
-                fontWeight: FontWeight.w600,
+      borderRadius: BorderRadius.circular(16),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        child: Row(
+          children: [
+            _drawerIconBubble(icon, tint: tint),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: p.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(fontSize: 11.5, color: p.textSecondary),
+                  ),
+                ],
               ),
             ),
-          ),
-          _langChip(p, AppLang.en, 'EN'),
-          const SizedBox(width: 6),
-          _langChip(p, AppLang.km, 'ខ្មែរ'),
-        ],
-      ),
-    );
-  }
-
-  Widget _langChip(AppPalette p, AppLang lang, String label) {
-    final active = AppSettings.instance.lang == lang;
-    return InkWell(
-      borderRadius: BorderRadius.circular(20),
-      onTap: () {
-        AppSettings.instance.setLang(lang);
-        setState(() {});
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        decoration: BoxDecoration(
-          color: active
-              ? AppColors.primaryBlue
-              : AppColors.primaryBlue.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w700,
-            color: active ? AppColors.white : AppColors.primaryBlue,
-          ),
+            if (trailing != null) trailing,
+            Icon(Icons.chevron_right, color: p.textSecondary),
+          ],
         ),
       ),
     );
   }
 
-  Widget _drawerDarkModeRow(AppPalette p) {
+  Widget _drawerSwitchRow({
+    required IconData icon,
+    required Color tint,
+    required String title,
+    required String subtitle,
+    required bool value,
+    required ValueChanged<bool> onChanged,
+  }) {
+    final p = context.pal;
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Row(
         children: [
-          Icon(Icons.dark_mode_outlined, color: p.textPrimary),
+          _drawerIconBubble(icon, tint: tint),
           const SizedBox(width: 12),
           Expanded(
-            child: Text(
-              AppStrings.t('darkMode'),
-              style: TextStyle(
-                color: p.textPrimary,
-                fontWeight: FontWeight.w600,
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: p.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  subtitle,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(fontSize: 11.5, color: p.textSecondary),
+                ),
+              ],
             ),
           ),
-          Switch(
-            value: AppSettings.instance.isDark,
-            onChanged: (v) {
-              AppSettings.instance.setDarkMode(v);
-              setState(() {});
-            },
-          ),
+          Switch(value: value, onChanged: onChanged),
         ],
       ),
+    );
+  }
+
+  Widget _drawerLogoutButton() {
+    const red = Color(0xFFE5484D);
+    return InkWell(
+      onTap: () {
+        Navigator.of(context).pop();
+        _logout();
+      },
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        decoration: BoxDecoration(
+          color: red.withValues(alpha: 0.07),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: red.withValues(alpha: 0.25)),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.logout_rounded, size: 18, color: red),
+            const SizedBox(width: 8),
+            Text(
+              AppStrings.t('logout'),
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: red,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _pickLanguage() async {
+    final picked = await showModalBottomSheet<AppLang>(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (_) => const LanguageSheet(),
+    );
+    if (picked != null) {
+      AppSettings.instance.setLang(picked);
+      if (mounted) setState(() {});
+    }
+  }
+
+  void _showTrustInfo() {
+    showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      builder: (sheetContext) {
+        final p = sheetContext.pal;
+        Widget point(IconData icon, String key) => Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(icon, size: 20, color: AppColors.primaryBlue),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      AppStrings.t(key),
+                      style: TextStyle(
+                        fontSize: 13.5,
+                        height: 1.4,
+                        color: p.textPrimary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  AppStrings.t('trustShield'),
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                    color: p.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                point(Icons.verified_user_outlined, 'trustPointReview'),
+                point(Icons.star_outline_rounded, 'trustPointRatings'),
+                point(Icons.receipt_long_outlined, 'trustPointQuotes'),
+                point(Icons.lock_outline_rounded, 'trustPointChat'),
+                const SizedBox(height: 4),
+                OutlinedButton.icon(
+                  onPressed: () {
+                    Navigator.of(sheetContext).pop();
+                    Navigator.of(context).pushNamed('/privacy-policy');
+                  },
+                  icon: const Icon(Icons.privacy_tip_outlined, size: 18),
+                  label: Text(AppStrings.t('privacyPolicy')),
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size.fromHeight(46),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
