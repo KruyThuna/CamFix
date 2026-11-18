@@ -1,0 +1,18 @@
+# Code Owners file to enforce review and write boundaries.
+# Any modification to backend, database, scripts, or deployment configurations
+# strictly requires KruyThuna's review and approval.
+
+* @KruyThuna
+
+# Backend & Database
+/Backend/ @KruyThuna
+/Database/ @KruyThuna
+/deploy/ @KruyThuna
+/scripts/ @KruyThuna
+docker-compose.yml @KruyThuna
+wrangler.jsonc @KruyThuna
+.env* @KruyThuna
+
+# Front-End components
+/Camfix_App/ @KruyThuna
+/admin/ @KruyThuna

@@ -1,0 +1,71 @@
+name: Enforce Front-End Only Permissions
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - '**'
+
+jobs:
+  check-front-end-scope:
+    name: Verify Front-End File Scope
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Enforce Front-End Boundary
+        run: |
+          AUTHOR="${{ github.actor }}"
+          echo "Commit author / Actor: $AUTHOR"
+
+          # Target front-end contributor accounts
+          RESTRICTED_USERS=("twlightzome" "twlightzome@gmail.com")
+
+          IS_RESTRICTED=false
+          for USER in "${RESTRICTED_USERS[@]}"; do
+            if [[ "$AUTHOR" =~ "$USER" ]]; then
+              IS_RESTRICTED=true
+              break
+            fi
+          done
+
+          if [ "$IS_RESTRICTED" = true ]; then
+            echo "Checking file boundaries for front-end contributor $AUTHOR..."
+            
+            if [ "${{ github.event_name }}" = "pull_request" ]; then
+              BASE="origin/${{ github.base_ref }}"
+            else
+              BASE="HEAD~1"
+            fi
+
+            CHANGED_FILES=$(git diff --name-only "$BASE" HEAD 2>/dev/null || git diff-tree --no-commit-id --name-only -r HEAD)
+            echo "Changed files in this commit/PR:"
+            echo "$CHANGED_FILES"
+
+            INVALID_FILES=()
+            while IFS= read -r file; do
+              [ -z "$file" ] && continue
+              # Front-end contributors can only modify Camfix_App/ and admin/
+              if [[ ! "$file" =~ ^Camfix_App/ ]] && [[ ! "$file" =~ ^admin/ ]]; then
+                INVALID_FILES+=("$file")
+              fi
+            done <<< "$CHANGED_FILES"
+
+            if [ ${#INVALID_FILES[@]} -gt 0 ]; then
+              echo "::error::Permission Denied! Front-End contributors are only allowed to modify Camfix_App/ and admin/."
+              echo "Restricted files detected:"
+              for inv in "${INVALID_FILES[@]}"; do
+                echo "  ❌ $inv"
+              done
+              exit 1
+            else
+              echo "✅ Success: All modified files are strictly inside Front-End directories (Camfix_App/ or admin/)."
+            fi
+          else
+            echo "User $AUTHOR is an administrator with full access."
+          fi
