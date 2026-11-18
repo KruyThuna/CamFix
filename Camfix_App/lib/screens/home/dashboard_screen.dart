@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
@@ -236,7 +237,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   static const String _supportPhone = '+855 879 084 70';
 
-  final _heroController = PageController();
+  final _heroController = PageController(viewportFraction: 0.88);
   int _heroPage = 0;
   Timer? _heroTimer;
   List<AppBanner> _adminBanners = const [];
@@ -585,12 +586,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: AppLayout.pageGutter,
-                        ),
-                        child: _heroCarousel(),
-                      ),
+                      _heroCarousel(),
                       const SizedBox(height: 20),
                       _buildServicesSection(),
                       _buildReferenceSections(),
@@ -1107,14 +1103,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
       child: Column(
         children: [
           Expanded(
-            child: PageView.builder(
-              controller: _heroController,
-              onPageChanged: (i) => setState(() => _heroPage = i),
-              itemCount: _heroBanners.length,
-              itemBuilder: (context, i) => _heroBannerCard(_heroBanners[i]),
+            child: ScrollConfiguration(
+              behavior: const ScrollBehavior().copyWith(
+                dragDevices: {
+                  PointerDeviceKind.touch,
+                  PointerDeviceKind.mouse,
+                  PointerDeviceKind.trackpad,
+                  PointerDeviceKind.stylus,
+                },
+              ),
+              child: PageView.builder(
+                controller: _heroController,
+                physics: const BouncingScrollPhysics(),
+                onPageChanged: (i) => setState(() => _heroPage = i),
+                itemCount: _heroBanners.length,
+                itemBuilder: (context, i) => _heroBannerCard(_heroBanners[i]),
+              ),
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 10),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: List.generate(_heroBanners.length, (i) {
@@ -1142,161 +1149,174 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final hasPhoto =
         banner.imageAsset != null || banner.imageNetworkUrl != null;
     final p = context.pal;
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(18),
-      child: Container(
-        decoration: BoxDecoration(
-          color: hasPhoto ? p.surfaceAlt : AppColors.primaryBlue,
-          gradient: hasPhoto ? null : AppColors.blueGradient,
-        ),
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            if (banner.imageAsset != null)
-              Positioned.fill(
-                child: Image.asset(banner.imageAsset!, fit: BoxFit.cover),
-              ),
-            if (banner.imageNetworkUrl != null)
-              Positioned.fill(
-                child: Image.network(
-                  '${ApiClient.instance.baseUrl}${banner.imageNetworkUrl!}',
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) =>
-                      const SizedBox.shrink(),
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: [
+          BoxShadow(
+            color: p.shadow.withValues(alpha: 0.12),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(18),
+        child: Container(
+          decoration: BoxDecoration(
+            color: hasPhoto ? p.surfaceAlt : AppColors.primaryBlue,
+            gradient: hasPhoto ? null : AppColors.blueGradient,
+          ),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              if (banner.imageAsset != null)
+                Positioned.fill(
+                  child: Image.asset(banner.imageAsset!, fit: BoxFit.cover),
                 ),
-              ),
-            if (!hasPhoto)
-              // No photo for this slide - add depth with a soft oversized
-              // watermark of the same icon instead of a flat solid card.
-              Positioned(
-                right: -24,
-                bottom: -30,
-                child: Icon(
-                  banner.icon,
-                  size: 150,
-                  color: AppColors.white.withValues(alpha: 0.10),
+              if (banner.imageNetworkUrl != null)
+                Positioned.fill(
+                  child: Image.network(
+                    '${ApiClient.instance.baseUrl}${banner.imageNetworkUrl!}',
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) =>
+                        const SizedBox.shrink(),
+                  ),
                 ),
-              ),
-            if (hasPhoto)
-              // A technician's own banner photo can contain anything
-              // (including its own baked-in text) - this scrim has to fully
-              // obscure that under our title, not just tint it, or the two
-              // texts visually collide.
-              Positioned.fill(
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.centerLeft,
-                      end: Alignment.centerRight,
-                      colors: [
-                        AppColors.deepBlue.withValues(alpha: 0.92),
-                        AppColors.deepBlue.withValues(alpha: 0.05),
-                      ],
-                      stops: const [0.0, 0.72],
+              if (!hasPhoto)
+                // No photo for this slide - add depth with a soft oversized
+                // watermark of the same icon instead of a flat solid card.
+                Positioned(
+                  right: -24,
+                  bottom: -30,
+                  child: Icon(
+                    banner.icon,
+                    size: 150,
+                    color: AppColors.white.withValues(alpha: 0.10),
+                  ),
+                ),
+              if (hasPhoto)
+                // A technician's own banner photo can contain anything
+                // (including its own baked-in text) - this scrim has to fully
+                // obscure that under our title, not just tint it, or the two
+                // texts visually collide.
+                Positioned.fill(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.centerLeft,
+                        end: Alignment.centerRight,
+                        colors: [
+                          AppColors.deepBlue.withValues(alpha: 0.92),
+                          AppColors.deepBlue.withValues(alpha: 0.05),
+                        ],
+                        stops: const [0.0, 0.72],
+                      ),
                     ),
                   ),
                 ),
-              ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          banner.rawTitle ?? AppStrings.t(banner.titleKey),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            color: AppColors.white,
-                            fontSize: 17,
-                            fontWeight: FontWeight.w800,
-                            height: 1.2,
-                            shadows: hasPhoto
-                                ? [
-                                    Shadow(
-                                      color: Colors.black.withValues(
-                                        alpha: 0.5,
-                                      ),
-                                      blurRadius: 6,
-                                      offset: const Offset(0, 1),
-                                    ),
-                                  ]
-                                : null,
-                          ),
-                        ),
-                        if (banner.subtitle != null &&
-                            banner.subtitle!.trim().isNotEmpty) ...[
-                          const SizedBox(height: 3),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
                           Text(
-                            banner.subtitle!.trim(),
+                            banner.rawTitle ?? AppStrings.t(banner.titleKey),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
-                              color: AppColors.white.withValues(alpha: 0.9),
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
+                              color: AppColors.white,
+                              fontSize: 17,
+                              fontWeight: FontWeight.w800,
+                              height: 1.2,
+                              shadows: hasPhoto
+                                  ? [
+                                      Shadow(
+                                        color: Colors.black.withValues(
+                                          alpha: 0.5,
+                                        ),
+                                        blurRadius: 6,
+                                        offset: const Offset(0, 1),
+                                      ),
+                                    ]
+                                  : null,
+                            ),
+                          ),
+                          if (banner.subtitle != null &&
+                              banner.subtitle!.trim().isNotEmpty) ...[
+                            const SizedBox(height: 3),
+                            Text(
+                              banner.subtitle!.trim(),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: AppColors.white.withValues(alpha: 0.9),
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                          const SizedBox(height: 8),
+                          ElevatedButton(
+                            onPressed: () => banner.provider != null
+                                ? Navigator.of(context).pushNamed(
+                                    '/provider',
+                                    arguments: banner.provider,
+                                  )
+                                : banner.category != null
+                                ? MainShell.of(context)
+                                      ?.openServiceCategory(banner.category!)
+                                : MainShell.of(context)?.goToTab(1),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.white,
+                              foregroundColor: AppColors.primaryBlue,
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 18,
+                                vertical: 10,
+                              ),
+                            ),
+                            child: Text(
+                              AppStrings.t('bookNow'),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w700,
+                                fontSize: 13,
+                              ),
                             ),
                           ),
                         ],
-                        const SizedBox(height: 8),
-                        ElevatedButton(
-                          onPressed: () => banner.provider != null
-                              ? Navigator.of(context).pushNamed(
-                                  '/provider',
-                                  arguments: banner.provider,
-                                )
-                              : banner.category != null
-                              ? MainShell.of(context)
-                                    ?.openServiceCategory(banner.category!)
-                              : MainShell.of(context)?.goToTab(1),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.white,
-                            foregroundColor: AppColors.primaryBlue,
-                            elevation: 0,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 18,
-                              vertical: 10,
-                            ),
-                          ),
-                          child: Text(
-                            AppStrings.t('bookNow'),
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w700,
-                              fontSize: 13,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  if (!hasPhoto)
-                    Container(
-                      width: 76,
-                      height: 76,
-                      decoration: BoxDecoration(
-                        color: AppColors.white.withValues(alpha: 0.16),
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: AppColors.white.withValues(alpha: 0.25),
-                        ),
-                      ),
-                      child: Icon(
-                        banner.icon,
-                        color: AppColors.white,
-                        size: 34,
                       ),
                     ),
-                ],
+                    if (!hasPhoto)
+                      Container(
+                        width: 76,
+                        height: 76,
+                        decoration: BoxDecoration(
+                          color: AppColors.white.withValues(alpha: 0.16),
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: AppColors.white.withValues(alpha: 0.25),
+                          ),
+                        ),
+                        child: Icon(
+                          banner.icon,
+                          color: AppColors.white,
+                          size: 34,
+                        ),
+                      ),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
