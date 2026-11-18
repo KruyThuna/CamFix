@@ -10,7 +10,14 @@ catch {
 }
 
 Write-Host 'Cloudflare tunnel:'
-cloudflared tunnel info CamApp
+$cfCmd = (Join-Path $PSScriptRoot "cloudflared.exe")
+if (-not (Test-Path $cfCmd)) {
+    $cfCmd = (Join-Path $env:LOCALAPPDATA "Programs\cloudflared\cloudflared.exe")
+}
+if (-not (Test-Path $cfCmd)) {
+    $cfCmd = "cloudflared"
+}
+& $cfCmd tunnel info CamApp
 
 Write-Host 'Public DNS:'
 try {

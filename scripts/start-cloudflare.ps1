@@ -4,10 +4,34 @@ param()
 $ErrorActionPreference = 'Stop'
 $repoRoot = Split-Path -Parent $PSScriptRoot
 $cloudflaredConfig = Join-Path $env:USERPROFILE '.cloudflared\config.yml'
-$cloudflaredExe = "C:\Program Files (x86)\cloudflared\cloudflared.exe"
 
-if (-not (Test-Path $cloudflaredExe)) {
-    $cloudflaredExe = (Get-Command cloudflared -ErrorAction SilentlyContinue).Source
+$candidatePaths = @(
+    (Join-Path $PSScriptRoot "cloudflared.exe"),
+    (Join-Path $env:USERPROFILE ".cloudflared\cloudflared.exe"),
+    (Join-Path $env:LOCALAPPDATA "Programs\cloudflared\cloudflared.exe"),
+    "C:\Program Files (x86)\cloudflared\cloudflared.exe",
+    "C:\Program Files\cloudflared\cloudflared.exe"
+)
+
+$cloudflaredExe = $null
+foreach ($cand in $candidatePaths) {
+    if (Test-Path -LiteralPath $cand) {
+        $cloudflaredExe = $cand
+        break
+    }
+}
+
+if (-not $cloudflaredExe) {
+    $cmd = Get-Command cloudflared -ErrorAction SilentlyContinue
+    if ($cmd) {
+        $cloudflaredExe = $cmd.Source
+    }
+}
+
+if (-not $cloudflaredExe) {
+    Write-Host "ERROR: cloudflared.exe could not be found." -ForegroundColor Red
+    Write-Host "Please install Cloudflare Tunnel or ensure cloudflared.exe is in .\scripts\ or on PATH." -ForegroundColor Yellow
+    exit 1
 }
 
 Write-Host "========================================" -ForegroundColor Cyan
