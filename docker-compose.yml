@@ -49,7 +49,7 @@ services:
       # TEXTBELT_KEY:
     ports:
       # Listen on all interfaces so local devices on Wi-Fi/LAN can connect directly
-      - "8081:8081"
+      - "8080:8080"
     volumes:
       - ./Camfix_Latest.apk:/app/Camfix_Latest.apk:ro
 

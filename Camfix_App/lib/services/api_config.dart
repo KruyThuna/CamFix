@@ -47,7 +47,7 @@ abstract final class ApiConfig {
 
     // 3. All builds use the public API unless explicitly overridden.
     if (kDebugMode && kIsWeb) {
-      return 'http://127.0.0.1:8081';
+      return 'http://127.0.0.1:8080';
     }
 
     return defaultProductionUrl;

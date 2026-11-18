@@ -44,7 +44,7 @@ if (-not (Test-Path -LiteralPath $backendJar)) {
     throw "Backend JAR not found: $backendJar"
 }
 
-$backendListener = Get-NetTCPConnection -State Listen -LocalPort 8081 -ErrorAction SilentlyContinue
+$backendListener = Get-NetTCPConnection -State Listen -LocalPort 8080 -ErrorAction SilentlyContinue
 if (-not $backendListener) {
     $backendProcess = Start-Process `
         -FilePath 'java.exe' `
@@ -60,11 +60,11 @@ if (-not $backendListener) {
 $deadline = (Get-Date).AddSeconds(45)
 do {
     Start-Sleep -Seconds 1
-    $backendListener = Get-NetTCPConnection -State Listen -LocalPort 8081 -ErrorAction SilentlyContinue
+    $backendListener = Get-NetTCPConnection -State Listen -LocalPort 8080 -ErrorAction SilentlyContinue
 } until ($backendListener -or (Get-Date) -ge $deadline)
 
 if (-not $backendListener) {
-    throw "Backend did not start on port 8081. Check $runtimeRoot\backend.err"
+    throw "Backend did not start on port 8080. Check $runtimeRoot\backend.err"
 }
 
 $localTunnel = Get-Process cloudflared -ErrorAction SilentlyContinue

@@ -22,5 +22,5 @@ RUN useradd --system --create-home --shell /usr/sbin/nologin camfix
 COPY --from=build /app/build/libs/api.jar app.jar
 USER camfix
 
-EXPOSE 8081
+EXPOSE 8080
 ENTRYPOINT ["java", "-jar", "app.jar"]
