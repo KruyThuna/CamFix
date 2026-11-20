@@ -1,0 +1,43 @@
+package com.api.modules.technician.dto;
+
+
+
+import com.api.modules.technician.entity.Technician;
+import com.api.modules.admin.entity.Category;
+import lombok.Getter;
+import lombok.Setter;
+
+/** Payload for {@code GET/PUT /api/technician/me} - matches the Flutter
+ *  {@code TechnicianProfile.fromJson}. */
+@Getter
+@Setter
+public class TechnicianProfileResponse {
+
+    private Long id;
+    private String firstName;
+    private String lastName;
+    private String email;
+    private String phoneNumber;
+    private String category;
+    private String serviceArea;
+    private String about;
+    private String openingHours;
+    private double rating;
+    private int ratingCount;
+    private String approvalStatus;
+    private String accountStatus;
+    private boolean available;
+    private Double lastLat;
+    private Double lastLng;
+    private String rejectionReason;
+    /** Relative path (e.g. {@code /api/technician/7/photo}) or null if no photo is set. */
+    private String photoUrl;
+    /** Relative path (e.g. {@code /api/technician/7/banner}) or null if no banner is set. */
+    private String bannerUrl;
+    private String bannerTitle;
+    private boolean hasIdCard;
+    private boolean hasFacePhoto;
+    private boolean identityEmailVerified;
+    private String idCardUrl;
+    private String facePhotoUrl;
+}

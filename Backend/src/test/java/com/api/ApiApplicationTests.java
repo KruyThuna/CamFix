@@ -1,5 +1,15 @@
 package com.api;
 
+
+
+
+
+
+import com.api.modules.user.entity.UserAddress;
+import com.api.modules.technician.entity.Technician;
+import com.api.modules.technician.entity.TechnicianAddresses;
+import com.api.modules.user.entity.Users;
+import com.api.modules.chat.entity.CallHistory;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -8,7 +18,7 @@ import org.springframework.web.context.WebApplicationContext;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.annotation.Transactional;
 import jakarta.persistence.EntityManager;
-import com.api.entity.*;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;

@@ -1,0 +1,18 @@
+package com.api.modules.payment.repository;
+
+
+import com.api.modules.payment.entity.Payment;
+import java.util.Optional;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import com.api.modules.payment.entity.KhqrPayment;
+
+@Repository
+public interface KhqrPaymentRepository extends JpaRepository<KhqrPayment, Long> {
+
+    Optional<KhqrPayment> findByMd5AndJobId(String md5, Long jobId);
+
+    Optional<KhqrPayment> findFirstByJobIdAndQuoteIdOrderByIdDesc(Long jobId, Long quoteId);
+}
