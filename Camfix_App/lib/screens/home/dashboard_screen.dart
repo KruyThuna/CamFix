@@ -237,7 +237,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   static const String _supportPhone = '+855 879 084 70';
 
-  final _heroController = PageController(viewportFraction: 0.88);
+  final _heroController = PageController();
   int _heroPage = 0;
   Timer? _heroTimer;
   List<AppBanner> _adminBanners = const [];
@@ -586,7 +586,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _heroCarousel(),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppLayout.pageGutter,
+                        ),
+                        child: _heroCarousel(),
+                      ),
                       const SizedBox(height: 20),
                       _buildServicesSection(),
                       _buildReferenceSections(),
@@ -1150,7 +1155,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         banner.imageAsset != null || banner.imageNetworkUrl != null;
     final p = context.pal;
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      margin: const EdgeInsets.symmetric(vertical: 2),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(18),
         boxShadow: [
