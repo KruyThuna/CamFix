@@ -10,9 +10,12 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Contact;
 import io.swagger.v3.oas.models.info.Info;
+import io.swagger.v3.oas.models.security.SecurityRequirement;
+import io.swagger.v3.oas.models.security.SecurityScheme;
 import io.swagger.v3.oas.models.servers.Server;
 import io.swagger.v3.oas.models.tags.Tag;
 
@@ -51,17 +54,27 @@ public class SwaggerConfig {
 
         @Bean
         public OpenAPI customOpenAPI() {
+                final String securitySchemeName = "bearerAuth";
                 return new OpenAPI()
                                 .info(new Info()
                                                 .title("CamFix API Documentation")
                                                 .version("1.0.0")
-                                                .description("CamFix Platform REST API and CRUD operations")
+                                                .description("CamFix Platform REST API and CRUD operations - ACLEDA Mobile Server Side Standard")
                                                 .contact(new Contact()
                                                                 .name("CamFix Team")
                                                                 .url("https://admin.camonline.store")))
+                                .addSecurityItem(new SecurityRequirement().addList(securitySchemeName))
+                                .components(new Components()
+                                                .addSecuritySchemes(securitySchemeName,
+                                                                new SecurityScheme()
+                                                                                .name(securitySchemeName)
+                                                                                .type(SecurityScheme.Type.HTTP)
+                                                                                .scheme("bearer")
+                                                                                .bearerFormat("JWT")
+                                                                                .description("Enter JWT Bearer token (without Bearer prefix)")))
                                 .servers(List.of(
                                                 new Server().url("https://api.camonline.store").description("Production Server (Cloudflare)"),
-                                                new Server().url("http://localhost:8081").description("Local Development Server")))
+                                                new Server().url("http://localhost:8080").description("Local Development Server (Port 8080)")))
                                 .tags(List.of(
                                                 // Primary CRUD Action Tags
                                                 new Tag().name("Create").description("Create & insert new records (POST)"),
