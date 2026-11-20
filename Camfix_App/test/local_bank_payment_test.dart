@@ -36,7 +36,7 @@ void main() {
         ));
         await tester.pumpAndSettle();
         expect(find.text('Apple Pay'), findsNothing);
-        expect(find.text('AC / ABA Local Bank'), findsOneWidget);
+        expect(find.text('ACLEDA Local Bank'), findsOneWidget);
         await tester.tap(find.byType(FilledButton));
         await tester.pumpAndSettle();
         expect(starts, enabled ? 1 : 0);

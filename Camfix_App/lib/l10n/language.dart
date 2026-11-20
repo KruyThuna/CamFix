@@ -1161,8 +1161,8 @@ class Language {
     },
     'khqrTitle': {AppLang.en: 'KHQR (Bakong)', AppLang.km: 'KHQR (បាគង)'},
     'khqrSubtitle': {
-      AppLang.en: 'Scan with ABA, ACLEDA or any Bakong app',
-      AppLang.km: 'ស្កេនជាមួយ ABA, ACLEDA ឬកម្មវិធីបាគងណាមួយ',
+      AppLang.en: 'Scan with ACLEDA or any Bakong app',
+      AppLang.km: 'ស្កេនជាមួយ ACLEDA ឬកម្មវិធីបាគងណាមួយ',
     },
     'scanWithBanking': {
       AppLang.en: 'Scan with Mobile Banking',
@@ -1191,8 +1191,8 @@ class Language {
     'acledaPayTab': {AppLang.en: 'ACLEDA Pay', AppLang.km: 'ACLEDA Pay'},
     'downloadQr': {AppLang.en: 'Download QR', AppLang.km: 'ទាញយក QR'},
     'paywayLink': {
-      AppLang.en: 'PayWay - Payment Link',
-      AppLang.km: 'PayWay - តំណទូទាត់',
+      AppLang.en: 'ACLEDA Pay - Link',
+      AppLang.km: 'ACLEDA Pay - តំណទូទាត់',
     },
     'autoVerifying': {
       AppLang.en: 'Auto-verifying payment status...',
@@ -1333,8 +1333,8 @@ class Language {
       AppLang.km: 'ជ្រើសរើសវិធីដែលអ្នកចង់ប្រើដើម្បីទូទាត់ថ្លៃសេវា។',
     },
     'localBank': {
-      AppLang.en: 'AC / ABA Local Bank',
-      AppLang.km: 'AC / ABA ធនាគារក្នុងស្រុក',
+      AppLang.en: 'ACLEDA Local Bank',
+      AppLang.km: 'ធនាគារ អេស៊ីលីដា (ACLEDA)',
     },
     'localBankSubtitle': {
       AppLang.en: 'Pay with your banking app via KHQR',

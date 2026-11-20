@@ -43,7 +43,7 @@ class _KhqrPayScreenState extends State<KhqrPayScreen> {
 
   final GlobalKey _standTicketKey = GlobalKey();
 
-  BankTab _selectedTab = BankTab.bakong;
+  BankTab _selectedTab = BankTab.acleda;
   String? _qr;
   String? _md5;
   double? _amount;
@@ -568,9 +568,9 @@ class _KhqrPayScreenState extends State<KhqrPayScreen> {
               ),
               const SizedBox(height: 10),
 
-              // Bound Asset Card (ABA PAY ••••9578592)
+              // Bound Asset Card (ACLEDA PAY ••••9578592)
               InkWell(
-                onTap: () => _openBankApp(BankTab.aba),
+                onTap: () => _openBankApp(BankTab.acleda),
                 borderRadius: BorderRadius.circular(14),
                 child: Container(
                   padding: const EdgeInsets.symmetric(
@@ -593,32 +593,33 @@ class _KhqrPayScreenState extends State<KhqrPayScreen> {
                         width: 36,
                         height: 36,
                         decoration: const BoxDecoration(
-                          color: Color(0xFF005A70),
+                          color: Color(0xFF0A2B4E),
                           shape: BoxShape.circle,
                         ),
                         alignment: Alignment.center,
                         child: const Text(
-                          'ABA\nPAY',
+                          'ACLEDA\nPAY',
                           textAlign: TextAlign.center,
                           style: TextStyle(
-                            color: Color(0xFF00E5FF),
+                            color: Color(0xFFFFD700),
                             fontWeight: FontWeight.w900,
-                            fontSize: 7.5,
+                            fontSize: 7.0,
                             height: 1.0,
                           ),
                         ),
                       ),
                       const SizedBox(width: 14),
-                      const Text(
-                        '••••9578592',
-                        style: TextStyle(
-                          fontWeight: FontWeight.w800,
-                          fontSize: 13.5,
-                          color: Color(0xFF0F172A),
-                          letterSpacing: 0.8,
+                      const Expanded(
+                        child: Text(
+                          'ACLEDA ••••9578592',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w800,
+                            fontSize: 13.5,
+                            color: Color(0xFF0F172A),
+                            letterSpacing: 0.8,
+                          ),
                         ),
                       ),
-                      const Spacer(),
                       Icon(Icons.chevron_right_rounded,
                           color: Colors.grey.shade400, size: 22),
                     ],
@@ -819,20 +820,14 @@ class _KhqrPayScreenState extends State<KhqrPayScreen> {
       child: Row(
         children: [
           _tabPill(
-            BankTab.bakong,
-            label: AppStrings.t('bakongKhqrTab'),
-          ),
-          _tabPill(
-            BankTab.aba,
-            label: 'Mobile',
-            prefix: 'ABA ',
-            prefixColor: const Color(0xFF005A70),
-          ),
-          _tabPill(
             BankTab.acleda,
-            label: 'Pay',
+            label: 'Mobile',
             prefix: 'ACLEDA ',
             prefixColor: const Color(0xFF0A2B4E),
+          ),
+          _tabPill(
+            BankTab.bakong,
+            label: AppStrings.t('bakongKhqrTab'),
           ),
         ],
       ),

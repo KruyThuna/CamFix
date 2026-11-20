@@ -44,8 +44,7 @@ void main() {
       // Header & Tabs
       expect(find.text('KHQR (Bakong)'), findsOneWidget);
       expect(find.text('Bakong KHQR'), findsOneWidget);
-      expect(find.text('ABA Mobile'), findsOneWidget);
-      expect(find.text('ACLEDA Pay'), findsOneWidget);
+      expect(find.text('ACLEDA Mobile'), findsWidgets);
 
       // Standee Details
       expect(find.text('CamFix Field Service Co., Ltd.'), findsOneWidget);
@@ -55,7 +54,7 @@ void main() {
 
       // Action Buttons
       expect(find.text('Download QR'), findsOneWidget);
-      expect(find.text('PayWay - Payment Link'), findsOneWidget);
+      expect(find.text('ACLEDA Pay - Link'), findsOneWidget);
 
       // Auto verification
       expect(find.text('Auto-verifying payment status...'), findsOneWidget);
