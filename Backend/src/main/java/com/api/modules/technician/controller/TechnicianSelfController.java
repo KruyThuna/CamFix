@@ -28,6 +28,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.api.modules.technician.entity.Technician;
 import com.api.modules.technician.service.TechnicianSelfService;
 import com.api.modules.technician.service.TechnicianServiceManager;
+import com.api.modules.telegram.service.TelegramWalletService;
 import com.api.modules.auth.dto.AuthResponse;
 import com.api.modules.auth.dto.PhoneOtpRequest;
 import com.api.modules.booking.dto.ServiceQuoteResponse;
@@ -53,10 +54,13 @@ public class TechnicianSelfController {
 
     private final TechnicianSelfService service;
     private final TechnicianServiceManager services;
+    private final TelegramWalletService telegramWallet;
 
-    public TechnicianSelfController(TechnicianSelfService service, TechnicianServiceManager services) {
+    public TechnicianSelfController(TechnicianSelfService service, TechnicianServiceManager services,
+            TelegramWalletService telegramWallet) {
         this.service = service;
         this.services = services;
+        this.telegramWallet = telegramWallet;
     }
 
     // --- Registration / auth ------------------------------------------------
@@ -83,6 +87,18 @@ public class TechnicianSelfController {
     @GetMapping("/me")
     public TechnicianProfileResponse me(@RequestHeader(value = AUTH, required = false) String auth) {
         return service.me(auth);
+    }
+
+    @PostMapping("/me/telegram/link")
+    public TelegramWalletService.LinkResponse telegramLink(
+            @RequestHeader(value = AUTH, required = false) String auth) {
+        return telegramWallet.issueLink(auth);
+    }
+
+    @GetMapping("/me/wallet")
+    public TelegramWalletService.WalletResponse wallet(
+            @RequestHeader(value = AUTH, required = false) String auth) {
+        return telegramWallet.myWallet(auth);
     }
 
     @PutMapping("/me")

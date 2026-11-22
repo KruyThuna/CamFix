@@ -18,6 +18,15 @@ class TechnicianApi {
     return TechnicianProfile.fromJson(json);
   }
 
+  Future<String> telegramLink() async {
+    final json = await _client.postJson(
+      '/api/technician/me/telegram/link', const {}, withAuth: true);
+    return json['link'] as String;
+  }
+
+  Future<Map<String, dynamic>> wallet() =>
+      _client.getJson('/api/technician/me/wallet');
+
   Future<TechnicianProfile> updateIdentity({
     Uint8List? idCard,
     Uint8List? facePhoto,

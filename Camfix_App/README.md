@@ -145,6 +145,21 @@ no setup.
 
 ## Guidelines
 
+### Technician Telegram wallet
+
+The technician profile has a **Telegram wallet** action. It creates a short-lived
+account-link URL for `@Camfix_bot`; after linking, `/balance` reads the
+technician's payment ledger and quote payments credit the quote base amount
+(before platform fee and tax). Telegram receives an alert when a credit is
+recorded. This is an in-app wallet ledger, not a bank transfer or cash-out.
+
+Configure the backend environment with `TELEGRAM_BOT_TOKEN` (rotate any token
+that has been shared), `TELEGRAM_BOT_USERNAME=Camfix_bot`,
+`TELEGRAM_WEBHOOK_URL=https://<public-api-host>/api/telegram/webhook`, and a
+random `TELEGRAM_WEBHOOK_SECRET`. On startup, the backend registers this webhook
+with Telegram. The API must be reachable over HTTPS. Wallet credits remain
+stored in MySQL if Telegram is unavailable.
+
 - **Lint**: `flutter analyze` before committing (`analysis_options.yaml`,
   `package:flutter_lints/flutter.yaml`). `android/ios/web/windows/macos/linux/build`
   are excluded from analysis.
