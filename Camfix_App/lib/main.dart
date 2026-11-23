@@ -40,9 +40,15 @@ import 'screens/profile/favorites_screen.dart';
 import 'screens/receipt/booking_receipt_screen.dart';
 import 'screens/payment/total_spend_screen.dart';
 import 'technician/main.dart' show TechnicianPortal;
+import 'package:firebase_core/firebase_core.dart';
 
 Future<void> main() async {
     WidgetsFlutterBinding.ensureInitialized();
+    try {
+      await Firebase.initializeApp();
+    } catch (e) {
+      debugPrint('Firebase init error: $e');
+    }
   // Filter transient browser resize / DevTools inspect ViewInsets assertion in Flutter Web
   FlutterError.onError = (FlutterErrorDetails details) {
     final msg = details.exceptionAsString();

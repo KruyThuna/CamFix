@@ -1,11 +1,7 @@
 plugins {
     id("com.android.application")
-
-    // AGP 9+ has built-in Kotlin support.
-    // Do NOT add:
-    // id("org.jetbrains.kotlin.android")
-
     id("dev.flutter.flutter-gradle-plugin")
+    id("com.google.gms.google-services")
 }
 
 // google_maps_flutter needs the Maps key in the manifest at build time.

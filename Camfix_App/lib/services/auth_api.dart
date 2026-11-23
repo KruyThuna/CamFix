@@ -41,6 +41,16 @@ class AuthApi {
     return _storeToken(json);
   }
 
+  /// `POST /api/auth/firebase-phone` — exchange a Firebase ID token (from Firebase
+  /// Phone Auth) for our JWT. Stores the JWT on success.
+  Future<String> loginWithFirebasePhone(String idToken) async {
+    final json = await _client.postJson(
+      '/api/auth/firebase-phone',
+      {'idToken': idToken},
+    );
+    return _storeToken(json);
+  }
+
   /// `POST /api/auth/register` — email + password (name / phone optional).
   /// The backend returns a JWT immediately (auto-login).
   Future<String> register(

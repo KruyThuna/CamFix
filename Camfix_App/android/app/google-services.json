@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "907576615343",
+    "project_id": "camfix-b67ff",
+    "storage_bucket": "camfix-b67ff.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:907576615343:android:5638a390a9e9a0ea1c0f5a",
+        "android_client_info": {
+          "package_name": "com.example.camfix_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDJj4vfUXUUZTBGlX-wuC0-mYRC-jlUG3M"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

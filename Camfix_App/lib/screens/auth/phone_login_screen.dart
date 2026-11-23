@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../../l10n/language.dart';
 import '../../services/api_client.dart';
 import '../../services/api_config.dart';
@@ -152,6 +153,49 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
       return;
     }
     setState(() => _sending = true);
+
+    try {
+      await FirebaseAuth.instance.verifyPhoneNumber(
+        phoneNumber: _e164,
+        timeout: const Duration(seconds: 60),
+        verificationCompleted: (PhoneAuthCredential credential) async {
+          try {
+            final userCred =
+                await FirebaseAuth.instance.signInWithCredential(credential);
+            final idToken = await userCred.user?.getIdToken();
+            if (idToken != null) {
+              await AuthApi.instance.loginWithFirebasePhone(idToken);
+              if (mounted) {
+                Navigator.of(context)
+                    .pushNamedAndRemoveUntil('/home', (r) => false);
+              }
+            }
+          } catch (_) {}
+        },
+        verificationFailed: (FirebaseAuthException e) {
+          if (mounted) {
+            setState(() => _sending = false);
+            _snack('Firebase: ${e.message ?? e.code}');
+            _sendBackendOtpFallback();
+          }
+        },
+        codeSent: (String verificationId, int? resendToken) {
+          if (!mounted) return;
+          setState(() => _sending = false);
+          Navigator.of(context).pushNamed('/verify-code', arguments: {
+            'phone': _e164,
+            'verificationId': verificationId,
+            'resendToken': resendToken,
+          });
+        },
+        codeAutoRetrievalTimeout: (String verificationId) {},
+      );
+    } catch (_) {
+      _sendBackendOtpFallback();
+    }
+  }
+
+  Future<void> _sendBackendOtpFallback() async {
     try {
       final res = await AuthApi.instance.requestPhoneOtp(_e164);
       if (!mounted) return;

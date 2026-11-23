@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../../l10n/language.dart';
 import '../../services/api_client.dart';
 import '../../services/auth_api.dart';
@@ -19,6 +20,8 @@ class VerificationCodeScreen extends StatefulWidget {
 class _VerificationCodeScreenState extends State<VerificationCodeScreen> {
   String _phone = '';
   String? _devCode;
+  String? _verificationId;
+  int? _resendToken;
   String _code = '';
   bool _verifying = false;
   bool _resending = false;
@@ -33,6 +36,8 @@ class _VerificationCodeScreenState extends State<VerificationCodeScreen> {
     final args = ModalRoute.of(context)?.settings.arguments;
     if (args is Map) {
       _phone = (args['phone'] ?? '').toString();
+      _verificationId = (args['verificationId'] as String?)?.trim();
+      _resendToken = args['resendToken'] as int?;
       _devCode = (args['devCode'] as String?)?.trim();
       if (_devCode != null && _devCode!.isEmpty) _devCode = null;
       _code = _devCode ?? '';
@@ -54,7 +59,18 @@ class _VerificationCodeScreenState extends State<VerificationCodeScreen> {
     }
     setState(() => _verifying = true);
     try {
-      await AuthApi.instance.verifyPhoneOtp(_phone, _code);
+      if (_verificationId != null && _verificationId!.isNotEmpty) {
+        final cred = PhoneAuthProvider.credential(
+          verificationId: _verificationId!,
+          smsCode: _code.trim(),
+        );
+        final userCred = await FirebaseAuth.instance.signInWithCredential(cred);
+        final idToken = await userCred.user?.getIdToken();
+        if (idToken == null) throw Exception('Firebase token could not be obtained');
+        await AuthApi.instance.loginWithFirebasePhone(idToken);
+      } else {
+        await AuthApi.instance.verifyPhoneOtp(_phone, _code);
+      }
       if (!mounted) return;
       goToDashboardAfterLogin(context);
     } catch (e) {
@@ -71,6 +87,48 @@ class _VerificationCodeScreenState extends State<VerificationCodeScreen> {
 
   Future<void> _resend() async {
     setState(() => _resending = true);
+    if (_verificationId != null && _verificationId!.isNotEmpty) {
+      try {
+        await FirebaseAuth.instance.verifyPhoneNumber(
+          phoneNumber: _phone,
+          forceResendingToken: _resendToken,
+          verificationCompleted: (PhoneAuthCredential credential) async {
+            try {
+              final userCred =
+                  await FirebaseAuth.instance.signInWithCredential(credential);
+              final idToken = await userCred.user?.getIdToken();
+              if (idToken != null) {
+                await AuthApi.instance.loginWithFirebasePhone(idToken);
+                if (mounted) goToDashboardAfterLogin(context);
+              }
+            } catch (_) {}
+          },
+          verificationFailed: (FirebaseAuthException e) {
+            if (mounted) {
+              setState(() => _resending = false);
+              _snack('Firebase: ${e.message ?? e.code}');
+            }
+          },
+          codeSent: (String verificationId, int? resendToken) {
+            if (mounted) {
+              setState(() {
+                _verificationId = verificationId;
+                _resendToken = resendToken;
+                _resending = false;
+              });
+              _snack(AppStrings.t('newCodeSent'));
+            }
+          },
+          codeAutoRetrievalTimeout: (String verificationId) {},
+        );
+      } catch (e) {
+        if (mounted) {
+          setState(() => _resending = false);
+          _snack('$e');
+        }
+      }
+      return;
+    }
     try {
       final res = await AuthApi.instance.requestPhoneOtp(_phone);
       if (!mounted) return;

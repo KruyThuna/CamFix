@@ -39,6 +39,7 @@ dependencies {
     runtimeOnly("org.xerial:sqlite-jdbc")
 
     implementation("com.mysql:mysql-connector-j")
+    implementation("com.google.firebase:firebase-admin:9.4.1")
 
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.1.1")
 

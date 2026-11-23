@@ -7,6 +7,7 @@ import com.api.modules.user.entity.Users;
 import com.api.modules.auth.dto.AuthResponse;
 import com.api.modules.auth.dto.EmailOtpRequest;
 import com.api.modules.auth.dto.EmailVerifyRequest;
+import com.api.modules.auth.dto.FirebaseLoginRequest;
 import com.api.modules.auth.dto.GoogleLoginRequest;
 import com.api.modules.auth.dto.LoginRequest;
 import com.api.modules.auth.dto.PhoneOtpRequest;
@@ -32,6 +33,9 @@ public interface AuthService {
 
     /** Verify a Google ID token; create the user on first sign-in. */
     AuthResponse loginWithGoogle(GoogleLoginRequest request);
+
+    /** Verify a Firebase Phone ID token; create or login user. */
+    AuthResponse loginWithFirebasePhone(FirebaseLoginRequest request);
 
     /** Generate + send a one-time code by SMS to the given phone number. */
     Map<String, Object> requestPhoneOtp(PhoneOtpRequest request);

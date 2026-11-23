@@ -16,6 +16,7 @@ import com.api.modules.user.entity.Users;
 import com.api.modules.user.repository.UserRepository;
 import com.api.common.security.GoogleTokenVerifier;
 import com.api.common.security.GoogleTokenVerifier.GooglePrincipal;
+import com.api.common.security.FirebaseTokenVerifier;
 import com.api.common.security.JwtService;
 import com.api.modules.auth.service.AuthService;
 import com.api.modules.auth.service.OtpService;
@@ -23,6 +24,7 @@ import com.api.modules.auth.dto.AuthResponse;
 import com.api.modules.auth.dto.EmailOtpRequest;
 import com.api.modules.auth.dto.EmailVerifyRequest;
 import com.api.modules.auth.dto.GoogleLoginRequest;
+import com.api.modules.auth.dto.FirebaseLoginRequest;
 import com.api.modules.auth.dto.LoginRequest;
 import com.api.modules.auth.dto.PhoneOtpRequest;
 import com.api.modules.auth.dto.PhoneVerifyRequest;
@@ -43,17 +45,20 @@ public class AuthServiceImpl implements AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final GoogleTokenVerifier googleVerifier;
+    private final FirebaseTokenVerifier firebaseVerifier;
     private final OtpService otpService;
 
     public AuthServiceImpl(UserRepository userRepository,
             PasswordEncoder passwordEncoder,
             JwtService jwtService,
             GoogleTokenVerifier googleVerifier,
+            FirebaseTokenVerifier firebaseVerifier,
             OtpService otpService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
         this.googleVerifier = googleVerifier;
+        this.firebaseVerifier = firebaseVerifier;
         this.otpService = otpService;
     }
 
@@ -123,6 +128,35 @@ public class AuthServiceImpl implements AuthService {
             return userRepository.save(u);
         });
         return tokenFor(user, "Google login successful");
+    }
+
+    @Override
+    public AuthResponse loginWithFirebasePhone(FirebaseLoginRequest request) {
+        FirebaseTokenVerifier.FirebasePrincipal principal = firebaseVerifier.verify(
+                request == null ? null : request.getIdToken());
+        String phone = normalisePhone(principal.phoneNumber());
+        String syntheticEmail = syntheticPhoneEmail(phone);
+        Users user = userRepository.findByPhoneNumber(phone)
+                .or(() -> userRepository.findByEmail(syntheticEmail))
+                .map(u -> {
+                    if (!phone.equals(u.getPhoneNumber())) {
+                        u.setPhoneNumber(phone);
+                        return userRepository.save(u);
+                    }
+                    return u;
+                })
+                .orElseGet(() -> {
+                    Users u = new Users();
+                    u.setPhoneNumber(phone);
+                    u.setEmail(syntheticEmail);
+                    u.setFirstName(phone);
+                    u.setLastName("-");
+                    u.setPassword(unusablePassword());
+                    u.setRole(DEFAULT_ROLE);
+                    u.setStatus(DEFAULT_STATUS);
+                    return userRepository.save(u);
+                });
+        return tokenFor(user, "Firebase phone login successful");
     }
 
     // --- Phone + OTP -----------------------------------------------------

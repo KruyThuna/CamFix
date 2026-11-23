@@ -17,6 +17,7 @@ import com.api.modules.auth.service.AuthService;
 import com.api.modules.auth.dto.AuthResponse;
 import com.api.modules.auth.dto.EmailOtpRequest;
 import com.api.modules.auth.dto.EmailVerifyRequest;
+import com.api.modules.auth.dto.FirebaseLoginRequest;
 import com.api.modules.auth.dto.GoogleLoginRequest;
 import com.api.modules.auth.dto.LoginRequest;
 import com.api.modules.auth.dto.PhoneOtpRequest;
@@ -57,6 +58,11 @@ public class AuthController {
     @PostMapping("/google")
     public ResponseEntity<AuthResponse> google(@RequestBody GoogleLoginRequest request) {
         return ResponseEntity.ok(authService.loginWithGoogle(request));
+    }
+
+    @PostMapping("/firebase-phone")
+    public ResponseEntity<AuthResponse> firebasePhone(@RequestBody FirebaseLoginRequest request) {
+        return ResponseEntity.ok(authService.loginWithFirebasePhone(request));
     }
 
     // --- Phone + OTP ----------------------------------------------------------
