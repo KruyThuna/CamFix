@@ -53,20 +53,27 @@ class _ProfileScreenState extends State<ProfileScreen>
   Future<void> _loadWallet() async {
     try {
       final wallet = await TechnicianApi.instance.wallet();
-      if (mounted) setState(() => _walletBalance = (wallet['balance'] as num?)?.toDouble() ?? 0);
+      if (mounted) {
+        setState(() => _walletBalance = (wallet['balance'] as num?)?.toDouble() ?? 0);
+      }
     } catch (_) {}
   }
 
   Future<void> _connectTelegram() async {
     try {
       final link = await TechnicianApi.instance.telegramLink();
-      if (!await launchUrl(Uri.parse(link), mode: LaunchMode.externalApplication) && mounted) {
+      final launched = await launchUrl(Uri.parse(link), mode: LaunchMode.externalApplication);
+      if (!launched && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Could not open Telegram.')));
+          const SnackBar(content: Text('Could not open Telegram.')),
+        );
       }
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not connect Telegram: $e')));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Could not connect Telegram: $e')),
+        );
+      }
     }
   }
 
