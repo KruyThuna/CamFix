@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../app_settings.dart';
 import '../l10n/language.dart';
@@ -37,6 +38,7 @@ class _ProfileScreenState extends State<ProfileScreen>
   List<TechJob>? _jobs;
   bool _loadingJobs = true;
   bool _showHistory = false;
+  double? _walletBalance;
 
   static const _hoursCustom = 'Custom';
 
@@ -45,6 +47,27 @@ class _ProfileScreenState extends State<ProfileScreen>
     super.initState();
     _fill(CurrentTechnician.instance.value);
     _loadJobs();
+    _loadWallet();
+  }
+
+  Future<void> _loadWallet() async {
+    try {
+      final wallet = await TechnicianApi.instance.wallet();
+      if (mounted) setState(() => _walletBalance = (wallet['balance'] as num?)?.toDouble() ?? 0);
+    } catch (_) {}
+  }
+
+  Future<void> _connectTelegram() async {
+    try {
+      final link = await TechnicianApi.instance.telegramLink();
+      if (!await launchUrl(Uri.parse(link), mode: LaunchMode.externalApplication) && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not open Telegram.')));
+      }
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not connect Telegram: $e')));
+    }
   }
 
   Future<void> _loadJobs() async {
@@ -188,6 +211,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                   ]),
                   _card([
                     _availabilityRow(context, profile),
+                    _telegramWalletRow(context),
                     _darkRow(context),
                     _langRow(context),
                   ]),
@@ -347,6 +371,20 @@ class _ProfileScreenState extends State<ProfileScreen>
                 ],
               ],
             ),
+    );
+  }
+
+  Widget _telegramWalletRow(BuildContext context) {
+    final p = context.pal;
+    return ListTile(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14),
+      leading: const Icon(Icons.account_balance_wallet_outlined, color: AppColors.primaryBlue),
+      title: const Text('Telegram wallet'),
+      subtitle: Text(_walletBalance == null
+          ? 'Link Camfix_bot to receive payment alerts'
+          : 'Balance: \$${_walletBalance!.toStringAsFixed(2)} USD · Link Camfix_bot'),
+      trailing: Icon(Icons.open_in_new, color: p.textSecondary, size: 18),
+      onTap: _connectTelegram,
     );
   }
 

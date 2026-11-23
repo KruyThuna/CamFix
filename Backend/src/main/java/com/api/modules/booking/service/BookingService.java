@@ -6,6 +6,7 @@ package com.api.modules.booking.service;
 
 import com.api.modules.notification.entity.Notification;
 import com.api.modules.payment.service.KhqrService;
+import com.api.modules.telegram.service.TelegramWalletService;
 import com.api.modules.notification.service.NotificationDispatcher;
 import com.api.modules.admin.entity.Category;
 import java.security.SecureRandom;
@@ -82,6 +83,7 @@ public class BookingService {
     private final ServicePriceService servicePriceService;
     private final NotificationDispatcher notifications;
     private final TechnicianServiceRepository technicianServiceRepository;
+    private final TelegramWalletService telegramWallet;
 
     private static final SecureRandom RNG = new SecureRandom();
 
@@ -95,7 +97,8 @@ public class BookingService {
             NotificationDispatcher notifications,
             TechnicianServiceRepository technicianServiceRepository,
             QuoteItemService quoteItems,
-            KhqrService khqr) {
+            KhqrService khqr,
+            TelegramWalletService telegramWallet) {
         this.authSupport = authSupport;
         this.jobRepository = jobRepository;
         this.technicianRepository = technicianRepository;
@@ -105,6 +108,7 @@ public class BookingService {
         this.servicePriceService = servicePriceService;
         this.notifications = notifications;
         this.technicianServiceRepository = technicianServiceRepository;
+        this.telegramWallet = telegramWallet;
         this.quoteItems = quoteItems;
         this.khqr = khqr;
     }
@@ -321,9 +325,11 @@ public class BookingService {
 
         Payment existing = paymentRepository.findByQuoteId(quoteId).orElse(null);
         if (existing != null) {
+            telegramWallet.credit(existing, quote.getTechnicianId());
             return toPaymentDto(existing);
         }
         Payment p = recordPayment(job, quote, method, cardLast4);
+        telegramWallet.credit(p, quote.getTechnicianId());
         khqr.markPaidIfPresent(job.getId(), quote.getId(), method);
         return toPaymentDto(p);
     }
@@ -382,6 +388,7 @@ public class BookingService {
             ServiceQuote quote = ownedQuote(job, check.quoteId());
             Payment p = paymentRepository.findByQuoteId(quote.getId())
                     .orElseGet(() -> recordPayment(job, quote, "KHQR", null));
+            telegramWallet.credit(p, quote.getTechnicianId());
             paid = toPaymentDto(p);
         }
         return new KhqrService.KhqrStatusResponse(check.status(), paid);
