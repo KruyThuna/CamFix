@@ -74,6 +74,13 @@ public class GlobalExceptionHandler {
         return build(HttpStatus.NOT_FOUND, "No such endpoint");
     }
 
+    @ExceptionHandler(org.springframework.web.server.ResponseStatusException.class)
+    public ResponseEntity<Map<String, Object>> handleResponseStatus(org.springframework.web.server.ResponseStatusException ex) {
+        HttpStatus status = HttpStatus.resolve(ex.getStatusCode().value());
+        if (status == null) status = HttpStatus.INTERNAL_SERVER_ERROR;
+        return build(status, ex.getReason());
+    }
+
     /** Fallback so unexpected errors return a visible 500 JSON, not a masked 403. */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleUnexpected(Exception ex) {

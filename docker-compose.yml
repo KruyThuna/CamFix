@@ -47,6 +47,10 @@ services:
       # TWILIO_AUTH_TOKEN:
       # TWILIO_FROM_NUMBER:
       # TEXTBELT_KEY:
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      TELEGRAM_BOT_USERNAME: ${TELEGRAM_BOT_USERNAME:-Camfix_bot}
+      TELEGRAM_WEBHOOK_URL: ${TELEGRAM_WEBHOOK_URL:-}
+      TELEGRAM_WEBHOOK_SECRET: ${TELEGRAM_WEBHOOK_SECRET:-}
     ports:
       # Listen on all interfaces so local devices on Wi-Fi/LAN can connect directly
       - "8081:8081"
