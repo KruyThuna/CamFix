@@ -8,7 +8,7 @@ export const baseURL =
   window.location.hostname !== 'localhost' &&
   window.location.hostname !== '127.0.0.1'
     ? 'https://api.camonline.store'
-    : 'http://localhost:8080');
+    : 'http://localhost:8081');
 
 export const api = axios.create({ baseURL });
 

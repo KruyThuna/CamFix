@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../l10n/language.dart';
 import '../../services/api_client.dart';
+import '../../services/api_config.dart';
 import '../../services/auth_api.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/app_buttons.dart';
@@ -43,10 +44,106 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
     return n.length >= 8 && n.length <= 9 && !RegExp(r'^(\d)\1+$').hasMatch(n);
   }
 
-  void _snack(String msg) {
+  void _snack(String msg, {bool showServerAction = false}) {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(msg)));
+      ..showSnackBar(
+        SnackBar(
+          content: Text(msg),
+          action: showServerAction
+              ? SnackBarAction(
+                  label: 'Server URL',
+                  textColor: AppColors.cyan,
+                  onPressed: _showServerDialog,
+                )
+              : null,
+          duration: Duration(seconds: showServerAction ? 8 : 4),
+        ),
+      );
+  }
+
+  void _showServerDialog() {
+    final controller = TextEditingController(text: ApiConfig.baseUrl);
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Server Connection'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Backend server endpoint for this phone:',
+              style: TextStyle(fontSize: 13, color: Colors.black87),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: controller,
+              decoration: const InputDecoration(
+                labelText: 'Backend URL',
+                hintText: 'https://...',
+                border: OutlineInputBorder(),
+                isDense: true,
+              ),
+            ),
+            const SizedBox(height: 10),
+            const Text(
+              'Quick Presets:',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: [
+                ActionChip(
+                  label: const Text(
+                    'api.camonline.store',
+                    style: TextStyle(fontSize: 11),
+                  ),
+                  onPressed: () => controller.text = ApiConfig.domainUrl,
+                ),
+                ActionChip(
+                  label: const Text('Live Tunnel', style: TextStyle(fontSize: 11)),
+                  onPressed: () => controller.text = ApiConfig.liveTunnelUrl,
+                ),
+                ActionChip(
+                  label: const Text('Emulator (10.0.2.2)', style: TextStyle(fontSize: 11)),
+                  onPressed: () => controller.text = 'http://10.0.2.2:8081',
+                ),
+              ],
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              controller.text = ApiConfig.defaultProductionUrl;
+            },
+            child: const Text('Default'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              final nav = Navigator.of(ctx);
+              await ApiConfig.setCustomUrl(controller.text.trim());
+              nav.pop();
+              if (!mounted) return;
+              setState(() {});
+              _snack('Server updated to: ${ApiConfig.baseUrl}');
+            },
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _sendOtp() async {
@@ -56,9 +153,6 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
     }
     setState(() => _sending = true);
     try {
-      // Backend OTP — a plain SMS code, no reCAPTCHA / "prove you're not a
-      // bot" step. In dev the code comes back in [devCode] (no SMS provider
-      // wired); with Twilio configured it is sent by SMS and devCode is null.
       final res = await AuthApi.instance.requestPhoneOtp(_e164);
       if (!mounted) return;
       setState(() => _sending = false);
@@ -72,7 +166,7 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
     } on ApiException catch (e) {
       if (mounted) {
         setState(() => _sending = false);
-        _snack(e.message);
+        _snack(e.message, showServerAction: true);
       }
     } catch (e) {
       if (mounted) {

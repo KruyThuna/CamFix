@@ -48,7 +48,7 @@ public class AppVersionController {
         return ResponseEntity.ok(res);
     }
 
-    @GetMapping("/download")
+    @GetMapping({"/download", "/download/Cam-Fix_App.apk", "/download/Camfix_Latest.apk"})
     public ResponseEntity<Resource> downloadApk() throws IOException {
         File file = resolveApkFile();
         if (file == null || !file.exists()) {
@@ -57,7 +57,7 @@ public class AppVersionController {
 
         InputStreamResource resource = new InputStreamResource(new FileInputStream(file));
         return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"Camfix_Latest.apk\"")
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"Cam-Fix_App.apk\"")
                 .header(HttpHeaders.CACHE_CONTROL, "no-cache, no-store, must-revalidate")
                 .contentType(MediaType.parseMediaType("application/vnd.android.package-archive"))
                 .contentLength(file.length())
@@ -66,6 +66,10 @@ public class AppVersionController {
 
     private File resolveApkFile() {
         File[] candidates = new File[] {
+            new File("/app/Cam-Fix_App.apk"),
+            new File("Cam-Fix_App.apk"),
+            new File("../Cam-Fix_App.apk"),
+            new File("c:/CamV4/CamFix/Cam-Fix_App.apk"),
             new File("/app/Camfix_Latest.apk"),
             new File("Camfix_Latest.apk"),
             new File("../Camfix_Latest.apk"),

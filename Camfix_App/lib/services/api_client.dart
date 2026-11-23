@@ -168,7 +168,7 @@ class ApiClient {
     } catch (e) {
       throw ApiException(
         0,
-        'Cannot reach server at $baseUrl. Tap "Server URL" to check settings.',
+        'Cannot reach server. Please check your internet connection.',
       );
     }
 
@@ -193,3 +193,4 @@ class ApiClient {
     throw ApiException(res.statusCode, msg);
   }
 }
+

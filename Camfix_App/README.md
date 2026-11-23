@@ -8,7 +8,7 @@ sign-in verification are all done by the Spring API.
 
 ```
 C:\Cam
-├── Backend/            # Spring Boot 4.1 API (Java 21, Gradle), port 8080
+├── Backend/            # Spring Boot 4.1 API (Java 21, Gradle), port 8081
 └── Camfix_App/         # this Flutter app
     lib/
       main.dart               # MaterialApp + named routes
@@ -88,7 +88,7 @@ Requirements/notes (see `Backend/src/main/resources/application.properties`):
   `jdbc:mysql://localhost:3306/CamFix`, user `root` / password `12345` —
   edit the datasource block if yours differs). `spring.jpa.hibernate.ddl-auto=none`,
   so the schema must already exist / be migrated separately.
-- Boots on **`http://localhost:8080`**.
+- Boots on **`http://localhost:8081`**.
 - **OTP delivery is optional in dev.** With no env vars set, phone/email
   codes are just logged to the console and echoed back in the API response
   (`devCode`, shown as "Dev code" on the verify screen). For real SMS/email,
@@ -115,16 +115,16 @@ Requires Flutter 3.x / Dart ≥3.0. Optional `--dart-define`s:
 
 | Define | Purpose | Default when unset |
 |---|---|---|
-| `API_BASE_URL` | Backend URL (`lib/services/api_client.dart`) | `http://10.0.2.2:8080` on the Android **emulator**, `http://localhost:8080` everywhere else |
+| `API_BASE_URL` | Backend URL (`lib/services/api_client.dart`) | `http://10.0.2.2:8081` on the Android **emulator**, `http://localhost:8081` everywhere else |
 | `GOOGLE_MAPS_API_KEY` | Real Google Maps + Directions API on `/live-tracking` | unset → OpenStreetMap fallback (keyless) |
 | `GOOGLE_SIGNIN_CLIENT_ID` | Real Google account picker (`google_sign_in` v7, no Firebase) | unset → "Continue with Google" falls back to email OTP |
 
 **Real physical device**: `10.0.2.2` and `localhost` don't resolve on a
 phone — pass your PC's LAN IP and make sure the phone and PC share a Wi-Fi
-network and the firewall allows port 8080:
+network and the firewall allows port 8081:
 
 ```bash
-flutter run --dart-define=API_BASE_URL=http://192.168.x.x:8080
+flutter run --dart-define=API_BASE_URL=http://192.168.x.x:8081
 ```
 
 ### Enabling real Google Maps (optional)

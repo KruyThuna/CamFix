@@ -82,7 +82,7 @@ public class SwaggerConfig {
                                                                                 .description("Enter JWT Bearer token (without Bearer prefix)")))
                                 .servers(List.of(
                                                 new Server().url("https://api.camonline.store").description("Production Server (Cloudflare)"),
-                                                new Server().url("http://localhost:8080").description("Local Development Server (Port 8080)")))
+                                                new Server().url("http://localhost:8081").description("Local Development Server (Port 8081)")))
                                 .tags(List.of(
                                                 // Primary CRUD Action Tags
                                                 new Tag().name("Create").description("Create & insert new records (POST)"),

@@ -1155,7 +1155,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         banner.imageAsset != null || banner.imageNetworkUrl != null;
     final p = context.pal;
     return Container(
-      margin: const EdgeInsets.symmetric(vertical: 2),
+      margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(18),
         boxShadow: [
@@ -1222,7 +1222,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                 ),
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                 child: Row(
                   children: [
                     Expanded(

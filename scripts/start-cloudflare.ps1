@@ -41,13 +41,13 @@ Write-Host "========================================" -ForegroundColor Cyan
 # 1. Check & Start Docker Backend
 Set-Location $repoRoot
 Write-Host "`n[1/3] Checking Docker Backend Containers..." -ForegroundColor Yellow
-$backendListener = Get-NetTCPConnection -State Listen -LocalPort 8080 -ErrorAction SilentlyContinue
+$backendListener = Get-NetTCPConnection -State Listen -LocalPort 8081 -ErrorAction SilentlyContinue
 if (-not $backendListener) {
     Write-Host "  Starting Docker containers (backend & mysql)..." -ForegroundColor Gray
-    docker compose up -d
+    docker compose up -d --build
     Start-Sleep -Seconds 5
 } else {
-    Write-Host "  Backend is already running on port 8080 (HTTP 200)." -ForegroundColor Green
+    Write-Host "  Backend is already running on port 8081 (HTTP 200)." -ForegroundColor Green
 }
 
 # 2. Check & Start Cloudflare Tunnel

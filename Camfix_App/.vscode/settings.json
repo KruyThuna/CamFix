@@ -1,0 +1,11 @@
+{
+    "files.associations": {
+        "version": "plaintext",
+        "**/version": "plaintext",
+        "**/.dart_tool/**": "plaintext"
+    },
+    "C_Cpp.files.exclude": {
+        "**/.dart_tool/**": true
+    }
+}
+

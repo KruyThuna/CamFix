@@ -118,29 +118,18 @@ class _LoginScreenState extends State<LoginScreen> {
               children: [
                 ActionChip(
                   label: const Text(
-                    'Localhost (8080)',
-                    style: TextStyle(fontSize: 11),
+                    'api.camonline.store (Public)',
+                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
                   ),
-                  onPressed: () => controller.text = 'http://127.0.0.1:8080',
-                ),
-                ActionChip(
-                  label: const Text('Wi-Fi (192.168.100.35)', style: TextStyle(fontSize: 11)),
-                  onPressed: () => controller.text = 'http://192.168.100.35:8080',
-                ),
-                ActionChip(
-                  label: const Text('Emulator (10.0.2.2)', style: TextStyle(fontSize: 11)),
-                  onPressed: () => controller.text = 'http://10.0.2.2:8080',
+                  onPressed: () => controller.text = ApiConfig.domainUrl,
                 ),
                 ActionChip(
                   label: const Text('Live Tunnel', style: TextStyle(fontSize: 11)),
                   onPressed: () => controller.text = ApiConfig.liveTunnelUrl,
                 ),
                 ActionChip(
-                  label: const Text(
-                    'api.camonline.store',
-                    style: TextStyle(fontSize: 11),
-                  ),
-                  onPressed: () => controller.text = ApiConfig.domainUrl,
+                  label: const Text('Emulator (10.0.2.2)', style: TextStyle(fontSize: 11)),
+                  onPressed: () => controller.text = 'http://10.0.2.2:8081',
                 ),
               ],
             ),

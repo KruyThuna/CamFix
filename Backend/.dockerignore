@@ -1,4 +1,5 @@
-build/
+build/*
+!build/libs/api.jar
 .gradle/
 target/
 *.iml

@@ -9,11 +9,11 @@
         "-d",
         "web-server",
         "--web-port",
-        "8080",
+        "8081",
         "--web-hostname",
         "127.0.0.1"
       ],
-      "port": 8080
+      "port": 8081
     }
   ]
 }
