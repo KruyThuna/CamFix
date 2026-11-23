@@ -1,9 +1,14 @@
 {
-  "$schema": "https://developers.cloudflare.com/workers/wrangler/config-schema.json",
-  "name": "camfix",
+  "name": "camfix-admin",
   "compatibility_date": "2024-09-23",
   "assets": {
     "directory": "./dist"
-  }
+  },
+  "routes": [
+    {
+      "pattern": "admin.camonline.store",
+      "custom_domain": true
+    }
+  ]
 }
 
